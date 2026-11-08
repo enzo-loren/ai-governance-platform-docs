@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arquitectura · Plataforma de gobernanza de agentes de IA</title>
+<style>
+  :root{
+    --ink:#0f172a; --ink-2:#334155; --muted:#64748b; --line:#e2e8f0; --line-2:#cbd5e1;
+    --canvas:#f6f8fb; --surface:#ffffff;
+    --blue:#1d4ed8; --blue-bg:#eff6ff; --blue-line:#bfdbfe;
+    --green:#047857; --green-bg:#ecfdf5; --green-line:#a7f3d0;
+    --amber:#b45309; --amber-bg:#fffbeb; --amber-line:#fde68a;
+    --red:#b91c1c; --red-bg:#fef2f2; --red-line:#fecaca;
+    --violet:#6d28d9; --violet-bg:#f5f3ff; --violet-line:#ddd6fe;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--canvas); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px}
+  button{font:inherit; color:inherit}
+
+  /* ---------- header ---------- */
+  header.top{background:var(--surface); border-bottom:1px solid var(--line); padding:32px 0 26px}
+  .eyebrow{font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:650}
+  h1{font-size:30px; line-height:1.15; margin:9px 0 10px; letter-spacing:-.025em}
+  .lede{font-size:16.5px; color:var(--ink-2); max-width:74ch; margin:0}
+  .lede b{color:var(--ink); font-weight:600}
+
+  /* ---------- subnav ---------- */
+  nav.sub{position:sticky; top:0; z-index:60; background:rgba(255,255,255,.94); backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
+  nav.sub .wrap{display:flex; gap:4px; align-items:center; height:52px; overflow-x:auto}
+  nav.sub a{
+    font-size:13.5px; font-weight:550; color:var(--ink-2); text-decoration:none;
+    padding:7px 13px; border-radius:999px; white-space:nowrap; border:1px solid transparent;
+  }
+  nav.sub a:hover{background:var(--canvas); border-color:var(--line)}
+  nav.sub .sep{flex:1}
+  nav.sub .toggle{
+    display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--muted);
+    background:var(--surface); border:1px solid var(--line-2); border-radius:999px;
+    padding:5px 12px 5px 11px; cursor:pointer; white-space:nowrap;
+  }
+  nav.sub .toggle input{accent-color:var(--blue); margin:0}
+
+  /* ---------- sections ---------- */
+  section{padding:52px 0 6px}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px}
+  .sec-num{
+    font-family:var(--mono); font-size:12px; font-weight:600; color:var(--blue);
+    background:var(--blue-bg); border:1px solid var(--blue-line); border-radius:6px; padding:3px 8px;
+  }
+  h2{font-size:24px; margin:0; letter-spacing:-.015em}
+  .sec-sub{color:var(--muted); font-size:14.5px; max-width:86ch; margin:8px 0 22px}
+  .sec-sub b{color:var(--ink-2); font-weight:600}
+
+  /* ---------- journey ---------- */
+  .start{
+    display:flex; gap:16px; align-items:center; background:var(--surface);
+    border:1px dashed var(--line-2); border-radius:12px; padding:16px 20px; margin-bottom:14px;
+  }
+  .start .badge-start{
+    font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+    border:1px solid var(--line-2); border-radius:5px; padding:3px 8px; white-space:nowrap;
+  }
+  .start p{margin:0; font-size:14.5px; color:var(--ink-2)}
+  .start code{font-family:var(--mono); font-size:13px; background:var(--canvas); border:1px solid var(--line); border-radius:4px; padding:1px 5px}
+
+  ol.journey{list-style:none; margin:0; padding:0; counter-reset:step}
+  ol.journey > li{
+    position:relative; display:grid; grid-template-columns:56px 1fr; gap:20px;
+    padding:18px 0 18px; border-bottom:1px solid var(--line);
+  }
+  ol.journey > li:last-child{border-bottom:0}
+  ol.journey .n{
+    width:40px; height:40px; border-radius:50%; display:grid; place-items:center;
+    font-family:var(--mono); font-size:15px; font-weight:600;
+    background:var(--ink); color:#fff; margin-top:2px;
+  }
+  ol.journey li.stop .n{background:var(--red)}
+  ol.journey li.wait .n{background:var(--amber)}
+  ol.journey li.ok .n{background:var(--green)}
+  .j-title{font-size:17px; font-weight:650; margin:0 0 3px; letter-spacing:-.01em}
+  .j-why{font-size:14.5px; color:var(--ink-2); margin:0 0 10px}
+  .j-why b{font-weight:600; color:var(--ink)}
+  .j-meta{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+  .svc{
+    font-family:var(--mono); font-size:12px; font-weight:600;
+    background:var(--violet-bg); color:var(--violet); border:1px solid var(--violet-line);
+    border-radius:6px; padding:3px 9px; white-space:nowrap;
+  }
+  .q{
+    font-size:13px; color:var(--ink-2); background:var(--canvas); border:1px solid var(--line);
+    border-radius:6px; padding:3px 10px;
+  }
+  .q b{color:var(--ink); font-weight:600}
+  .tech{display:none; font-family:var(--mono); font-size:12.5px; color:var(--muted)}
+  body.show-tech .tech{display:inline}
+  body.show-tech ol.journey .tech{display:block; margin-top:7px; line-height:1.5}
+
+
+  /* ---------- figura: el diagrama de referencia ---------- */
+  .diagram-fig{
+    margin:0 0 26px; background:var(--surface); border:1px solid var(--line);
+    border-radius:14px; padding:14px 16px 10px; box-shadow:0 2px 12px rgba(15,23,42,.04);
+  }
+  body.zoom-open .diagram-fig{display:none}
+  .diagram-fig figcaption{
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:12px;
+    padding:0 2px 10px; border-bottom:1px solid var(--line); margin-bottom:10px;
+  }
+  .fig-k{font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--blue)}
+  .fig-t{font-size:12.5px; color:var(--muted)}
+  .diagram-scroll{overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch}
+  svg.macro-svg{display:block; width:100%; min-width:660px; height:auto}
+
+  .lane{
+    display:grid; grid-template-columns:120px 1fr; gap:16px; align-items:start;
+    padding:12px 0; border-top:1px dashed var(--line);
+  }
+  .lane:first-of-type{border-top:0; padding-top:0}
+  .lane-h{
+    font-size:10.5px; font-weight:700; letter-spacing:.11em; text-transform:uppercase;
+    color:var(--muted); padding-top:9px; line-height:1.35;
+  }
+  .lane-h em{font-style:normal; display:block; font-size:15px; font-weight:700; letter-spacing:-.02em;
+    color:var(--line-2); margin-bottom:1px}
+  .lane .row{display:flex; flex-wrap:wrap; gap:9px; align-items:stretch}
+  .node{
+    text-align:left; cursor:pointer; background:var(--surface);
+    border:1px solid var(--line-2); border-radius:9px; padding:8px 12px 9px;
+    transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease, opacity .18s ease;
+    flex:0 1 auto; min-width:126px;
+  }
+  .node:hover{border-color:#93c5fd; box-shadow:0 4px 14px rgba(15,23,42,.09); transform:translateY(-1px)}
+  .node:focus-visible{outline:2px solid var(--blue); outline-offset:2px}
+  .node .nm{display:block; font-size:13px; font-weight:600; line-height:1.3; letter-spacing:-.008em}
+  .node .sub{display:block; font-size:11px; color:var(--muted); line-height:1.35; margin-top:1px}
+  .node .tech{display:none; font-family:var(--mono); font-size:10.5px; color:var(--violet); margin-top:3px}
+  body.show-tech .node .tech{display:block}
+
+  .node.gate{border-color:var(--ink); border-width:1.5px; box-shadow:0 2px 10px rgba(15,23,42,.07)}
+  .node.ok{border-left:3px solid var(--green)}
+  .node.wait{border-left:3px solid var(--amber)}
+  .node.no{border-left:3px solid var(--red)}
+  .node.aux{background:#fcfdff}
+  .node.on{border-color:var(--blue); box-shadow:0 0 0 3px rgba(29,78,216,.14)}
+  body.plan-mode .node{opacity:.34}
+  body.plan-mode .node.on{opacity:1}
+
+  /* the two interceptors, as one object */
+  .pipe{
+    display:flex; flex-direction:column; gap:0; background:var(--surface);
+    border:1px solid var(--line-2); border-radius:9px; overflow:hidden; min-width:268px;
+  }
+  .pipe-h{
+    font-size:10.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--muted); padding:6px 12px; background:#f8fafc; border-bottom:1px solid var(--line);
+  }
+  .pipe button{
+    text-align:left; background:none; border:0; cursor:pointer; padding:7px 12px;
+    display:flex; gap:9px; align-items:baseline; border-bottom:1px solid var(--line);
+    transition:background .15s ease;
+  }
+  .pipe button:last-child{border-bottom:0}
+  .pipe button:hover{background:var(--blue-bg)}
+  .pipe .pn{
+    font-family:var(--mono); font-size:10px; font-weight:700; color:var(--blue);
+    background:var(--blue-bg); border:1px solid var(--blue-line); border-radius:4px;
+    padding:0 4px; flex:0 0 auto;
+  }
+  .pipe .st{font-size:12.5px; font-weight:600; line-height:1.3}
+  .pipe .sd{display:block; font-size:11px; color:var(--muted); font-weight:400; line-height:1.3}
+  .pipe button.on{background:var(--blue-bg)}
+  body.plan-mode .pipe{opacity:.34}
+  body.plan-mode .pipe button.on{opacity:1}
+  body.plan-mode .pipe:has(button.on){opacity:1; border-color:var(--blue); box-shadow:0 0 0 3px rgba(29,78,216,.14)}
+
+  .evidence{
+    display:grid; grid-template-columns:120px 1fr; gap:16px; align-items:center;
+    margin-top:12px; padding:12px; border:1px dashed var(--blue-line);
+    border-radius:11px; background:var(--blue-bg);
+  }
+  .evidence .eh{
+    font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--blue);
+    line-height:1.3;
+  }
+  .evidence .eh em{font-style:normal; display:block; font-size:15px; font-weight:700; letter-spacing:-.02em; color:#93c5fd; margin-bottom:1px}
+  .evidence .eh span{display:block; font-weight:500; letter-spacing:0; text-transform:none; font-size:11px; color:var(--muted)}
+  .evidence .row{display:flex; gap:9px; flex-wrap:wrap}
+  .evidence .node{background:var(--surface)}
+
+  /* ---------- zoom ---------- */
+  .z-bar{display:flex; align-items:center; gap:12px; margin:0 0 16px}
+  .z-back{
+    display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+    background:var(--surface); border:1px solid var(--line-2); border-radius:999px;
+    padding:6px 15px 6px 12px; font-size:12.5px; font-weight:600; color:var(--ink-2);
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .z-back:hover{border-color:#93c5fd; box-shadow:0 2px 10px rgba(29,78,216,.10)}
+  .z-crumb{font-size:12px; color:var(--muted); font-family:var(--mono)}
+
+  .z-stage{
+    display:grid; grid-template-columns:1fr minmax(300px,1.15fr) 1fr; gap:22px;
+    align-items:center; margin:0 0 22px;
+  }
+  .z-col{display:flex; flex-direction:column; gap:10px}
+  .z-col.right{align-items:flex-end}
+  .z-col .lbl{
+    font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+  }
+  .z-card{
+    width:100%; text-align:left; background:var(--surface); border:1px solid var(--line);
+    border-radius:9px; padding:9px 12px; cursor:pointer;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .z-card:hover{border-color:#93c5fd; box-shadow:0 3px 12px rgba(15,23,42,.08)}
+  .z-card .nm{display:block; font-size:12.5px; font-weight:600; line-height:1.3}
+  .z-card .sub{display:block; font-size:11px; color:var(--muted); line-height:1.3}
+  .z-card .rel{
+    font-family:var(--mono); font-size:9.5px; color:var(--muted); display:block; margin-top:3px;
+    letter-spacing:.04em; text-transform:uppercase;
+  }
+
+  .z-focus{
+    background:var(--surface); border:1.5px solid var(--ink); border-radius:14px; padding:20px 22px 18px;
+    box-shadow:0 10px 30px rgba(15,23,42,.10); position:relative;
+  }
+  .z-focus:before{
+    content:""; position:absolute; inset:-9px; border:1px solid var(--blue-line);
+    border-radius:20px; pointer-events:none;
+  }
+  .z-focus .kicker{
+    font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--blue);
+    font-weight:700;
+  }
+  .z-focus h3{font-size:20px; margin:5px 0 6px; letter-spacing:-.02em; line-height:1.2}
+  .z-focus .z-tech{font-family:var(--mono); font-size:11.5px; color:var(--violet); margin:0 0 8px}
+  .z-focus .z-line{font-size:14px; color:var(--ink-2); margin:0}
+  .z-focus .z-line b{color:var(--ink); font-weight:600}
+
+  .z-meta{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; padding-top:13px; border-top:1px solid var(--line)}
+  .z-meta .m{display:flex; flex-direction:column; gap:2px; min-width:96px}
+  .z-meta .k{font-size:9.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:700}
+  .z-meta .v{font-size:12.5px; font-weight:600; color:var(--ink)}
+  .z-meta .v.mono{font-family:var(--mono); font-size:12px}
+
+  .z-slices{display:flex; gap:5px; flex-wrap:wrap}
+  .z-slice{
+    font-family:var(--mono); font-size:10.5px; font-weight:700; cursor:pointer;
+    background:var(--blue-bg); color:var(--blue); border:1px solid var(--blue-line);
+    border-radius:5px; padding:1px 6px; transition:background .15s ease;
+  }
+  .z-slice:hover{background:#dbeafe}
+
+  .z-detail{margin:16px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px}
+  .z-detail li{
+    position:relative; padding-left:16px; font-size:13px; color:var(--ink-2); line-height:1.45;
+  }
+  .z-detail li:before{content:"·"; position:absolute; left:4px; top:-1px; color:var(--blue); font-weight:700; font-size:16px}
+  .z-detail b{color:var(--ink); font-weight:600}
+
+  .z-checks{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px}
+  .z-check{
+    font-size:11.5px; color:var(--ink-2); background:var(--canvas); border:1px solid var(--line);
+    border-radius:6px; padding:3px 9px;
+  }
+  .z-check b{color:var(--ink); font-weight:600}
+
+  /* ---------- plan ---------- */
+  .plan-head{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 14px}
+  .plan-head label{font-size:12.5px; color:var(--muted); font-weight:600}
+  .plan-head select{
+    font-family:inherit; font-size:13px; color:var(--ink); background:var(--surface);
+    border:1px solid var(--line-2); border-radius:8px; padding:6px 10px; cursor:pointer;
+  }
+  .says{
+    font-size:13.5px; color:var(--ink-2); background:var(--surface); border:1px solid var(--line);
+    border-left:3px solid var(--blue); border-radius:0 8px 8px 0; padding:8px 14px; margin:0 0 16px;
+  }
+  .says b{color:var(--ink)}
+  .plan-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:8px}
+  .slice{
+    text-align:left; cursor:pointer; background:var(--surface); border:1px solid var(--line);
+    border-radius:10px; padding:11px 12px 12px; transition:border-color .15s ease, box-shadow .15s ease;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .slice:hover{border-color:#93c5fd; box-shadow:0 4px 14px rgba(15,23,42,.08)}
+  .slice .sid{
+    font-family:var(--mono); font-size:10px; font-weight:700; color:var(--blue);
+    background:var(--blue-bg); border:1px solid var(--blue-line); border-radius:4px;
+    padding:0 5px; width:fit-content;
+  }
+  .slice .sn{font-size:12.5px; font-weight:650; line-height:1.25; letter-spacing:-.01em}
+  .slice .dep{font-size:10.5px; color:var(--muted); font-family:var(--mono)}
+  .slice.active{border-color:var(--ink); box-shadow:0 0 0 3px rgba(15,23,42,.10)}
+  .slice.active .sid{background:var(--ink); color:#fff; border-color:var(--ink)}
+
+  /* ---------- costs ---------- */
+  .tiers{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:0 0 14px}
+  .tier{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
+  .tier .tn{font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+  .tier .tv{font-family:var(--mono); font-size:23px; font-weight:600; letter-spacing:-.03em; margin:3px 0 1px}
+  .tier .td{font-size:12px; color:var(--muted)}
+
+  details.breakdown{background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden}
+  details.breakdown summary{
+    cursor:pointer; padding:11px 16px; font-size:12.5px; font-weight:600; color:var(--ink-2);
+    list-style:none; display:flex; align-items:center; gap:8px;
+  }
+  details.breakdown summary::-webkit-details-marker{display:none}
+  details.breakdown summary:before{content:"▶"; font-size:8px; color:var(--muted); transition:transform .15s ease}
+  details.breakdown[open] summary:before{transform:rotate(90deg)}
+  details.breakdown summary:hover{background:#f8fafc}
+  .tbl-wrap{overflow-x:auto; border-top:1px solid var(--line)}
+  table{width:100%; border-collapse:collapse; font-size:12px}
+  th,td{padding:6px 10px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap}
+  th:first-child,td:first-child{text-align:left; white-space:normal}
+  thead th{font-size:10px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); background:#fcfdff}
+  tbody tr.hi td{background:var(--amber-bg); font-weight:600}
+  tbody tr.opt td{color:var(--muted)}
+  tfoot td{font-weight:700; border-bottom:0; background:#fcfdff}
+  td.mono{font-family:var(--mono)}
+
+  .notes{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px}
+  .note{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--line-2); border-radius:0 9px 9px 0; padding:10px 14px}
+  .note.warn{border-left-color:var(--amber)} .note.risk{border-left-color:var(--red)}
+  .note p{margin:0; font-size:12.5px; color:var(--ink-2); line-height:1.45}
+  .note p b{color:var(--ink); font-weight:600}
+
+  footer{padding:34px 0 44px; border-top:1px solid var(--line); margin-top:48px}
+  footer p{margin:0; font-size:11.5px; color:var(--muted); line-height:1.5}
+
+  @media (max-width:980px){
+    .z-stage{grid-template-columns:1fr; gap:14px}
+    .z-col.right{align-items:flex-start}
+    .z-focus{order:-1}
+    .plan-grid{grid-template-columns:repeat(2,1fr)}
+    .tiers{grid-template-columns:1fr}
+    .notes{grid-template-columns:1fr}
+    .lane{grid-template-columns:1fr; gap:6px}
+    .lane-h{padding-top:0}
+  }
+  @media (max-width:700px){
+    .evidence{grid-template-columns:1fr; gap:9px}
+    .lane-h em{display:inline; margin-right:6px}
+  }
+  @media print{
+    nav.sub{display:none} body{background:#fff}
+    section{page-break-inside:avoid}
+    details.breakdown{border:1px solid var(--line)} details.breakdown .tbl-wrap{display:block}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="eyebrow">Plataforma de gobernanza de agentes de IA · Morris y Opazo</div>
+    <h1>La arquitectura, en una pantalla</h1>
+    <p class="lede">
+      Todo pasa por una puerta. <b>Toca cualquier pieza</b> y se abre de cerca: qué hace, qué revisa,
+      cuánto cuesta y en qué slice del plan se enciende.
+    </p>
+  </div>
+</header>
+
+<nav class="sub">
+  <div class="wrap">
+    <a href="#recorrido">El recorrido</a>
+    <a href="#mapa">El mapa</a>
+    <a href="#plan">El plan</a>
+    <a href="#costos">El costo</a>
+    <span class="sep"></span>
+    <label class="toggle" title="Muestra el nombre técnico de cada servicio">
+      <input type="checkbox" id="techToggle"> Nombres técnicos
+    </label>
+  </div>
+</nav>
+
+
+<div role="note" style="max-width:1160px;margin:20px auto;padding:16px 20px;background:#fff7e6;border:2px solid #d49b37;border-radius:12px;color:#49330e;font-family:system-ui,sans-serif;line-height:1.5"><strong>Dos perspectivas complementarias:</strong> esta página conserva el mapa AWS y sus costos iniciales. Para entender primero <b>qué controla la plataforma con cada conexión</b>, consulta las <a href="arquitecturas-por-conexion.html" style="font-weight:700;color:#164b91">cuatro arquitecturas conceptuales (A, A+C, A+B y A+B+C)</a> basadas en <code>insumo/</code>. Para revisar las diferencias de implementación y los costos pendientes, consulta la <a href="arquitectura-auditada.html" style="font-weight:700;color:#164b91">auditoría AWS</a>. Las cifras originales de esta página no representan TCO completo.</div>
+<main>
+
+<!-- ======================= 1 · RECORRIDO ======================= -->
+<section id="recorrido">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">01</span><h2>El recorrido de una petición</h2></div>
+    <p class="sec-sub">
+      Seis pasos, en orden. Si alguien solo lee esto, ya sabe qué hace la plataforma. Cada paso nombra el servicio de AWS
+      que lo ejecuta —ahí está la diferencia entre un diagrama y un plano.
+    </p>
+
+    <div class="start">
+      <span class="badge-start">Punto de partida</span>
+      <p>
+        El agente ya existe y funciona (OpenAI SDK, LangChain, CrewAI, un script propio). Nadie toca su código:
+        solo cambia <code>BASE_URL</code> y la API key. Si además tiene un usuario detrás, reenvía su token en una cabecera.
+      </p>
+    </div>
+
+    <ol class="journey">
+      <li>
+        <div class="n">1</div>
+        <div>
+          <p class="j-title">La petición entra por la puerta de la empresa</p>
+          <p class="j-why" style="margin-bottom:6px">Nada llega directo al modelo. Todo pasa por un único punto de entrada HTTPS, donde se filtra el tráfico malicioso y se aplican límites de tasa.</p>
+          <div class="j-meta">
+            <span class="svc">AWS WAFv2</span>
+            <span class="svc">API Gateway REST</span>
+            <span class="q">Se cobra por <b>web ACL + reglas + millones de requests</b></span>
+          </div>
+          <span class="tech">Frontal con reglas administradas (IP Reputation, Common Rule Set) y rate limit por IP; TLS 1.3 en el endpoint regional.</span>
+        </div>
+      </li>
+
+      <li>
+        <div class="n">2</div>
+        <div>
+          <p class="j-title">La puerta pregunta cinco cosas antes de dejar pasar</p>
+          <p class="j-why" style="margin-bottom:8px">Este es el corazón del sistema: un interceptor entra en el camino de la petición y responde cinco preguntas en milisegundos. Si alguna falla, la petición no llega al modelo.</p>
+          <div class="j-meta">
+            <span class="q">¿El agente <b>existe</b> y está activo?</span>
+            <span class="q">¿El usuario tiene un <b>token válido</b>?</span>
+            <span class="q">¿Le queda <b>presupuesto</b>?</span>
+            <span class="q">¿La <b>regla</b> permite esta acción?</span>
+            <span class="q">¿El prompt es un <b>ataque</b>?</span>
+          </div>
+          <div class="j-meta" style="margin-top:8px">
+            <span class="svc">AgentCore Gateway</span>
+            <span class="svc">Lambda · interceptor REQUEST</span>
+            <span class="svc">DynamoDB</span>
+            <span class="svc">Bedrock Guardrails</span>
+          </div>
+          <span class="tech">El Gateway delega la autorización al interceptor síncrono; el motor Cedar embebido evalúa con default-deny y forbid-beats-permit; los contadores de consumo viven en DynamoDB con caché en memoria de 30 s.</span>
+        </div>
+      </li>
+
+      <li class="stop">
+        <div class="n">3a</div>
+        <div>
+          <p class="j-title">Si la regla prohíbe: se bloquea, pero el agente no se cae</p>
+          <p class="j-why" style="margin-bottom:6px">La negativa vuelve <b>dentro del protocolo</b> que el agente ya entiende, con el motivo en lenguaje natural. Un software que no sabe nada de la plataforma sigue funcionando; y no se gasta ni un token del modelo.</p>
+          <div class="j-meta">
+            <span class="svc">Lambda · interceptor REQUEST</span>
+            <span class="q">Respuesta <b>403 / tool_call retirado + motivo</b></span>
+          </div>
+        </div>
+      </li>
+
+      <li class="wait">
+        <div class="n">3b</div>
+        <div>
+          <p class="j-title">Si la acción es crítica: se retiene y espera a una persona</p>
+          <p class="j-why" style="margin-bottom:6px">La operación queda <b>pendiente con un número de aprobación y un plazo</b>. Otra persona la autoriza y se re-ejecuta por la misma puerta —nunca por un atajo. El agente solo ve que la acción está en curso.</p>
+          <div class="j-meta">
+            <span class="svc">DynamoDB</span>
+            <span class="svc">Consola (CloudFront + S3)</span>
+            <span class="q">Aprobador <b>distinto</b> del solicitante</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="ok">
+        <div class="n">4</div>
+        <div>
+          <p class="j-title">Si todo está en orden: se ejecuta en el destino</p>
+          <p class="j-why" style="margin-bottom:6px">O se invoca un modelo autorizado de Bedrock, o se ejecuta una herramienta corporativa. <b>Las credenciales las inyecta la puerta</b>: el agente nunca guarda una contraseña productiva.</p>
+          <div class="j-meta">
+            <span class="svc">Amazon Bedrock</span>
+            <span class="svc">Targets MCP</span>
+            <span class="svc">Secrets Manager</span>
+            <span class="q">Cifrado con <b>KMS CMK</b></span>
+          </div>
+        </div>
+      </li>
+
+      <li>
+        <div class="n">5</div>
+        <div>
+          <p class="j-title">La respuesta se revisa antes de salir</p>
+          <p class="j-why" style="margin-bottom:6px">Un segundo interceptor mira lo que vuelve: <b>enmascara datos personales</b> (RUT chileno validado con módulo 11, correos, teléfonos), bloquea llamadas a herramientas no permitidas y <b>anota el costo real</b> del turno.</p>
+          <div class="j-meta">
+            <span class="svc">Lambda · interceptor RESPONSE</span>
+            <span class="svc">Cedar embebido</span>
+            <span class="q">El prompt de entrada <b>viaja intacto</b></span>
+          </div>
+          <span class="tech">Modo buffered: acumula el stream SSE y lo re-emite ya enmascarado; la validación de RUT es aritmética local, sin llamadas externas.</span>
+        </div>
+      </li>
+
+      <li>
+        <div class="n">6</div>
+        <div>
+          <p class="j-title">Quien decidió, cuánto costó y por qué queda registrado</p>
+          <p class="j-why" style="margin-bottom:6px">La evidencia se escribe <b>antes</b> de liberar la respuesta. Dos niveles: un índice caliente para ver el flujo en vivo y una copia inmutable para auditoría, que nadie puede borrar.</p>
+          <div class="j-meta">
+            <span class="svc">Amazon DynamoDB</span>
+            <span class="svc">Amazon S3 Object Lock</span>
+            <span class="q">Retención <b>GOVERNANCE</b></span>
+          </div>
+          <span class="tech">Escritura síncrona con KMS CMK; réplica asíncrona a S3 con Object Lock en modo GOVERNANCE, denegación explícita de s3:BypassGovernanceRetention.</span>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ======================= MAPA ======================= -->
+<section id="mapa">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">02</span><h2>El mapa</h2></div>
+    <p class="sec-sub">
+      Una puerta con dos interceptores y servicios de apoyo colgando de ella.
+      <b>La puerta no es el control</b>: es por donde pasa todo; los controles son los servicios que consulta.
+    </p>
+
+    <figure class="diagram-fig" id="figura">
+      <figcaption>
+        <span class="fig-k">Figura 1 · La frontera</span>
+        <span class="fig-t">Todo lo que entra al entorno del cliente pasa por la puerta. Las piezas de abajo son el mismo sistema, una por una.</span>
+      </figcaption>
+      <div class="diagram-scroll">
+<svg class="macro-svg" id="macroSvg" viewBox="0 0 1376 768" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="dg-shadow-soft" x="-10%" y="-10%" width="125%" height="125%">
+          <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000000" flood-opacity="0.06"/>
+        </filter>
+        <filter id="dg-shadow-puerta" x="-10%" y="-10%" width="125%" height="125%">
+          <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#000000" flood-opacity="0.10"/>
+        </filter>
+        <filter id="dg-shadow-tile" x="-5%" y="-5%" width="110%" height="115%">
+          <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0f172a" flood-opacity="0.08"/>
+        </filter>
+        <marker id="dg-m-arrow-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#de3b3d" />
+        </marker>
+        <marker id="dg-m-arrow-dark" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#0f172a" />
+        </marker>
+        <marker id="dg-m-arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#15803d" />
+        </marker>
+        <marker id="dg-m-arrow-amber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#b45309" />
+        </marker>
+        <marker id="dg-m-arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#2563eb" />
+        </marker>
+      </defs>
+
+      <!-- Background plate -->
+      <rect width="1376" height="768" fill="#ffffff"/>
+
+      <!-- ============================================================== -->
+      <!-- RED VERTICAL FRONTIER LINE & BADGE                             -->
+      <!-- ============================================================== -->
+      <g id="frontier-boundary">
+        <line x1="380" y1="110" x2="380" y2="720" stroke="#de3b3d" stroke-width="4" stroke-dasharray="14 12" stroke-linecap="round"/>
+        <line x1="380" y1="52" x2="380" y2="102" stroke="#de3b3d" stroke-width="4" stroke-dasharray="14 12" stroke-linecap="round"/>
+        <text x="394" y="68" font-family="'Inter', sans-serif" font-weight="800" font-size="16" fill="#de3b3d" letter-spacing="0.06em">FRONTERA:</text>
+        <text x="394" y="90" font-family="'Inter', sans-serif" font-weight="800" font-size="16" fill="#de3b3d" letter-spacing="0.06em">CUENTA AWS</text>
+        <rect x="394" y="98" width="144" height="20" rx="4" fill="#fef2f2" stroke="#fca5a5"/>
+        <text x="402" y="112" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" fill="#991b1b">100% SOBERANO</text>
+      </g>
+
+      <!-- ============================================================== -->
+      <!-- 1. LEFT ZONE: ENTORNO DEL CLIENTE                              -->
+      <!-- ============================================================== -->
+      <g id="entorno-cliente">
+        <text x="185" y="142" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="18" fill="#0f172a" letter-spacing="0.05em">ENTORNO DEL CLIENTE</text>
+
+        <!-- Outer Card -->
+        <rect x="35" y="160" width="300" height="490" rx="14" fill="#ffffff" stroke="#0f172a" stroke-width="2.5" filter="url(#dg-shadow-soft)"/>
+
+        <!-- Dark Pill Header -->
+        <rect x="52" y="182" width="266" height="85" rx="10" fill="#0f172a"/>
+        <rect x="70" y="194" width="136" height="22" rx="4" fill="#ffffff"/>
+        <text x="138" y="210" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="12" fill="#0f172a">Sin tocar código</text>
+        <text x="70" y="240" font-family="'Inter', sans-serif" font-weight="500" font-size="12.5" fill="#cbd5e1">Solo apunta BASE_URL a la puerta</text>
+
+        <!-- Agent Title -->
+        <text x="185" y="310" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="24" fill="#0f172a">Agente de IA</text>
+        <text x="185" y="332" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="500" font-size="13" fill="#64748b">(Código existente del cliente)</text>
+
+        <!-- Channels Overview inside Client Card -->
+        <g transform="translate(52, 354)">
+          <rect width="266" height="44" rx="6" fill="#fef2f2" stroke="#fca5a5"/>
+          <text x="14" y="27" font-family="'Inter', sans-serif" font-weight="700" font-size="13" fill="#de3b3d">Canal A: Inferencia (/chat)</text>
+
+          <rect y="54" width="266" height="44" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+          <text x="14" y="81" font-family="'Inter', sans-serif" font-weight="700" font-size="13" fill="#0f172a">Canal B: Tools MCP (/mcp)</text>
+
+          <rect y="108" width="266" height="44" rx="6" fill="#eff6ff" stroke="#93c5fd"/>
+          <text x="14" y="135" font-family="'Inter', sans-serif" font-weight="700" font-size="13" fill="#2563eb">Canal C: Identidad (JWT)</text>
+        </g>
+
+        <!-- User Identity Section -->
+        <g transform="translate(115, 572)">
+          <circle cx="22" cy="20" r="15" fill="#f1f5f9" stroke="#0f172a" stroke-width="2"/>
+          <circle cx="22" cy="14" r="5.5" fill="#0f172a"/>
+          <path d="M 11 29 A 11 11 0 0 1 33 29" fill="#0f172a"/>
+          <text x="48" y="18" font-family="'Inter', sans-serif" font-weight="800" font-size="14.5" fill="#0f172a">Persona usuaria (IdP)</text>
+          <text x="48" y="34" font-family="'Inter', sans-serif" font-weight="600" font-size="12.5" fill="#2563eb">Token C (JWT del Cliente)</text>
+        </g>
+      </g>
+
+      <!-- ============================================================== -->
+      <!-- 2. CONNECTING ARROWS ACROSS THE FRONTIER                       -->
+      <!-- ============================================================== -->
+      <g id="input-arrows">
+        <!-- Arrow A (Red) -->
+        <line x1="335" y1="242" x2="550" y2="242" stroke="#de3b3d" stroke-width="3.5" marker-end="url(#dg-m-arrow-red)"/>
+        <text x="398" y="232" font-family="'Inter', sans-serif" font-weight="800" font-size="12.5" fill="#de3b3d">A · Inferencia</text>
+
+        <!-- Arrow B (Dark) -->
+        <line x1="335" y1="392" x2="550" y2="392" stroke="#0f172a" stroke-width="3.5" marker-end="url(#dg-m-arrow-dark)"/>
+        <text x="398" y="382" font-family="'Inter', sans-serif" font-weight="800" font-size="12.5" fill="#0f172a">B · Tools</text>
+
+        <!-- Arrow C (Blue Dashed) -->
+        <line x1="335" y1="542" x2="550" y2="542" stroke="#2563eb" stroke-width="3.5" stroke-dasharray="6 4" marker-end="url(#dg-m-arrow-blue)"/>
+        <text x="398" y="532" font-family="'Inter', sans-serif" font-weight="800" font-size="12.5" fill="#2563eb">+ C · Identidad</text>
+      </g>
+
+      <!-- ============================================================== -->
+      <!-- 3. PUERTA ÚNICA EN AWS: LAS 8 CAPACIDADES ➔ SERVICIOS AWS     -->
+      <!-- ============================================================== -->
+      <g id="puerta-unica">
+        <!-- Main Outer Box -->
+        <rect x="555" y="130" width="485" height="515" rx="14" fill="#ffffff" stroke="#0f172a" stroke-width="3" filter="url(#dg-shadow-puerta)"/>
+
+        <!-- Header -->
+        <text x="797" y="166" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="24" fill="#0f172a">Puerta Única en AWS</text>
+        <text x="797" y="186" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11.5" font-weight="700" fill="#475569">AMAZON BEDROCK AGENTCORE GATEWAY</text>
+
+        <!-- Capacidad 1: Control de Identidad en Frontera (Validación OIDC en Vuelo) -->
+        <g id="sub-identidad">
+          <rect x="570" y="200" width="220" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8" filter="url(#dg-shadow-tile)"/>
+          <text x="584" y="226" font-family="'Inter', sans-serif" font-weight="800" font-size="15" fill="#0f172a">🔐 1. Identidad en Frontera</text>
+          <text x="584" y="245" font-family="'Inter', sans-serif" font-size="12" fill="#64748b">¿Token de usuario?</text>
+          <rect x="584" y="258" width="192" height="26" rx="4" fill="#eff6ff" stroke="#93c5fd"/>
+          <text x="680" y="275" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" fill="#1e40af">OIDC In-Flight (Lambda)</text>
+        </g>
+
+        <!-- Capacidad 2: Control FinOps (DynamoDB + CloudWatch) -->
+        <g id="sub-finops">
+          <rect x="805" y="200" width="220" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8" filter="url(#dg-shadow-tile)"/>
+          <text x="819" y="226" font-family="'Inter', sans-serif" font-weight="800" font-size="15" fill="#0f172a">💰 2. Control FinOps</text>
+          <text x="819" y="245" font-family="'Inter', sans-serif" font-size="12" fill="#64748b">¿Cuánto consume?</text>
+          <rect x="819" y="258" width="192" height="26" rx="4" fill="#f0fdf4" stroke="#86efac"/>
+          <text x="915" y="275" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" fill="#15803d">DynamoDB + CWatch</text>
+        </g>
+
+        <!-- Capacidad 3: Guardrails Semánticos (Bedrock Guardrails) -->
+        <g id="sub-guardrails">
+          <rect x="570" y="306" width="220" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8" filter="url(#dg-shadow-tile)"/>
+          <text x="584" y="332" font-family="'Inter', sans-serif" font-weight="800" font-size="15" fill="#0f172a">🛡️ 3. Guardrails</text>
+          <text x="584" y="351" font-family="'Inter', sans-serif" font-size="12" fill="#64748b">¿Contenido seguro?</text>
+          <rect x="584" y="364" width="192" height="26" rx="4" fill="#fef2f2" stroke="#fca5a5"/>
+          <text x="680" y="381" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" fill="#991b1b">Bedrock Guardrails</text>
+        </g>
+
+        <!-- Capacidad 4: Reglas de Autorización (Cedar Engine Lambda) -->
+        <g id="sub-cedar">
+          <rect x="805" y="306" width="220" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8" filter="url(#dg-shadow-tile)"/>
+          <text x="819" y="332" font-family="'Inter', sans-serif" font-weight="800" font-size="15" fill="#0f172a">📋 4. Reglas Cedar</text>
+          <text x="819" y="351" font-family="'Inter', sans-serif" font-size="12" fill="#64748b">¿Tiene permiso?</text>
+          <rect x="819" y="364" width="192" height="26" rx="4" fill="#faf5ff" stroke="#d8b4fe"/>
+          <text x="915" y="381" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" fill="#6b21a8">Cedar Engine (Lambda)</text>
+        </g>
+
+        <!-- Capacidad 5: Privacidad Soberana (Lambda Módulo 11) -->
+        <g id="sub-pii">
+          <rect x="570" y="412" width="220" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8" filter="url(#dg-shadow-tile)"/>
+          <text x="584" y="438" font-family="'Inter', sans-serif" font-weight="800" font-size="15" fill="#0f172a">🔒 5. Privacidad & RUT</text>
+          <text x="584" y="457" font-family="'Inter', sans-serif" font-size="12" fill="#64748b">¿Datos personales?</text>
+          <rect x="584" y="470" width="192" height="26" rx="4" fill="#eff6ff" stroke="#93c5fd"/>
+          <text x="680" y="487" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" fill="#1e40af">Lambda (Módulo 11)</text>
+        </g>
+
+        <!-- Capacidad 6: Bóveda de Secretos (AgentCore Identity) -->
+        <g id="sub-vault">
+          <rect x="805" y="412" width="220" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8" filter="url(#dg-shadow-tile)"/>
+          <text x="819" y="438" font-family="'Inter', sans-serif" font-weight="800" font-size="15" fill="#0f172a">🔑 6. Bóveda Secretos</text>
+          <text x="819" y="457" font-family="'Inter', sans-serif" font-size="12" fill="#64748b">¿Secretos seguros?</text>
+          <rect x="819" y="470" width="192" height="26" rx="4" fill="#f0fdf4" stroke="#86efac"/>
+          <text x="915" y="487" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" fill="#15803d">Secrets Manager</text>
+        </g>
+
+        <!-- Capacidad 7: Supervisión Humana (Consola HITL D-13) -->
+        <g id="sub-hitl">
+          <rect x="570" y="518" width="220" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8" filter="url(#dg-shadow-tile)"/>
+          <text x="584" y="544" font-family="'Inter', sans-serif" font-weight="800" font-size="15" fill="#0f172a">👤 7. Supervisión HITL</text>
+          <text x="584" y="563" font-family="'Inter', sans-serif" font-size="12" fill="#64748b">¿Requiere firma?</text>
+          <rect x="584" y="576" width="192" height="26" rx="4" fill="#fffbeb" stroke="#fde68a"/>
+          <text x="680" y="593" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" fill="#92400e">Consola HITL (D-13)</text>
+        </g>
+
+        <!-- Capacidad 8: Kill Switch (Parada en <= 60s) -->
+        <g id="sub-kill">
+          <rect x="805" y="518" width="220" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.8" filter="url(#dg-shadow-tile)"/>
+          <text x="819" y="544" font-family="'Inter', sans-serif" font-weight="800" font-size="15" fill="#0f172a">⚡ 8. Kill Switch</text>
+          <text x="819" y="563" font-family="'Inter', sans-serif" font-size="12" fill="#64748b">¿Parada inmediata?</text>
+          <rect x="819" y="576" width="192" height="26" rx="4" fill="#fef2f2" stroke="#fca5a5"/>
+          <text x="915" y="593" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" fill="#991b1b">Caché LRU (&le; 60s)</text>
+        </g>
+      </g>
+
+      <!-- ============================================================== -->
+      <!-- 4. BOTTOM: EVIDENCIA INMUTABLE SELLADA                         -->
+      <!-- ============================================================== -->
+      <g id="evidencia-inmutable">
+        <line x1="797" y1="645" x2="797" y2="668" stroke="#0f172a" stroke-width="2.5" stroke-dasharray="6 6"/>
+        <polygon points="791,668 797,678 803,668" fill="#0f172a"/>
+
+        <g transform="translate(600, 680)">
+          <!-- Database cylinder -->
+          <g transform="translate(0, 4)">
+            <path d="M 3 26 L 3 36 A 16 6 0 0 0 35 36 L 35 26" fill="#ffffff" stroke="#0f172a" stroke-width="2.2"/>
+            <path d="M 3 16 L 3 26 A 16 6 0 0 0 35 26 L 35 16" fill="#ffffff" stroke="#0f172a" stroke-width="2.2"/>
+            <ellipse cx="19" cy="15" rx="16" ry="6" fill="#ffffff" stroke="#0f172a" stroke-width="2.2"/>
+          </g>
+          <text x="48" y="24" font-family="'Inter', sans-serif" font-weight="800" font-size="16" fill="#0f172a">Evidencia Inmutable sellada</text>
+          <text x="48" y="44" font-family="'Inter', sans-serif" font-weight="600" font-size="13" fill="#475569">Amazon DynamoDB (KMS) + Amazon S3 Object Lock (WORM)</text>
+        </g>
+      </g>
+
+      <!-- ============================================================== -->
+      <!-- 5. RIGHT ZONE: DESTINOS DE EJECUCIÓN                           -->
+      <!-- ============================================================== -->
+      <!-- ALLOW Path -->
+      <g id="flow-allow" class="hitbox-target">
+        <path d="M 1040 249 L 1125 249 Q 1150 249 1150 225 L 1150 205 Q 1150 190 1175 190 L 1200 190" fill="none" stroke="#15803d" stroke-width="3.5" marker-end="url(#dg-m-arrow-green)"/>
+        <path d="M 1125 249 Q 1150 249 1150 275 L 1150 305 Q 1150 320 1175 320 L 1200 320" fill="none" stroke="#15803d" stroke-width="3.5" marker-end="url(#dg-m-arrow-green)"/>
+        <text x="1055" y="240" font-family="'Inter', sans-serif" font-weight="800" font-size="15" fill="#15803d">ALLOW</text>
+
+        <!-- Destination 1: Bedrock -->
+        <g transform="translate(1208, 170)">
+          <text x="0" y="18" font-family="'Inter', sans-serif" font-weight="800" font-size="20" fill="#0f172a">Amazon</text>
+          <text x="0" y="40" font-family="'Inter', sans-serif" font-weight="800" font-size="20" fill="#0f172a">Bedrock</text>
+          <text x="0" y="58" font-family="'Inter', sans-serif" font-weight="500" font-size="12.5" fill="#64748b">Modelos autorizados</text>
+        </g>
+
+        <!-- Destination 2: MCP Tools -->
+        <g transform="translate(1208, 298)">
+          <text x="0" y="18" font-family="'Inter', sans-serif" font-weight="800" font-size="20" fill="#0f172a">Tools</text>
+          <text x="0" y="40" font-family="'Inter', sans-serif" font-weight="800" font-size="20" fill="#0f172a">Corporativas</text>
+          <text x="0" y="58" font-family="'Inter', sans-serif" font-weight="500" font-size="12.5" fill="#64748b">Secretos inyectados</text>
+        </g>
+      </g>
+
+      <!-- PENDING Path -->
+      <g id="flow-pending">
+        <line x1="1040" y1="461" x2="1200" y2="461" stroke="#b45309" stroke-width="3.5" marker-end="url(#dg-m-arrow-amber)"/>
+        <text x="1055" y="451" font-family="'Inter', sans-serif" font-weight="800" font-size="15" fill="#b45309">PENDING</text>
+        <g transform="translate(1208, 442)">
+          <text x="0" y="18" font-family="'Inter', sans-serif" font-weight="800" font-size="20" fill="#0f172a">Supervisión</text>
+          <text x="0" y="40" font-family="'Inter', sans-serif" font-weight="800" font-size="20" fill="#0f172a">Humana</text>
+          <text x="0" y="58" font-family="'Inter', sans-serif" font-weight="600" font-size="12.5" fill="#b45309">Aprobación (Token APR)</text>
+        </g>
+
+        <!-- D-13 loopback -->
+        <path d="M 1205 498 C 1175 528, 1085 528, 1040 498" fill="none" stroke="#b45309" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#dg-m-arrow-amber)"/>
+        <text x="1120" y="538" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" fill="#92400e">Re-ejecución D-13</text>
+      </g>
+
+      <!-- DENY Path -->
+      <g id="flow-deny">
+        <text x="1055" y="555" font-family="'Inter', sans-serif" font-weight="800" font-size="15" fill="#de3b3d">DENY</text>
+        <path d="M 1040 567 C 1175 567, 1175 695, 800 695 C 440 695, 185 695, 185 655" fill="none" stroke="#de3b3d" stroke-width="3.5" marker-end="url(#dg-m-arrow-red)"/>
+        <g transform="translate(1050, 588)">
+          <text x="0" y="16" font-family="'Inter', sans-serif" font-weight="800" font-size="15" fill="#0f172a">Bloqueado: Respuesta segura</text>
+          <text x="0" y="34" font-family="'Inter', sans-serif" font-weight="500" font-size="12" fill="#64748b">Protocolo amigable · Cero excepciones</text>
+        </g>
+      </g>
+
+      
+</svg>
+      </div>
+    </figure>
+
+    <div id="view-macro">
+      <div id="map"></div>
+
+      <div class="evidence">
+        <div class="eh"><em>5</em>Evidencia<span>se escribe antes de responder</span></div>
+        <div class="row" id="evidenceRow"></div>
+      </div>
+    </div>
+
+    <div id="view-zoom"></div>
+  </div>
+</section>
+
+<!-- ======================= 2 · PLAN ======================= -->
+<section id="plan">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">03</span><h2>El plan</h2></div>
+    <p class="sec-sub">
+      Siete slices verticales: cada uno deja un sistema que funciona y se puede mostrar.
+      Elige uno y el mapa se ilumina solo en las piezas que ese slice enciende.
+    </p>
+
+    <div class="plan-head">
+      <label for="sliceSelect">Ver el mapa con:</label>
+      <select id="sliceSelect">
+        <option value="all">Todo construido</option>
+        <option value="S0">Slice 1 · Fundación</option>
+        <option value="S1">Slice 2 · Ver</option>
+        <option value="S2">Slice 3 · Controlar</option>
+        <option value="S3">Slice 4 · Identidad</option>
+        <option value="S4">Slice 5 · Tools por la puerta</option>
+        <option value="S5">Slice 6 · Supervisión humana</option>
+        <option value="S6">Slice 7 · Auditoría</option>
+      </select>
+    </div>
+
+    <p class="says" id="sliceSays"></p>
+    <div class="plan-grid" id="planGrid"></div>
+  </div>
+</section>
+
+<!-- ======================= 3 · COSTOS ======================= -->
+<section id="costos">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">04</span><h2>El costo</h2></div>
+    <p class="sec-sub">
+      Un <b>turno</b> es una petición gobernada: 2 Lambdas, 1 llamada al Gateway, 1 escritura y 1 lectura en
+      DynamoDB, 3 unidades de guardrail y 4 KB de evidencia. Precios on-demand de <em>us-east-1</em>, noviembre 2026.
+    </p>
+
+    <div class="tiers">
+      <div class="tier"><div class="tn">Demo / MVP</div><div class="tv">$22 /mes</div><div class="td">10.000 turnos · $0,0022 por turno</div></div>
+      <div class="tier"><div class="tn">Piloto</div><div class="tv">$163 /mes</div><div class="td">300.000 turnos · $0,00054 por turno</div></div>
+      <div class="tier"><div class="tn">Producción</div><div class="tv">$1.480 /mes</div><div class="td">3 millones de turnos · $0,00049 por turno</div></div>
+    </div>
+
+    <details class="breakdown">
+      <summary>Desglose por servicio, los 13 renglones</summary>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Servicio</th><th>Qué se cobra</th><th>Precio unitario</th><th>10 k</th><th>300 k</th><th>3 M</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>WAFv2</td><td>1 web ACL + 4 reglas + requests</td><td class="mono">$5 + $1/regla + $0,60/M</td><td>9,01</td><td>9,18</td><td>10,80</td></tr>
+            <tr><td>API Gateway REST</td><td>requests</td><td class="mono">$3,50 / M</td><td>0,04</td><td>1,05</td><td>10,50</td></tr>
+            <tr><td>AgentCore Gateway</td><td>invocaciones</td><td class="mono">$5,00 / M</td><td>0,05</td><td>1,50</td><td>15,00</td></tr>
+            <tr><td>Lambda · 2 interceptores</td><td>requests + GB-segundo</td><td class="mono">$0,20/M + $0,0000167/GB-s</td><td>0,02</td><td>0,50</td><td>4,95</td></tr>
+            <tr class="hi"><td>Bedrock Guardrails</td><td>unidades de texto filtradas</td><td class="mono">$0,15 / 1.000 u.</td><td>4,50</td><td>135,00</td><td>1.350,00</td></tr>
+            <tr><td>DynamoDB</td><td>escrituras, lecturas, almacenamiento</td><td class="mono">$1,25/M · $0,25/M · $0,25/GB</td><td>1,28</td><td>2,08</td><td>9,50</td></tr>
+            <tr><td>S3 Object Lock</td><td>PUT + almacenamiento Standard</td><td class="mono">$5,00/M + $0,023/GB</td><td>0,06</td><td>1,82</td><td>18,16</td></tr>
+            <tr><td>Secrets Manager</td><td>6 secretos + llamadas</td><td class="mono">$0,40/secreto + $0,05/10k</td><td>2,45</td><td>3,90</td><td>17,40</td></tr>
+            <tr><td>KMS</td><td>2 llaves + operaciones</td><td class="mono">$1/llave + $0,03/10k</td><td>2,09</td><td>4,70</td><td>29,00</td></tr>
+            <tr><td>CloudWatch</td><td>ingesta + almacenamiento + alarmas</td><td class="mono">$0,50/GB + $0,03/GB-mes</td><td>0,44</td><td>1,61</td><td>12,53</td></tr>
+            <tr><td>CloudFront + S3</td><td>transferencia + requests</td><td class="mono">$0,085 / GB</td><td>2,00</td><td>2,00</td><td>2,00</td></tr>
+            <tr><td>Cognito</td><td>usuarios activos al mes</td><td class="mono">10.000 gratis</td><td>0,00</td><td>0,00</td><td>0,00</td></tr>
+            <tr class="opt"><td>VPC endpoints (opcional)</td><td>3 endpoints × 2 AZ</td><td class="mono">$7,30 / endpoint-AZ</td><td>43,80</td><td>43,80</td><td>43,80</td></tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="3">Total sin aislamiento de VPC</td><td>21,93</td><td>163,33</td><td>1.479,84</td></tr>
+            <tr><td colspan="3">Total con VPC endpoints</td><td>65,73</td><td>207,13</td><td>1.523,64</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </details>
+
+    <div class="notes">
+      <div class="note risk">
+        <p><b>El guardrail es el 91 % de la factura a escala.</b> A 3 M de turnos pasa de $4,50 a $1.350.
+        Por eso el diseño filtra solo el mensaje del usuario y el texto final, no el turno completo.</p>
+      </div>
+      <div class="note warn">
+        <p><b>Piso fijo de $17,05 al mes.</b> WAF, secretos, llaves y consola se cobran aunque no pase una
+        sola petición. La inferencia va aparte: gobernar es cerca del <b>5 %</b> de lo que vigila.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      Cada pieza del mapa declara su slice y su renglón de costo: si algo no está en la tabla, es porque no
+      se cobra por llamada. Precios on-demand de <em>us-east-1</em>, noviembre de 2026; no incluye consumo de
+      modelos de Bedrock ni impuestos.
+    </p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     UNA SOLA FUENTE DE VERDAD.
+     Cada pieza declara: qué es, qué hace, cuánto cuesta, en qué
+     slice se enciende, con qué conecta. De aquí salen el mapa,
+     el zoom, el plan y el costo. Si una pieza no está aquí, no
+     existe en el documento.
+     ============================================================ */
+  var P = {
+    agente: {nm:"Agente de IA", sub:"ya existe", tech:"OpenAI SDK · LangChain · CrewAI",
+      lane:1, slices:["S0"], cost:"—", step:1,
+      line:"El agente que la empresa ya tiene funcionando. <b>No se toca su código</b>: solo cambia la URL y la clave.",
+      detail:["Si hay una persona detrás, reenvía su token en una cabecera y la puerta lo valida.",
+              "La primera inferencia gobernada es lo que se muestra al final del slice 1."],
+      from:[], to:["waf"]},
+
+    usuario: {nm:"Persona usuaria + su IdP", sub:"emite el token", tech:"Microsoft Entra ID · Okta · Ping",
+      lane:1, slices:["S3"], cost:"Cognito 10.000 usuarios gratis", step:0,
+      line:"Quien está detrás del agente. Sin este dato, la puerta solo sabe que habló <b>un software</b>, no <b>quién</b>.",
+      detail:["Los roles y los límites por persona entran a la decisión en el slice 4.",
+              "Las tareas desatendidas se tratan como identidad de servicio, no como usuario."],
+      from:[], to:["gateway"]},
+
+    waf: {nm:"WAF", sub:"filtra ataques, limita tasa", tech:"AWS WAFv2 · IP Reputation + Common Rule Set",
+      lane:2, slices:["S0"], cost:"$9,01 / mes (1 ACL + 4 reglas)", step:1,
+      line:"El primer filtro. Corta tráfico malicioso y pone techo de tasa <b>antes</b> de que la petición cueste un peso.",
+      detail:["Reglas administradas por AWS más un límite de tasa por IP.",
+              "TLS 1.3 en el endpoint regional."],
+      from:["agente"], to:["apigw"]},
+
+    apigw: {nm:"API Gateway", sub:"HTTPS, cuotas, dominio propio", tech:"Amazon API Gateway REST",
+      lane:2, slices:["S0"], cost:"$3,50 / millón de requests", step:1,
+      line:"La puerta de entrada de la empresa: dominio propio, cuotas y el punto que el cliente ya sabe operar.",
+      detail:["Si el endpoint del Gateway ya cubre dominio, cuotas y WAF, esta pieza sobra y se ahorra su línea.",
+              "Es una decisión de despliegue, no de arquitectura: las dos opciones están en el costo."],
+      from:["waf"], to:["gateway"]},
+
+    gateway: {nm:"AgentCore Gateway", sub:"un solo punto, falla cerrado", tech:"Amazon Bedrock AgentCore Gateway",
+      lane:3, slices:["S0","S1","S2"], cost:"$0,50 / millón de invocaciones", step:1,
+      line:"<b>La puerta única.</b> Todo modelo y toda herramienta se alcanzan por aquí; si la autorización falla, no pasa nada.",
+      detail:["No decide: delega la decisión a los dos interceptores y aplica lo que le devuelven.",
+              "Falla cerrado: ante error del interceptor, la petición se niega en vez de pasar.",
+              "Herramientas y modelos se declaran como targets, no se codifican en el agente."],
+      from:["apigw","usuario"], to:["req"]},
+
+    req: {nm:"Interceptor REQUEST", sub:"5 preguntas antes de pasar", tech:"AWS Lambda (síncrona) · Cedar embebido · DynamoDB",
+      lane:3, slices:["S0","S1","S2"], cost:"Lambda $0,20/M + GB-segundo", step:2,
+      line:"El corazón del sistema. Responde cinco preguntas en milisegundos; si alguna falla, <b>la petición no llega al modelo</b>.",
+      detail:["Identidad, presupuesto, regla, ataque y agente activo, en ese orden.",
+              "La negativa vuelve dentro del protocolo que el agente ya entiende, con el motivo en lenguaje natural.",
+              "No se gasta ni un token del modelo cuando se bloquea."],
+      checks:["¿el agente <b>existe</b>?","¿el token es <b>válido</b>?","¿queda <b>presupuesto</b>?","¿la <b>regla</b> lo permite?","¿el prompt es un <b>ataque</b>?"],
+      from:["gateway"], to:["deny","pending","bedrock"]},
+
+    deny: {nm:"Bloqueo amigable", sub:"motivo en lenguaje llano", tech:"Respuesta 403 dentro del protocolo",
+      lane:4, slices:["S2"], cost:"sin costo propio", step:3,
+      line:"La negativa vuelve <b>dentro del protocolo</b>: un 403 o un tool_call retirado, con el motivo escrito para que el agente lo entienda.",
+      detail:["El software del cliente sigue funcionando: no sabe que hay una plataforma debajo.",
+              "Queda registrado el motivo, no solo el hecho de que se bloqueó."],
+      from:["req"], to:["evid"]},
+
+    pending: {nm:"Consola de aprobación", sub:"una persona decide", tech:"CloudFront + S3 · DynamoDB · plazo",
+      lane:4, slices:["S5"], cost:"CloudFront $0,085 / GB", step:3,
+      line:"Si la acción es crítica, se retiene con un número de aprobación y un plazo. <b>Otra persona</b> la autoriza.",
+      detail:["El aprobador no puede ser el solicitante: la autoaprobación falla por diseño.",
+              "Se re-ejecuta por la misma puerta, nunca por un atajo."],
+      from:["req"], to:["resp"]},
+
+    bedrock: {nm:"Modelos en Bedrock", sub:"solo los autorizados", tech:"Amazon Bedrock",
+      lane:4, slices:["S0","S1"], cost:"consumo del modelo, aparte", step:4,
+      line:"El destino cuando todo está en orden: <b>solo</b> los modelos que la regla autoriza, con el prompt de entrada intacto.",
+      detail:["La inferencia no la cobra la plataforma: se mide y se atribuye, pero el gasto es del modelo.",
+              "Gobernar cuesta cerca del 5 % de lo que vigila."],
+      from:["req"], to:["resp"]},
+
+    mcp: {nm:"Herramientas MCP", sub:"credenciales inyectadas", tech:"Targets MCP · Secrets Manager",
+      lane:4, slices:["S4"], cost:"$0,40 / secreto + llamadas", step:4,
+      line:"Las herramientas corporativas ejecutadas <b>por la puerta</b>. La credencial la inyecta ella: el agente nunca guarda una contraseña productiva.",
+      detail:["Las reglas pueden mirar el parámetro concreto, no solo el nombre de la herramienta.",
+              "Se mide la cobertura por herramienta: cuántas llamadas pasan gobernadas."],
+      from:["gateway"], to:["resp"]},
+
+    resp: {nm:"Interceptor RESPONSE", sub:"3 revisiones a la salida", tech:"AWS Lambda · Cedar embebido · modo buffered",
+      lane:3, slices:["S0","S1"], cost:"Lambda $0,20/M + GB-segundo", step:5,
+      line:"Mira lo que vuelve antes de que salga: <b>enmascara datos personales</b>, bloquea herramientas no permitidas y anota el costo real.",
+      detail:["RUT chileno validado con módulo 11, correos y teléfonos, sin llamadas externas.",
+              "Acumula el stream y lo re-emite ya enmascarado.",
+              "El costo real del turno se escribe aquí, no se estima después."],
+      checks:["<b>datos personales</b>","<b>tools</b> no permitidas","<b>costo real</b>"],
+      from:["bedrock","mcp","pending"], to:["evid"]},
+
+    evid: {nm:"Evidencia", sub:"se escribe antes de responder", tech:"DynamoDB + S3 Object Lock · KMS CMK",
+      lane:5, slices:["S0","S6"], cost:"DynamoDB $1,25/M · S3 $0,023/GB", step:6,
+      line:"Quien decidió, cuánto costó y por qué. Se escribe <b>antes</b> de liberar la respuesta, en dos niveles.",
+      detail:["Índice caliente para el flujo en vivo; copia inmutable para auditoría.",
+              "Retención GOVERNANCE con denegación explícita de BypassGovernanceRetention.",
+              "El auditor ve la versión exacta de la regla que decidió."],
+      from:["deny","resp"], to:[]},
+
+    guardrails: {nm:"Guardrails", sub:"ataques de prompt", tech:"Amazon Bedrock Guardrails",
+      lane:3, aux:true, slices:["S1"], cost:"$0,15 / 1.000 unidades", step:2,
+      line:"Filtrado semántico de ataques y datos personales en el texto. Es la línea más caras de la factura a escala.",
+      detail:["Se aplica sobre el mensaje del usuario y el texto final, no sobre el turno completo.",
+              "Es el 91 % del costo a 3 M de turnos: la decisión de alcance sostiene el precio por turno."],
+      from:["req"], to:["req"]},
+
+    cedar: {nm:"Motor Cedar", sub:"reglas por política", tech:"Cedar embebido en el Lambda",
+      lane:3, aux:true, slices:["S2"], cost:"sin costo por llamada", step:2,
+      line:"El lenguaje de políticas que decide permitir o prohibir. <b>Default-deny</b>: lo que no está permitido, está negado.",
+      detail:["Forbid gana sobre permit: una prohibición no se puede compensar con otro permiso.",
+              "Corre dentro del interceptor, no como servicio aparte."],
+      from:["req"], to:["deny"]},
+
+    ddb: {nm:"DynamoDB", sub:"presupuesto y estado", tech:"Amazon DynamoDB on-demand",
+      lane:3, aux:true, slices:["S1","S5"], cost:"$1,25/M escrituras · $0,25/M lecturas", step:2,
+      line:"El estado que la puerta necesita en cada petición: presupuesto consumido, agente activo, aprobaciones pendientes.",
+      detail:["Contadores con caché en memoria de 30 segundos para no leer en cada llamada.",
+              "Es también el índice caliente de la evidencia."],
+      from:["req"], to:["req"]},
+
+    secrets: {nm:"Secrets Manager", sub:"credenciales de destino", tech:"AWS Secrets Manager",
+      lane:3, aux:true, slices:["S4"], cost:"$0,40 / secreto + $0,05/10k", step:4,
+      line:"Donde viven las credenciales de las herramientas. La puerta las inyecta en el momento de ejecutar.",
+      detail:["El agente nunca ve una contraseña productiva.",
+              "Rotación sin volver a desplegar el agente."],
+      from:["mcp"], to:["mcp"]},
+
+    kms: {nm:"KMS", sub:"llaves de cifrado", tech:"AWS KMS · CMK",
+      lane:3, aux:true, slices:["S0"], cost:"$1 / llave + $0,03/10k", step:6,
+      line:"Cifra la evidencia y las credenciales. Sin la llave, la copia inmutable es un archivo opaco.",
+      detail:["Una llave para el índice caliente y otra para la copia de auditoría.",
+              "Cada operación de cifrado se cobra: entra en el piso fijo."],
+      from:[], to:["evid"]},
+
+  };
+
+  /* la lane 5 no vive aquí: se dibuja como banda de evidencia, arriba */
+  var LANES = [
+    {n:1, name:"Tu empresa"},
+    {n:2, name:"Borde"},
+    {n:3, name:"La puerta única"},
+    {n:4, name:"Destinos"}
+  ];
+
+  var SLICES = [
+    {id:"S0", n:1, name:"Fundación",  dep:"base",
+     lights:["waf","apigw","gateway","req","resp","bedrock","evid","kms"],
+     says:"camino mínimo: borde, puerta, Bedrock y evidencia. Todavía no bloquea nada."},
+    {id:"S1", n:2, name:"Ver",        dep:"← 1",
+     lights:["guardrails","ddb","bedrock","resp","evid"],
+     says:"la plataforma ya ve todo lo que pasa, en modo descubrimiento: muestra lo que <em>se habría</em> bloqueado."},
+    {id:"S2", n:3, name:"Controlar",  dep:"← 2",
+     lights:["cedar","deny"],
+     says:"control real: reglas Cedar, bloqueo dentro del protocolo, presupuestos y apagado de emergencia."},
+    {id:"S3", n:4, name:"Identidad",  dep:"← 3",
+     lights:["usuario"],
+     says:"la persona entra a la decisión: su rol define reglas, datos visibles y límites por usuario."},
+    {id:"S4", n:5, name:"Tools por la puerta", dep:"← 3",
+     lights:["mcp","secrets"],
+     says:"las herramientas corporativas se ejecutan por la puerta y la credencial deja de vivir en el agente."},
+    {id:"S5", n:6, name:"Supervisión humana", dep:"← 5",
+     lights:["pending","ddb"],
+     says:"lo crítico espera a una persona distinta y vuelve por la misma puerta."},
+    {id:"S6", n:7, name:"Auditoría",  dep:"← 3",
+     lights:["evid"],
+     says:"la evidencia pasa a ser inmutable y demostrable ante un auditor."}
+  ];
+
+  /* ============================================================
+     RENDER · mapa
+     ============================================================ */
+  var map = document.getElementById("map");
+
+  function nodeHTML(id){
+    var p = P[id];
+    var cls = "node" + (p.aux ? " aux" : "") + (id === "gateway" ? " gate" : "") +
+              (id === "bedrock" || id === "mcp" ? " ok" : "") +
+              (id === "pending" ? " wait" : "") +
+              (id === "deny" ? " no" : "");
+    return '<button class="' + cls + '" data-id="' + id + '" type="button">' +
+             '<span class="nm">' + p.nm + '</span>' +
+             '<span class="sub">' + p.sub + '</span>' +
+             '<span class="tech">' + p.tech + '</span>' +
+           '</button>';
+  }
+
+  function pipeHTML(){
+    return '<div class="pipe">' +
+             '<div class="pipe-h">Los dos interceptores</div>' +
+             '<button type="button" data-id="req"><span class="pn">2</span>' +
+               '<span class="st">Al entrar<span class="sd">5 preguntas</span></span></button>' +
+             '<button type="button" data-id="resp"><span class="pn">5</span>' +
+               '<span class="st">Al salir<span class="sd">3 revisiones</span></span></button>' +
+           '</div>';
+  }
+
+  LANES.forEach(function(lane){
+    var ids = Object.keys(P).filter(function(k){ return P[k].lane === lane.n; });
+    var el = document.createElement("div");
+    el.className = "lane";
+    el.innerHTML = '<div class="lane-h"><em>' + lane.n + '</em>' + lane.name + '</div><div class="row"></div>';
+    var row = el.querySelector(".row");
+
+    ids.forEach(function(id){
+      if (id === "req") {
+        row.insertAdjacentHTML("beforeend", pipeHTML());
+      } else if (id === "evid" || id === "resp") {
+        /* evid va en su banda; resp ya vive dentro del pipe */
+      } else {
+        row.insertAdjacentHTML("beforeend", nodeHTML(id));
+      }
+    });
+    map.appendChild(el);
+  });
+
+  /* la banda de evidencia reutiliza la misma ficha */
+  var evRow = document.getElementById("evidenceRow");
+  evRow.innerHTML =
+    '<button class="node aux" data-id="evid" type="button">' +
+      '<span class="nm">DynamoDB · índice caliente</span>' +
+      '<span class="sub">flujo en vivo &lt; 3 s · forense &lt; 5 s</span>' +
+    '</button>' +
+    '<button class="node aux" data-id="evid" type="button">' +
+      '<span class="nm">S3 Object Lock · copia inmutable</span>' +
+      '<span class="sub">no se puede borrar ni sobrescribir</span>' +
+    '</button>';
+
+  /* ============================================================
+     RENDER · plan
+     ============================================================ */
+  var grid = document.getElementById("planGrid");
+  SLICES.forEach(function(s){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "slice";
+    b.setAttribute("data-slice", s.id);
+    b.innerHTML = '<span class="sid">' + s.id + '</span>' +
+                  '<span class="sn">' + s.n + ' · ' + s.name + '</span>' +
+                  '<span class="dep">' + s.dep + '</span>';
+    grid.appendChild(b);
+  });
+
+  /* ============================================================
+  /* ============================================================
+     ESTADO · slice
+     ============================================================ */
+  var sel   = document.getElementById("sliceSelect");
+  var says  = document.getElementById("sliceSays");
+  var body  = document.body;
+
+  function reqsFor(id){
+    /* un slice arrastra lo que necesita para funcionar */
+    var order = {S0:0,S1:1,S2:2,S3:3,S4:4,S5:5,S6:6};
+    var base = {S0:["S0"],S1:["S0","S1"],S2:["S0","S1","S2"],S3:["S0","S1","S2","S3"],
+                S4:["S0","S1","S2","S4"],S5:["S0","S1","S2","S4","S5"],S6:["S0","S1","S2","S6"]};
+    return base[id] || [id];
+  }
+
+  function applySlice(id){
+    var active = id === "all" ? null : reqsFor(id);
+    body.classList.toggle("plan-mode", !!active);
+    Object.keys(P).forEach(function(k){
+      var on = !!active && P[k].slices.some(function(s){ return active.indexOf(s) !== -1; });
+      document.querySelectorAll('[data-id="' + k + '"]').forEach(function(el){
+        el.classList.toggle("on", on);
+      });
+    });
+    document.querySelectorAll(".slice").forEach(function(c){
+      c.classList.toggle("active", c.getAttribute("data-slice") === id);
+    });
+    var s = SLICES.filter(function(x){ return x.id === id; })[0];
+    var total = Object.keys(P).length - 1; /* el interceptor de salida va dentro del pipe */
+    says.innerHTML = s
+      ? '<b>Slice ' + s.n + ' · ' + s.name + '.</b> Enciende ' + s.lights.length +
+        ' piezas: ' + s.says
+      : '<b>Todo construido.</b> Las ' + total + ' piezas del mapa, encendidas a la vez. Elige un slice para ver el sistema por etapas.';
+    sel.value = id;
+  }
+
+  /* ============================================================
+     ZOOM · macro → pieza
+     ============================================================ */
+  var macro = document.getElementById("view-macro");
+  var zoom  = document.getElementById("view-zoom");
+
+  function neighbors(id, dir){
+    var p = P[id];
+    var list = dir === "from" ? p.from : p.to;
+    return list.filter(function(k){ return P[k]; });
+  }
+
+  function zcard(id, rel){
+    var p = P[id];
+    return '<button class="z-card" type="button" data-goto="' + id + '">' +
+             '<span class="nm">' + p.nm + '</span>' +
+             '<span class="sub">' + p.sub + '</span>' +
+             '<span class="rel">' + rel + '</span>' +
+           '</button>';
+  }
+
+  function openZoom(id){
+    var p = P[id];
+    if (!p) return;
+
+    var back   = neighbors(id, "from");
+    var forth  = neighbors(id, "to");
+    var slices = p.slices.map(function(s){
+      return '<button class="z-slice" type="button" data-slice="' + s + '">' + s + '</button>';
+    }).join("");
+
+    var left = back.length
+      ? '<div class="lbl">Viene de</div>' + back.map(function(k){ return zcard(k, "antes"); }).join("")
+      : '<div class="lbl">Origen</div><div class="z-card" style="cursor:default"><span class="nm">Nada aguas arriba</span><span class="sub">es el primer punto del recorrido</span></div>';
+
+    var right = forth.length
+      ? '<div class="lbl">Pasa a</div>' + forth.map(function(k){ return zcard(k, "después"); }).join("")
+      : '<div class="lbl">Fin</div><div class="z-card" style="cursor:default"><span class="nm">Nada aguas abajo</span><span class="sub">aquí termina el recorrido</span></div>';
+
+    var checks = p.checks
+      ? '<div class="z-checks">' + p.checks.map(function(c){ return '<span class="z-check">' + c + '</span>'; }).join("") + '</div>'
+      : "";
+
+    zoom.innerHTML =
+      '<div class="z-bar">' +
+        '<button class="z-back" type="button" id="zBack">← Volver al mapa</button>' +
+        '<span class="z-crumb">El mapa / ' + p.nm + '</span>' +
+      '</div>' +
+      '<div class="z-stage">' +
+        '<div class="z-col">' + left + '</div>' +
+        '<div class="z-focus">' +
+          '<div class="kicker">Pieza ' + (p.aux ? "de apoyo" : "del recorrido") + '</div>' +
+          '<h3>' + p.nm + '</h3>' +
+          '<p class="z-tech">' + p.tech + '</p>' +
+          '<p class="z-line">' + p.line + '</p>' +
+          '<ul class="z-detail">' + p.detail.map(function(d){ return '<li>' + d + '</li>'; }).join("") + '</ul>' +
+          checks +
+          '<div class="z-meta">' +
+            '<div class="m"><span class="k">Se enciende en</span><span class="z-slices">' + slices + '</span></div>' +
+            '<div class="m"><span class="k">Costo</span><span class="v mono">' + p.cost + '</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="z-col right">' + right + '</div>' +
+      '</div>';
+
+    macro.style.display = "none";
+    zoom.style.display = "block";
+    zoom.setAttribute("data-piece", id);
+    body.classList.add("zoom-open");
+    window.scrollTo({ top: document.getElementById("mapa").offsetTop - 60, behavior: "smooth" });
+  }
+
+  function closeZoom(){
+    zoom.style.display = "none";
+    macro.style.display = "block";
+    zoom.innerHTML = "";
+    zoom.removeAttribute("data-piece");
+    body.classList.remove("zoom-open");
+  }
+
+  /* ============================================================
+     EVENTOS
+     ============================================================ */
+  map.addEventListener("click", function(e){
+    var b = e.target.closest("[data-id]");
+    if (b) openZoom(b.getAttribute("data-id"));
+  });
+  evRow.addEventListener("click", function(e){
+    var b = e.target.closest("[data-id]");
+    if (b) openZoom(b.getAttribute("data-id"));
+  });
+  zoom.addEventListener("click", function(e){
+    if (e.target.closest("#zBack")) { closeZoom(); return; }
+    var g = e.target.closest("[data-goto]");
+    if (g) { openZoom(g.getAttribute("data-goto")); return; }
+    var s = e.target.closest("[data-slice]");
+    if (s) {
+      closeZoom();
+      applySlice(s.getAttribute("data-slice"));
+      document.getElementById("plan").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && zoom.style.display === "block") closeZoom();
+  });
+
+  sel.addEventListener("change", function(){ applySlice(sel.value); });
+  grid.addEventListener("click", function(e){
+    var b = e.target.closest("[data-slice]");
+    if (!b) return;
+    var s = b.getAttribute("data-slice");
+    applySlice(sel.value === s ? "all" : s);
+  });
+
+  document.getElementById("techToggle").addEventListener("change", function(e){
+    body.classList.toggle("show-tech", e.target.checked);
+  });
+
+  /* ============================================================
+     ENLACES PROFUNDOS · #slice-3 · #pieza-guardrails · #zoom-req
+     ============================================================ */
+  function fromHash(){
+    var h = (location.hash || "").replace("#", "");
+    if (!h) return;
+    var m = h.match(/^(?:slice|corte)-(\d)$/);
+    if (m) {
+      var s = SLICES[Number(m[1]) - 1];
+      if (s) applySlice(s.id);
+      return;
+    }
+    if (/^S[0-6]$/.test(h)) { applySlice(h); return; }
+    if (/^pieza-/.test(h)) {
+      var key = h.replace("pieza-", "");
+      if (P[key]) { openZoom(key); return; }
+    }
+    if (/^zoom-/.test(h)) {
+      var z = h.replace("zoom-", "");
+      if (P[z]) openZoom(z);
+    }
+  }
+
+  applySlice("all");
+  window.addEventListener("hashchange", fromHash);
+  if (location.hash) fromHash();
+
+  /* piezas del mapa para enlazar desde el plan */
+  window.__piezas = Object.keys(P);
+})();
+</script>
+</body>
+</html>
