@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arquitectura AWS auditada · AI Governance Platform</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#10233d;background:#f5f8fc;font-size:15px}
+*{box-sizing:border-box}body{margin:0}header{background:#0f2341;color:white;padding:32px max(24px,calc((100% - 1120px)/2))}
+header p{max-width:950px;line-height:1.6;color:#d4e1f5}h1{font-size:clamp(25px,4vw,39px);margin:10px 0}h2{font-size:22px;margin:28px 0 12px}h3{font-size:17px;margin:15px 0 10px}
+main{max-width:1170px;margin:auto;padding:24px}nav{display:flex;flex-wrap:wrap;gap:12px}a{color:#1261ad}header a{color:#bcdcff}
+.panel{background:white;border:1px solid #dae4f0;border-radius:12px;padding:22px;margin:18px 0;box-shadow:0 4px 18px #0c31530b}
+.notice{background:#fff9e9;border-left:4px solid #b67c1e;padding:14px;border-radius:5px;line-height:1.55}
+.small{font-size:13px;color:#53647b;line-height:1.5}.lead{font-size:16px;line-height:1.7}
+.diagram{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.node{border:1px solid #b7cde6;border-radius:9px;background:#f5faff;padding:14px;line-height:1.5}
+.node strong{display:block;margin-bottom:5px;color:#12345b}.node small{color:#486582}
+.node.full{grid-column:1/-1;text-align:center}.node.mid{grid-column:2/3}
+.node.implemented{border-color:#90b8a0;background:#f1faf4}.node.goal{border-color:#d5b57b;background:#fffaf0}
+.rail{grid-column:1/-1;display:flex;justify-content:center;font-size:22px;color:#6e8baa}
+.chips{display:flex;gap:10px;flex-wrap:wrap}.chip{background:#e9f1fb;padding:7px 11px;border-radius:999px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:12px 10px;border-bottom:1px solid #e2e9f1;text-align:left;vertical-align:top}th{background:#f1f5fb}td:last-child,th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.scroller{overflow-x:auto}label{display:block;font-weight:600;font-size:13px;margin-bottom:7px}
+input,select{width:100%;border:1px solid #adbed0;border-radius:8px;padding:10px;font-size:15px;background:white}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.controls>div{min-width:0}
+.metric{font-size:32px;font-weight:750;font-variant-numeric:tabular-nums;color:#105d41}.metricLine{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline}
+code{background:#eff4fa;padding:2px 4px;border-radius:3px}
+footer{font-size:13px;color:#5b6b82;padding:16px 0 35px}ul{line-height:1.75}
+@media(max-width:700px){.diagram{grid-template-columns:1fr}.node.mid{grid-column:1}.controls{grid-template-columns:1fr 1fr}.node.full,.rail{grid-column:1}}
+@media(max-width:420px){.controls{grid-template-columns:1fr}th,td{padding:9px 6px;font-size:12px}}
+</style>
+</head>
+<body>
+<header><nav><a href="../index.html">Inicio</a><a href="./arquitecturas-por-conexion.html">4 arquitecturas desde insumo/</a><a href="./arquitectura.html">Mapa AWS original</a><a href="../docs/arquitectura-aws-auditada.md">Informe técnico y fuentes</a></nav>
+<h1>Arquitectura AWS auditada</h1><p>Plataforma de gobernanza de agentes IA · revisión del 8 de noviembre de 2026. Compara decisiones, resultados de spikes y CDK de la rama <code>u13-s0-otlp</code> con la arquitectura publicada. No implica que S1–S6 estén operativos ni desplegados.</p></header>
+<main>
+<section class="panel"><p class="notice"><b>Esta página examina decisiones de implementación y costos.</b> La explicación conceptual del producto se presenta por separado, en <a href="arquitecturas-por-conexion.html">las cuatro arquitecturas de conexión A, A+C, A+B y A+B+C</a>, redactadas exclusivamente desde insumo/.</p></section>
+<section class="panel"><h2>Lo que cambia en el diagrama</h2>
+<p class="lead">El camino de inferencia real incluye una <b>Lambda fachada entre API Gateway y AgentCore Gateway</b> (SP-01b), tres Lambdas por petición (fachada, REQUEST, RESPONSE), dos APIs REST y dos ACL de WAF en el producto. La evidencia primero se escribe en DynamoDB y después se copia asíncronamente a S3 Object Lock.</p>
+<div class="notice"><b>Importante:</b> los bloques verdes están definidos en IaC en la rama inspeccionada; amarillo representa capacidades objetivo o sujetas a pruebas. Tener un recurso en CDK no demuestra que la cuenta esté desplegada ni que una unidad AI-DLC haya pasado toda su validación.</div>
+</section>
+<section class="panel"><h2>1. Plano de datos: petición de inferencia</h2>
+<div class="chips"><span class="chip">A · Inferencia (obligatoria)</span><span class="chip">B · Tools MCP (opcional)</span><span class="chip">C · JWT usuario (opcional)</span></div>
+<div class="diagram" style="margin-top:18px">
+<div class="node full">Agente externo · SDK OpenAI <code>base_url</code> + <code>agent_token</code><br><small>Conexión C opcional: <code>X-Gov-User-Token</code>. El agente puede usar tools fuera de B, sin control de ejecución.</small></div>
+<div class="rail">↓</div>
+<div class="node implemented"><strong>WAF fachada</strong>1 ACL, 1 regla de tasa en CDK</div>
+<div class="node implemented"><strong>REST API Gateway</strong>API regional de inferencia/MCP</div>
+<div class="node implemented"><strong>Lambda fachada</strong>Cabeceras de respuesta, SigV4, timeout</div>
+<div class="rail">↓</div>
+<div class="node full implemented"><strong>AgentCore Gateway</strong><small>Ingreso AWS_IAM limitado a rol de fachada por resource policy. Interceptores Lambda síncronos, targets de inferencia y MCP.</small></div>
+<div class="rail">↓</div>
+<div class="node implemented"><strong>REQUEST interceptor</strong>Token, estado, trazabilidad. Cedar/guardrail/cuotas para siguientes fases.</div>
+<div class="node implemented"><strong>Inference targets</strong>Bedrock-mantle o simulado opcional. Streaming reconstruido en buffer.</div>
+<div class="node goal"><strong>MCP targets (B)</strong>Lambda / OpenAPI con AgentCore Identity. Aprobaciones de negocio pendientes de verificación.</div>
+<div class="rail">↓</div>
+<div class="node full implemented"><strong>RESPONSE interceptor</strong><small>Correlación por REQUEST_ID, cierre y costos/evidencia. En fases siguientes: política de intenciones, enmascaramiento de salida y guardrail.</small></div>
+<div class="rail">↓</div>
+<div class="node implemented"><strong>DynamoDB</strong>Cuatro tablas on-demand, índices y DynamoDB Streams</div>
+<div class="node implemented"><strong>S3 Object Lock GOVERNANCE</strong>Copia asíncrona; KMS CMK; retención</div>
+<div class="node implemented"><strong>SQS + EventBridge + Lambda</strong>Reintentos de copia y barrido; no son gratis</div>
+</div>
+<h3>Plano de administración, seguridad y operaciones</h3>
+<div class="diagram">
+<div class="node implemented"><strong>Consola</strong>React/Cloudscape · CloudFront + S3 privado</div>
+<div class="node implemented"><strong>API de control</strong>Otro REST Gateway, otro WAF, Cognito User Pool, Lambda</div>
+<div class="node implemented"><strong>Monitoreo</strong>CloudWatch, alarmas, SNS; en U13 OTLP, X-Ray y cola de fallos</div>
+<div class="node goal"><strong>Autorización declarativa</strong>Cedar, presets, shadow, modelo/permisos y límites</div>
+<div class="node goal"><strong>Supervisión humana</strong>Separación de funciones, idempotencia, ejecución por puerta</div>
+<div class="node goal"><strong>Auditoría forense</strong>Consulta multivariable &lt;5 s y versiones exactas de políticas</div>
+</div></section>
+<section class="panel"><h2>2. Calculadora ilustrativa de costos AWS</h2>
+<p class="small">USD / mes en us-east-1, demanda a pedido, sin impuestos ni free tier. No es precio contractual ni AWS Cost and Usage Report. Los tokens Bedrock se muestran con los valores registrados en SP-03 (29 oct. 2026). El componente Gateway usa $5/M como hipótesis a confirmar para inferencia. Separamos expresamente servicios no presupuestados.</p>
+<div class="controls">
+<div><label for="n">Solicitudes de inferencia / mes</label><input id="n" type="number" min="0" step="1000" value="300000"></div>
+<div><label for="model">Modelo Bedrock</label><select id="model"><option value="20">gpt-oss-20b · SP-03</option><option value="120">gpt-oss-120b · SP-03</option><option value="none">Simulado · sin tokens Bedrock</option></select></div>
+<div><label for="guard">Guardrail de contenido (unidades / solicitud)</label><select id="guard"><option value="0">0 · sin filtro facturado</option><option value="1">1 unidad</option><option value="3" selected>3 unidades</option><option value="6">6 unidades</option></select></div>
+<div><label for="inputTokens">Tokens de entrada por solicitud</label><input id="inputTokens" type="number" min="0" step="100" value="1000"></div>
+<div><label for="outputTokens">Tokens de salida por solicitud</label><input id="outputTokens" type="number" min="0" step="100" value="300"></div>
+<div><label for="lambdaTime">Duración fachada (segundos)</label><input id="lambdaTime" type="number" min="0" step="0.1" value="3"></div>
+<div><label for="wru">WRU DynamoDB por solicitud (incluye índices)</label><input id="wru" type="number" min="0" step="1" value="4"></div>
+<div><label for="rru">RRU DynamoDB por solicitud</label><input id="rru" type="number" min="0" step="1" value="2"></div>
+<div><label for="evidence">Evidencia en S3 (KiB por solicitud)</label><input id="evidence" type="number" min="0" step="1" value="4"></div>
+<div><label for="logs">Logs ingeridos por solicitud (KiB)</label><input id="logs" type="number" min="0" step="0.1" value="2"></div>
+<div><label for="api">Invocaciones de API administrativa / mes</label><input id="api" type="number" min="0" step="1000" value="30000"></div>
+<div><label for="months">Retención S3: meses equivalentes (estado estable)</label><input id="months" type="number" min="1" step="1" value="1"></div>
+</div>
+<div style="margin:20px 0"><div class="small">Total estimado de partidas incluidas (sin observabilidad completa ni tráfico MCP)</div><div class="metricLine"><div class="metric" id="total">—</div><span class="small" id="per">—</span></div></div>
+<div class="scroller"><table><thead><tr><th>Componente</th><th>Hipótesis</th><th>USD/mes</th></tr></thead><tbody id="breakdown"></tbody></table></div>
+<p class="notice"><b>Exclusiones críticas:</b> tráfico y targets MCP; Step Functions/scheduler u operaciones HITL; cualquier filtro Guardrails adicional; solicitudes reales y almacenamiento DynamoDB/GSIs; KMS por solicitudes; CloudWatch métricas y alarmas; X-Ray/OTLP; SQS; SNS; Cognito MAU; secretos adicionales; reintentos; storage de logs; egreso real y transferencias entre regiones/AZ; cuota de API Gateway; impuestos. El escenario asume tres Lambdas de 256 MiB por solicitud, dos interceptores de 0,15 s cada uno, y almacena un mes equivalente de evidencia.</p>
+<h3>Precios y facturación</h3>
+<ul>
+<li><a href="https://aws.amazon.com/waf/pricing/">WAF</a> · <a href="https://aws.amazon.com/api-gateway/pricing/">API Gateway</a> · <a href="https://aws.amazon.com/bedrock/agentcore/pricing/">AgentCore</a> · <a href="https://aws.amazon.com/lambda/pricing/">Lambda</a>.</li>
+<li><a href="https://aws.amazon.com/dynamodb/pricing/">DynamoDB</a> · <a href="https://aws.amazon.com/s3/pricing/">S3</a> · <a href="https://aws.amazon.com/bedrock/pricing/">Bedrock</a> · <a href="https://aws.amazon.com/cloudwatch/pricing/">CloudWatch</a> · <a href="https://aws.amazon.com/kms/pricing/">KMS</a>.</li>
+<li><a href="https://calculator.aws/">AWS Pricing Calculator</a> · <a href="https://aws.amazon.com/aws-cost-management/aws-cost-explorer/">Cost Explorer</a>. Contrastar con la configuración de cada cuenta y fecha.</li>
+</ul>
+</section>
+<section class="panel"><h2>3. Qué faltaría antes de aprobar esta arquitectura</h2>
+<ul><li>Revalidar streaming de salida y su timeout de 28–29 s para modelos y respuestas largas.</li><li>Probar que no es posible sortear la fachada ni derivar información personal desde evidencia/logs.</li><li>Medir costo real de cada transacción, WRUs/RRUs, conteo de invocaciones Gateway y unidades facturadas de Guardrails.</li><li>Completar cobertura de conexiones A, A+B, A+C y A+B+C, sin etiquetar como «gobernada» la ejecución externa de tools.</li><li>Comprobar falla cerrada en activo, fail-open delimitado de descubrimiento, Kill Switch y latencias de propagación.</li><li>Verificar capacidad real S1–S6 y la condición U13 con pruebas, más allá de existencia de recursos en IaC.</li></ul>
+<p>Lectura completa, comparación y referencias de código: <a href="../docs/arquitectura-aws-auditada.md">informe de arquitectura AWS auditada</a>.</p></section>
+<footer>Revisión técnica de documentación · 2026-11-08 · No modifica los requisitos oficiales ni implica que los cambios estén mergeados.</footer>
+</main>
+<script>
+const els=["n","model","guard","inputTokens","outputTokens","lambdaTime","wru","rru","evidence","logs","api","months"];
+const v=id=>Math.max(0,Number(document.getElementById(id).value)||0);
+const money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:2}).format(n);
+function compute(){
+const n=v("n"),api=v("api"),model=document.getElementById("model").value,g=v("guard"),i=v("inputTokens"),o=v("outputTokens");
+const kib=1024,GB=1024*1024*1024;
+const wru=v("wru"),rru=v("rru"),e=v("evidence"),log=v("logs"),months=v("months");
+const modelRate=model==="120"?[0.15,0.60]:model==="20"?[0.07,0.30]:[0,0];
+const lines=[
+["WAF","2 ACL + 3 reglas + tráfico fachada/API",13+(n+api)*.60/1e6],
+["API Gateway REST","Puerta + API administración; sin transferencia",3.5*(n+api)/1e6],
+["AgentCore Gateway","Hipótesis $5/M: confirmar facturación del endpoint",5*n/1e6],
+["Lambda","Fachada 256 MiB × duración; 2 interceptores 0.15 s",n*(3*.20/1e6+(.25*(v("lambdaTime")+.30))*0.0000166667)],
+["DynamoDB","WRU y RRU declarados, sin storage/GSI adicional",n*(wru*.625+rru*.125)/1e6],
+["S3","1 PUT / petición + almacenamiento histórico equivalente",n*5/1e6+n*e*kib/GB*.023*months],
+["Bedrock Guardrails","Unidades del filtro de contenido, precio variable",n*g*.15/1000],
+["Bedrock modelo","Tokens referenciales SP-03, no factura de AWS",n*(i*modelRate[0]+o*modelRate[1])/1e6],
+["CloudWatch Logs","Hipótesis ingestión a $0.50/GB, otras partidas excluidas",n*log*kib/GB*.50],
+["KMS + Secrets Manager","1 clave + 1 secreto activo; excluye solicitudes",1.40],
+];
+let sum=0;document.getElementById("breakdown").innerHTML="";
+for(const [name,desc,amount] of lines){sum+=amount;const tr=document.createElement("tr");for(const t of [name,desc,money(amount)]){const td=document.createElement("td");td.textContent=t;tr.appendChild(td)}document.getElementById("breakdown").appendChild(tr)}
+document.getElementById("total").textContent=money(sum);document.getElementById("per").textContent=n?money(sum/n)+" / solicitud (incluye costos fijos)":"sin solicitudes";
+}
+els.forEach(id=>document.getElementById(id).addEventListener("input",compute));compute();
+</script>
+</body></html>

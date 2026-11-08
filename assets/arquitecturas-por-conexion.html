@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Cuatro arquitecturas conceptuales de AI Governance Platform, según las conexiones A, A+C, A+B y A+B+C. Alcance, límites y controles desde insumo.">
+<title>Cuatro arquitecturas de conexión · Plataforma de gobernanza de agentes IA</title>
+<style>
+:root{--ink:#162840;--muted:#53667e;--bg:#f5f8fc;--paper:#fff;--line:#d9e3ed;--a:#2365be;--b:#187d65;--c:#784cc7;--danger:#a85c24;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.48}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:80px}body{margin:0}a{color:#1459a1}a:hover{text-decoration-thickness:2px}a:focus-visible{outline:3px solid #ffbd4a;outline-offset:3px}
+.wrap{max-width:1170px;margin:auto;padding:0 24px}header.hero{background:#132b47;color:white;padding:42px 0 36px;border-bottom:6px solid #7da5d9}
+.eyebrow{color:#536d8c;text-transform:uppercase;letter-spacing:.105em;font-size:12px;font-weight:750}.hero .eyebrow{color:#accbe9}
+.hero h1{font-size:clamp(29px,4.2vw,48px);max-width:840px;line-height:1.11;letter-spacing:-.025em;margin:14px 0 19px}
+.hero p{max-width:880px;color:#d5e2f3;font-size:17px;line-height:1.62;margin:0}
+.toplinks{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:28px}.toplinks a{color:#d7e9ff}
+.quick{background:var(--paper);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:8;box-shadow:0 4px 12px #0920380d}
+.quick .wrap{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding-top:9px;padding-bottom:9px}
+.quick a{display:inline-block;text-decoration:none;font-weight:700;font-size:13px;padding:8px 12px;border-radius:8px;background:#edf3fb;color:#1b4169}
+.quick a:hover,.quick a:focus{background:#dce9fb}
+main{padding-bottom:40px}.intro{padding:30px 0 12px}.intro h2,.comparison h2,.sources h2{font-size:25px;letter-spacing:-.012em;margin:6px 0 12px}
+.intro p{max-width:960px;font-size:16px;color:#33485f;line-height:1.65}
+.sibling{display:grid;grid-template-columns:1fr 2fr 1fr;gap:14px;margin:18px 0 14px;align-items:center}
+.sibling .cell{background:white;border:1px solid #cddcea;padding:18px;border-radius:12px;text-align:center}
+.sibling .cell strong{font-size:19px}.sibling .cell p{margin:5px 0 0;font-size:12px}
+.sibling .middle{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.sibling .middle .cell{background:#f0f8ff}
+.legend{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0}.legend span{font-size:12px;padding:6px 10px;border:1px solid #d6dfeb;border-radius:9px;background:white}
+.noteCall{padding:14px 18px;background:#fff8e9;border-left:4px solid #c18a24;border-radius:6px;color:#594223;line-height:1.55;margin:18px 0}
+.scenario{border:1px solid var(--line);border-radius:16px;background:var(--paper);margin:26px auto;overflow:hidden;box-shadow:0 7px 26px #1628400b}
+.caseHead{padding:24px 25px;background:linear-gradient(110deg,#f1f6fc,#fff);border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
+.caseHead h2{font-size:clamp(23px,3vw,29px);line-height:1.24;margin:5px 0 9px}.caseHead p{line-height:1.58;color:#34485f;margin:0;max-width:830px}
+.flags{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}.flag{padding:5px 10px;font-size:12px;font-weight:650;border-radius:8px}.flag.on{background:#e8f3ee;color:#146348}.flag.off{background:#f1f1f4;color:#59616f}
+.score{text-align:center;min-width:145px;padding:13px 17px;background:white;border:1px solid #d9e7f1;border-radius:12px}
+.scoreNum{font-weight:800;font-size:35px;color:#13588f;font-variant-numeric:tabular-nums;line-height:1.2}.score strong{display:block;font-size:12px}.score small{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+.diagram{padding:18px 25px 21px;margin:0}.diagram figcaption{font-weight:750;font-size:15px;margin-bottom:15px}
+.tag{background:#e5f1ff;color:#174f99;border-radius:5px;padding:4px 8px;margin-right:6px}
+.flowPrimary,.route{display:flex;align-items:stretch;justify-content:center;gap:7px}
+.item{display:flex;flex:1 1 0;flex-direction:column;justify-content:center;min-width:0;text-align:center;border-radius:9px;padding:11px 9px;border:1px solid #cdd8e8;font-weight:760;font-size:14px;line-height:1.38}
+.item small{font-weight:450;font-size:11px;margin-top:5px;line-height:1.4}
+.item.external,.item.client{background:#f1f4f8;border-color:#c6d0dc}.item.perimeter{background:#e6f1ff;border:2px solid #8bb6ed;color:#113c70}
+.item.target{background:#edf8f3;border-color:#9fcec0;color:#154e3e}
+.item.mutedBox{background:#f0f1f4;color:#4f596b}
+.item.outsideBox{background:#fff4eb;color:#763a1d;border:1px dashed #c78b5d}
+.arrow{font-size:21px;color:#66829b;align-self:center;min-width:22px;text-align:center;flex:0 0 22px}
+.arrow.outside{color:#af642c}.arrow.muted{color:#8a95a6}
+.flowInner{background:#f5faff;border:1px dashed #b7d2ee;margin:12px 0 20px;padding:12px 15px;font-size:13px;line-height:1.6;border-radius:8px}
+.flowInner strong{color:#164d85}.flowInner span{font-weight:650}
+.tracks{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.track{border:1px solid #d7e0e9;border-radius:11px;padding:13px;background:#fbfcfe}
+.track.connected{border-color:#b4dacc}.track.missing{border-color:#e0daca;background:#fdfcf9}
+.trackHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 14px;font-size:13px}
+.trackHead span{background:#e5ecef;color:#3f5c61;padding:4px 8px;border-radius:7px;font-size:11px;text-align:right}
+.track .route{min-height:76px}.track .item{font-size:12px;padding:8px 6px}.track .item small{font-size:10px}
+.track .arrow{font-size:17px;min-width:17px;flex-basis:17px}
+.track p.note{font-size:12px;line-height:1.5;margin:12px 1px 0;color:#475b70}
+.common{margin-top:15px;padding:13px 16px;border:1px solid #cdd7e3;background:#f2f5f9;border-radius:9px;display:flex;gap:13px;align-items:center}
+.commonMark{font-size:25px;color:#627c99}
+.common strong{display:block;font-size:13px;margin-bottom:4px}.common span{display:block;color:#4b5e70;font-size:12px;line-height:1.53}
+.outcomes{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:0 25px 16px}
+.gain,.limit{padding:15px 17px;border-radius:10px}.gain{background:#f0f8f4;border:1px solid #c6e2d4}.limit{background:#fff8ed;border:1px solid #efd9b5}
+.outcomes h3{font-size:14px;margin:0 0 8px}.outcomes ul{margin:0;padding-left:20px;font-size:13px;line-height:1.65}.outcomes li+li{margin-top:5px}
+.example{margin:0 25px 16px;border-left:3px solid #7ca4d4;background:#f6f9fd;padding:12px 15px}
+.example strong{font-size:12px;text-transform:uppercase;letter-spacing:.045em}.example p{font-size:13px;margin:5px 0 0;color:#354b64;line-height:1.65}
+.caseEnd{padding:0 25px 21px;display:flex;gap:18px;font-size:13px}
+.comparison,.sources{background:white;border:1px solid var(--line);padding:22px 25px;margin:26px auto;border-radius:15px}
+.scroller{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px;min-width:700px}
+th,td{padding:12px 11px;border-bottom:1px solid #e1e8f0;text-align:center}th:first-child,td:first-child{text-align:left}
+th{background:#f1f5fa}tbody tr:hover{background:#f7fafe}
+.s{font-weight:750;color:#17694f}.no{color:#6d747f}.conditional{color:#83531d}
+.statline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stat{padding:15px;background:#f4f8fc;border:1px solid #dbe5ef;border-radius:9px;text-align:center}
+.stat b{display:block;font-size:24px;color:#144f88}.stat span{font-size:12px}
+.detail{margin-top:14px;color:#56677b;font-size:13px;line-height:1.65}
+.sources ul{line-height:1.78;padding-left:23px}.sources li{margin-bottom:5px}
+footer{font-size:12px;color:#63748b;padding:14px 0 45px}
+@media(max-width:810px){.sibling{grid-template-columns:1fr}.sibling .middle{grid-template-columns:1fr 1fr}.tracks{grid-template-columns:1fr}.outcomes{grid-template-columns:1fr}.caseHead{grid-template-columns:1fr}.score{text-align:left;min-width:unset;display:flex;gap:12px;align-items:center}.score strong{display:inline}.flowPrimary .item small{font-size:9px}.item{font-size:12px}.statline{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.wrap{padding:0 14px}.hero{padding-top:25px!important}.scenario{border-radius:10px}.caseHead,.diagram,.comparison,.sources{padding-left:15px;padding-right:15px}.outcomes{padding-left:15px;padding-right:15px}.example{margin-left:15px;margin-right:15px}.caseEnd{padding-left:15px}.flowPrimary{display:flex;flex-direction:column;gap:5px}.flowPrimary .item{min-height:70px;width:100%}.flowPrimary .arrow{transform:rotate(90deg);font-size:18px;min-height:24px}.route.compact .item{font-size:11px}.statline{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{.quick{position:static}.scenario{break-inside:avoid-page}.hero{background:#fff;color:#111}.hero p,.hero .eyebrow{color:#333}}
+</style>
+</head>
+<body id="arriba">
+<a class="skip" href="#contenido" style="position:absolute;top:-60px;left:10px;background:white;padding:8px;z-index:100" onfocus="this.style.top='10px'" onblur="this.style.top='-60px'">Saltar al contenido</a>
+<header class="hero"><div class="wrap">
+<nav class="toplinks" aria-label="Otros documentos"><a href="../index.html">Inicio del proyecto</a><a href="arquitectura.html">Arquitectura AWS publicada</a><a href="../docs/arquitecturas-por-conexion.md">Documento conceptual y fuentes</a></nav>
+<div class="eyebrow">Arquitectura del producto · Fuente de verdad: insumo/</div><h1>Una plataforma.<br>Cuatro formas de conectarla.</h1>
+<p>El perímetro de gobernanza no cambia de producto cuando se integra una herramienta o se incorpora la identidad del usuario. Cambia <b>qué información recibe</b>, <b>qué acción puede detener</b> y <b>qué queda fuera</b>.</p>
+</div></header>
+<nav class="quick" aria-label="Ir a una arquitectura"><div class="wrap"><a href="#a">A · Inferencia</a><a href="#ac">A+C · Identidad</a><a href="#ab">A+B · MCP</a><a href="#abc">A+B+C · Completa</a><a href="#comparar">Comparar</a></div></nav>
+<main class="wrap" id="contenido">
+<section class="intro" aria-labelledby="introtitle">
+<div class="eyebrow">Modelo de conexión</div><h2 id="introtitle">B y C no son etapas secuenciales</h2>
+<p>La conexión <b>A</b> es obligatoria: el agente cambia <code>BASE_URL</code> y <code>agent_token</code> para que la inferencia atraviese la Puerta Única. <b>B</b> incorpora la ejecución de tools por MCP. <b>C</b> incorpora el JWT del usuario en las solicitudes. B y C son independientes y admiten adopción parcial.</p>
+<div class="sibling" aria-label="Mapa de combinaciones: desde A se puede agregar indistintamente B o C; ambas se combinan en A+B+C.">
+<div class="cell"><strong>A</strong><p>Base · modelo e intención</p></div>
+<div class="middle"><div class="cell"><strong>A+C</strong><p>JWT y roles, sin tools MCP</p></div><div class="cell"><strong>A+B</strong><p>Tools MCP, sin usuario verificado</p></div></div>
+<div class="cell"><strong>A+B+C</strong><p>Modelo, tools y persona</p></div>
+</div>
+<div class="legend"><span><b>A</b> canal de inferencia</span><span><b>B</b> canal MCP</span><span><b>C</b> identidad reenviada</span><span>Tool fuera de la puerta = ejecución no gobernada</span></div>
+<p class="noteCall"><b>Dos límites que se conservan:</b> el salto usuario → agente es responsabilidad del cliente. Una tool que se ejecuta fuera de MCP no está gobernada aunque la plataforma haya visto un <code>tool_call</code> del modelo. El diagrama habla de la <b>arquitectura objetivo definida en insumo</b>, no del código implementado hoy.</p>
+</section>
+<article class="scenario" id="a" aria-labelledby="title-a">
+ <header class="caseHead"><div><div class="eyebrow">Arquitectura 1 de 4 · conexión A</div><h2 id="title-a">Inferencia bajo gobierno</h2><p>El agente cambia el endpoint del modelo y usa su agent_token. La puerta ve las solicitudes al modelo, su respuesta y las intenciones de invocar herramientas, pero no puede gobernar una ejecución que el agente realiza por otro canal.</p><div class="flags"><span class="flag off">C ausente · solo_workload</span><span class="flag off">B ausente · ejecución externa</span></div></div><div class="score"><div class="scoreNum">41%</div><strong>Índice en activo</strong><small>33% en descubrimiento</small></div></header>
+ <figure class="diagram"><figcaption><span class="tag">A</span> Inferencia · siempre pasa por la Puerta Única</figcaption>
+ <div class="flowPrimary"><div class="item external">Usuario<small>Interfaz y autenticación de cliente</small></div><span class="arrow" aria-hidden="true">→</span><div class="item client">Agente<small>BASE_URL + agent_token</small></div><span class="arrow" aria-hidden="true">→</span><div class="item perimeter">Puerta Única<small>AgentCore Gateway · inferencia</small></div><span class="arrow" aria-hidden="true">⇄</span><div class="item target">Modelo<small>Bedrock / simulado</small></div></div>
+ <div class="flowInner"><strong>Sobre A:</strong> validar agente, evaluar Cedar y límites, guardrail del mensaje; en la respuesta, evaluar intención de <code>tool_calls</code>, enmascarar PII y registrar consumo y evidencia. <span>La respuesta gobernada regresa al agente.</span></div>
+ <div class="tracks">
+  <div class="track missing"><div class="trackHead"><strong>Conexión C · identidad</strong><span>no conectada</span></div>
+    <div class="route compact"><div class="item client">Agente<small>Sin JWT de usuario</small></div><span class="arrow muted" aria-hidden="true">→</span><div class="item mutedBox">Puerta<small>Principal: solo_workload</small></div></div>
+    <p class="note">Se autentica el agente, pero no se identifica a la persona que originó la solicitud. El salto usuario → agente es externo.</p>
+  </div>
+  <div class="track missing"><div class="trackHead"><strong>Conexión B · tools por MCP</strong><span>no conectada</span></div>
+    <div class="route compact"><div class="item client">Agente<small>Tool local o externa</small></div><span class="arrow outside" aria-hidden="true">⇢</span><div class="item outsideBox">Ejecución fuera de la puerta<small>No hay decisión sobre tools/call</small></div></div>
+    <p class="note">La puerta puede filtrar el <b>tool_call de la respuesta del modelo</b>, pero no intercepta esta ejecución.</p>
+  </div></div>
+ <div class="common"><div class="commonMark">↳</div><div><strong>Control común y evidencia</strong><span>Consola: modos, Presets, reglas, alertas y cobertura · índice durable de decisiones y copia S3 Object Lock GOVERNANCE. Se registra únicamente lo que atraviesa el perímetro.</span></div></div>
+ </figure>
+ <div class="outcomes"><div class="gain"><h3>Qué controla</h3><ul><li>Identifica al agente y registra modelos, tokens, costos y decisiones.</li><li>Descubre las tools declaradas al modelo y controla la intención en tool_calls.</li><li>Aplica guardrails y enmascara datos personales en respuestas del modelo.</li></ul></div><div class="limit"><h3>Qué no controla o condiciona</h3><ul><li>Las tools locales o externas se ejecutan fuera de la puerta.</li><li>No puede aplicar reglas ni presupuestos por usuario: principal solo_workload.</li><li>Una aprobación humana no se ejecuta por una tool sin MCP; en activo se bloquea su intención con un mensaje.</li></ul></div></div>
+ <div class="example"><strong>Un caso concreto</strong><p>Ejemplo: el modelo propone eliminar_registro; una regla activa elimina esa intención de la respuesta. Si el agente llama directamente a su tool por otro camino, esa ejecución sigue fuera del perímetro.</p></div>
+ <div class="caseEnd"><a href="#comparar">Ver comparación de capacidades</a><a href="#arriba">Volver al inicio</a></div>
+ </article>
+<article class="scenario" id="ac" aria-labelledby="title-ac">
+ <header class="caseHead"><div><div class="eyebrow">Arquitectura 2 de 4 · conexión A+C</div><h2 id="title-ac">Inferencia con contexto de usuario</h2><p>Además de A, cada solicitud puede adjuntar X-Gov-User-Token. La puerta valida el JWT y evalúa roles, datos personales y consumo en nombre de la persona verificada; no controla una tool que siga ejecutándose fuera de MCP.</p><div class="flags"><span class="flag on">C · Usuario verificado si JWT válido</span><span class="flag off">B ausente · ejecución externa</span></div></div><div class="score"><div class="scoreNum">56%</div><strong>Índice en activo</strong><small>44% en descubrimiento</small></div></header>
+ <figure class="diagram"><figcaption><span class="tag">A</span> Inferencia · siempre pasa por la Puerta Única</figcaption>
+ <div class="flowPrimary"><div class="item external">Usuario<small>Interfaz y autenticación de cliente</small></div><span class="arrow" aria-hidden="true">→</span><div class="item client">Agente<small>BASE_URL + agent_token</small></div><span class="arrow" aria-hidden="true">→</span><div class="item perimeter">Puerta Única<small>AgentCore Gateway · inferencia</small></div><span class="arrow" aria-hidden="true">⇄</span><div class="item target">Modelo<small>Bedrock / simulado</small></div></div>
+ <div class="flowInner"><strong>Sobre A:</strong> validar agente, evaluar Cedar y límites, guardrail del mensaje; en la respuesta, evaluar intención de <code>tool_calls</code>, enmascarar PII y registrar consumo y evidencia. <span>La respuesta gobernada regresa al agente.</span></div>
+ <div class="tracks">
+  <div class="track connected"><div class="trackHead"><strong>Conexión C · identidad</strong><span>opcional · presente</span></div>
+    <div class="route compact"><div class="item client">Usuario<small>JWT en aplicación cliente</small></div><span class="arrow" aria-hidden="true">→</span><div class="item client">Agente<small>Reenvía X-Gov-User-Token</small></div><span class="arrow" aria-hidden="true">→</span><div class="item perimeter">Puerta<small>Verifica y evalúa rol</small></div></div>
+    <p class="note">El mismo JWT se reenvía en inferencia y, cuando existe B, en MCP. Un JWT ausente/inválido no cuenta como C verificada.</p>
+  </div>
+  <div class="track missing"><div class="trackHead"><strong>Conexión B · tools por MCP</strong><span>no conectada</span></div>
+    <div class="route compact"><div class="item client">Agente<small>Tool local o externa</small></div><span class="arrow outside" aria-hidden="true">⇢</span><div class="item outsideBox">Ejecución fuera de la puerta<small>No hay decisión sobre tools/call</small></div></div>
+    <p class="note">La puerta puede filtrar el <b>tool_call de la respuesta del modelo</b>, pero no intercepta esta ejecución.</p>
+  </div></div>
+ <div class="common"><div class="commonMark">↳</div><div><strong>Control común y evidencia</strong><span>Consola: modos, Presets, reglas, alertas y cobertura · índice durable de decisiones y copia S3 Object Lock GOVERNANCE. Se registra únicamente lo que atraviesa el perímetro.</span></div></div>
+ </figure>
+ <div class="outcomes"><div class="gain"><h3>Qué controla</h3><ul><li>Permite aplicar reglas por rol sobre la intención de tool_calls.</li><li>Atribuye consumo, presupuestos y evidencia a usuarios verificados.</li><li>Aplica el permiso pii_access en respuestas de modelo.</li></ul></div><div class="limit"><h3>Qué no controla o condiciona</h3><ul><li>C no convierte las tools externas en tools gobernadas.</li><li>La aplicación del cliente sigue siendo responsable de autenticar al usuario y de no atribuirle un token equivocado.</li><li>Una petición sin JWT válido no obtiene automáticamente identidad: se rechaza o trata como solo_workload según configuración.</li></ul></div></div>
+ <div class="example"><strong>Un caso concreto</strong><p>Ejemplo: el mismo agente propone actualizar_precio. La intención puede estar permitida para un rol y denegada para otro, pero la ejecución sigue fuera de la puerta si no hay MCP.</p></div>
+ <div class="caseEnd"><a href="#comparar">Ver comparación de capacidades</a><a href="#arriba">Volver al inicio</a></div>
+ </article>
+<article class="scenario" id="ab" aria-labelledby="title-ab">
+ <header class="caseHead"><div><div class="eyebrow">Arquitectura 3 de 4 · conexión A+B</div><h2 id="title-ab">Inferencia y ejecución por MCP</h2><p>El agente mantiene A y conecta sus tools mediante MCP usando el mismo agent_token. Las llamadas tools/call que atraviesan la puerta pueden ser autorizadas, retenidas para aprobación o denegadas antes del target.</p><div class="flags"><span class="flag off">C ausente · solo_workload</span><span class="flag on">B · Ejecución mediada por MCP</span></div></div><div class="score"><div class="scoreNum">67%</div><strong>Índice en activo</strong><small>48% en descubrimiento</small></div></header>
+ <figure class="diagram"><figcaption><span class="tag">A</span> Inferencia · siempre pasa por la Puerta Única</figcaption>
+ <div class="flowPrimary"><div class="item external">Usuario<small>Interfaz y autenticación de cliente</small></div><span class="arrow" aria-hidden="true">→</span><div class="item client">Agente<small>BASE_URL + agent_token</small></div><span class="arrow" aria-hidden="true">→</span><div class="item perimeter">Puerta Única<small>AgentCore Gateway · inferencia</small></div><span class="arrow" aria-hidden="true">⇄</span><div class="item target">Modelo<small>Bedrock / simulado</small></div></div>
+ <div class="flowInner"><strong>Sobre A:</strong> validar agente, evaluar Cedar y límites, guardrail del mensaje; en la respuesta, evaluar intención de <code>tool_calls</code>, enmascarar PII y registrar consumo y evidencia. <span>La respuesta gobernada regresa al agente.</span></div>
+ <div class="tracks">
+  <div class="track missing"><div class="trackHead"><strong>Conexión C · identidad</strong><span>no conectada</span></div>
+    <div class="route compact"><div class="item client">Agente<small>Sin JWT de usuario</small></div><span class="arrow muted" aria-hidden="true">→</span><div class="item mutedBox">Puerta<small>Principal: solo_workload</small></div></div>
+    <p class="note">Se autentica el agente, pero no se identifica a la persona que originó la solicitud. El salto usuario → agente es externo.</p>
+  </div>
+  <div class="track connected"><div class="trackHead"><strong>Conexión B · tools por MCP</strong><span>opcional · presente</span></div>
+    <div class="route compact"><div class="item client">Agente<small>tools/call</small></div><span class="arrow" aria-hidden="true">→</span><div class="item perimeter">Puerta · MCP<small>Reglas · credenciales · HITL</small></div><span class="arrow" aria-hidden="true">→</span><div class="item target">Tool / target<small>Solo si autorizada</small></div></div>
+    <p class="note">La puerta controla la <b>ejecución real</b> de las tools integradas. Las demás siguen fuera; B puede ser parcial.</p>
+  </div></div>
+ <div class="common"><div class="commonMark">↳</div><div><strong>Control común y evidencia</strong><span>Consola: modos, Presets, reglas, alertas y cobertura · índice durable de decisiones y copia S3 Object Lock GOVERNANCE. Se registra únicamente lo que atraviesa el perímetro.</span></div></div>
+ </figure>
+ <div class="outcomes"><div class="gain"><h3>Qué controla</h3><ul><li>Controla tools/list y tools/call: autorización, argumentos y resultados de targets conectados.</li><li>Custodia credenciales de los targets; registra la ejecución y permite supervisión humana.</li><li>Extiende Kill Switch y evidencia desde el modelo al canal MCP.</li></ul></div><div class="limit"><h3>Qué no controla o condiciona</h3><ul><li>Sin C no existe identidad de usuario final verificada: el principal es solo_workload.</li><li>Las reglas del Preset 2 que necesitan rol de usuario no se satisfacen solo conectando B.</li><li>Una tool no integrada por MCP permanece fuera del perímetro; B puede ser parcial.</li></ul></div></div>
+ <div class="example"><strong>Un caso concreto</strong><p>Ejemplo: una tool de escritura permitida con supervisión requiere_aprobacion puede quedar pendiente de un aprobador humano, con origen atribuido al agente. Una regla que exija rol de operador todavía requiere C.</p></div>
+ <div class="caseEnd"><a href="#comparar">Ver comparación de capacidades</a><a href="#arriba">Volver al inicio</a></div>
+ </article>
+<article class="scenario" id="abc" aria-labelledby="title-abc">
+ <header class="caseHead"><div><div class="eyebrow">Arquitectura 4 de 4 · conexión A+B+C</div><h2 id="title-abc">Inferencia, ejecución e identidad</h2><p>Cada inferencia y llamada MCP puede llevar el JWT del usuario. La puerta evalúa tanto intenciones como ejecuciones, con políticas por rol y por parámetros, enmascaramiento por permiso, trazabilidad y aprobaciones diferenciadas por persona.</p><div class="flags"><span class="flag on">C · Usuario verificado si JWT válido</span><span class="flag on">B · Ejecución mediada por MCP</span></div></div><div class="score"><div class="scoreNum">89%</div><strong>Índice en activo</strong><small>59% en descubrimiento</small></div></header>
+ <figure class="diagram"><figcaption><span class="tag">A</span> Inferencia · siempre pasa por la Puerta Única</figcaption>
+ <div class="flowPrimary"><div class="item external">Usuario<small>Interfaz y autenticación de cliente</small></div><span class="arrow" aria-hidden="true">→</span><div class="item client">Agente<small>BASE_URL + agent_token</small></div><span class="arrow" aria-hidden="true">→</span><div class="item perimeter">Puerta Única<small>AgentCore Gateway · inferencia</small></div><span class="arrow" aria-hidden="true">⇄</span><div class="item target">Modelo<small>Bedrock / simulado</small></div></div>
+ <div class="flowInner"><strong>Sobre A:</strong> validar agente, evaluar Cedar y límites, guardrail del mensaje; en la respuesta, evaluar intención de <code>tool_calls</code>, enmascarar PII y registrar consumo y evidencia. <span>La respuesta gobernada regresa al agente.</span></div>
+ <div class="tracks">
+  <div class="track connected"><div class="trackHead"><strong>Conexión C · identidad</strong><span>opcional · presente</span></div>
+    <div class="route compact"><div class="item client">Usuario<small>JWT en aplicación cliente</small></div><span class="arrow" aria-hidden="true">→</span><div class="item client">Agente<small>Reenvía X-Gov-User-Token</small></div><span class="arrow" aria-hidden="true">→</span><div class="item perimeter">Puerta<small>Verifica y evalúa rol</small></div></div>
+    <p class="note">El mismo JWT se reenvía en inferencia y, cuando existe B, en MCP. Un JWT ausente/inválido no cuenta como C verificada.</p>
+  </div>
+  <div class="track connected"><div class="trackHead"><strong>Conexión B · tools por MCP</strong><span>opcional · presente</span></div>
+    <div class="route compact"><div class="item client">Agente<small>tools/call</small></div><span class="arrow" aria-hidden="true">→</span><div class="item perimeter">Puerta · MCP<small>Reglas · credenciales · HITL</small></div><span class="arrow" aria-hidden="true">→</span><div class="item target">Tool / target<small>Solo si autorizada</small></div></div>
+    <p class="note">La puerta controla la <b>ejecución real</b> de las tools integradas. Las demás siguen fuera; B puede ser parcial.</p>
+  </div></div>
+ <div class="common"><div class="commonMark">↳</div><div><strong>Control común y evidencia</strong><span>Consola: modos, Presets, reglas, alertas y cobertura · índice durable de decisiones y copia S3 Object Lock GOVERNANCE. Se registra únicamente lo que atraviesa el perímetro.</span></div></div>
+ </figure>
+ <div class="outcomes"><div class="gain"><h3>Qué controla</h3><ul><li>Autoriza la intención y la ejecución MCP por roles y parámetros, cuando ambas pasan por la puerta.</li><li>Conserva el vínculo entre usuario, agente, modelo, tool, regla y decisión.</li><li>Permite supervisión con separación de funciones: el originador no puede aprobar su propia solicitud.</li></ul></div><div class="limit"><h3>Qué no controla o condiciona</h3><ul><li>No controla tools o llamadas a modelos que el agente eluda deliberadamente fuera de la puerta.</li><li>La atribución depende de que el agente reenvíe el JWT correcto; la plataforma verifica el token, no la intención del cliente.</li><li>B y C pueden seguir siendo parciales: no basta con configurarlas para asumir cobertura total.</li></ul></div></div>
+ <div class="example"><strong>Un caso concreto</strong><p>Ejemplo: un usuario solicita una acción crítica por una tool MCP. La puerta verifica su rol, crea una solicitud de aprobación si la política lo requiere y un aprobador distinto decide; la ejecución autorizada queda registrada.</p></div>
+ <div class="caseEnd"><a href="#comparar">Ver comparación de capacidades</a><a href="#arriba">Volver al inicio</a></div>
+ </article>
+<section class="comparison" id="comparar">
+<div class="eyebrow">Qué cambia realmente</div><h2>Comparación de capacidades</h2>
+<p>«Sí» indica una capacidad conceptual; su aplicación requiere las políticas y una conexión efectiva. Para B y C parciales, el control se limita a la fracción integrada.</p>
+<div class="scroller"><table>
+<thead><tr><th>Capacidad de gobierno</th><th>A</th><th>A+C</th><th>A+B</th><th>A+B+C</th></tr></thead>
+<tbody>
+<tr><td>Inferencia, modelos, guardrail, intención de tool</td><td class="s">Sí</td><td class="s">Sí</td><td class="s">Sí</td><td class="s">Sí</td></tr>
+<tr><td>Identidad y reglas por usuario</td><td class="no">No</td><td class="s">JWT válido</td><td class="no">No</td><td class="s">JWT válido</td></tr>
+<tr><td>Ejecución real de tools gobernada</td><td class="no">No</td><td class="no">No</td><td class="s">Solo MCP</td><td class="s">Solo MCP</td></tr>
+<tr><td>Reglas por parámetros de una ejecución</td><td class="no">No</td><td class="no">No</td><td class="s">Solo MCP</td><td class="s">MCP + rol</td></tr>
+<tr><td>Resultado directo de tool enmascarado</td><td class="no">Solo si vuelve al modelo</td><td class="no">Solo si vuelve al modelo</td><td class="s">MCP</td><td class="s">MCP + rol</td></tr>
+<tr><td>Aprobación humana antes de ejecutar</td><td class="no">No</td><td class="no">No</td><td class="conditional">Originador agente</td><td class="s">Originador usuario, separa funciones</td></tr>
+<tr><td>Kill Switch en inferencia y herramientas</td><td class="conditional">Solo inferencia</td><td class="conditional">Solo inferencia</td><td class="s">Ambos canales conectados</td><td class="s">Ambos canales conectados</td></tr>
+<tr><td>Quién figura en evidencia</td><td>solo_workload</td><td>Usuario verificado*</td><td>solo_workload</td><td>Usuario verificado*</td></tr>
+</tbody></table></div>
+<p class="detail">* Si C falta en una solicitud o el JWT no es válido, la plataforma no puede atribuirla a una persona por el solo hecho de que el agente tenga C configurada. El token inválido se rechaza o degrada según reglas del agente. Las tools fuera de MCP siempre se etiquetan «Fuera de la puerta».</p>
+<h3>Índice de cobertura del catálogo, no un «porcentaje absoluto de seguridad»</h3>
+<div class="statline"><div class="stat"><strong>A</strong><b>41%</b><span>Activo · 33% en descubrimiento</span></div><div class="stat"><strong>A+C</strong><b>56%</b><span>Activo · 44% en descubrimiento</span></div><div class="stat"><strong>A+B</strong><b>67%</b><span>Activo · 48% en descubrimiento</span></div><div class="stat"><strong>A+B+C</strong><b>89%</b><span>Activo · 59% en descubrimiento</span></div></div>
+<p class="detail">Valores canónicos de <a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/catalogo-controles.md">catálogo de controles</a>: agente con tools y usuarios humanos, cobertura completa de las conexiones presentes, evidencia disponible. Máximo alcanzable por la plataforma: <b>89% de 27 controles</b>; CTRL-25 a CTRL-27 quedan fuera del perímetro. Conexiones parciales o controles no aplicables cambian el índice según <a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/01-modelo-de-conexion.md">la fórmula de insumo §3</a>.</p>
+</section>
+<section class="sources" id="fuentes">
+<div class="eyebrow">Fuente y mantenimiento</div><h2>Arquitectura de intención, no fotografía de implementación</h2>
+<p>Los cuatro esquemas expresan el comportamiento diseñado en <code>insumo/</code>. El <b>Módulo B</b> es un agente sintético de prueba separado y prescindible: no representa otra conexión ni una dependencia del Módulo A. No mostramos cantidades de Lambdas, WAF, fachada, ramas de desarrollo ni facturación: pertenecen a arquitectura de implementación y costos, que se pueden consultar <a href="arquitectura-auditada.html">en otra vista</a>.</p>
+<ul>
+<li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/index.md"><code>insumo/index.md</code></a>: fuente normativa y precedencia de <code>requisitos.yaml</code>.</li>
+<li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/requisitos.yaml"><code>insumo/requisitos.yaml</code></a>: requisitos, controles y escenarios.</li>
+<li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/01-modelo-de-conexion.md"><code>01-modelo-de-conexion.md</code></a>: conexiones A/B/C, sus cuatro combinaciones, límites y fórmula.</li>
+<li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/02-contrato.md"><code>02-contrato.md</code></a>: llamadas de inferencia y MCP, JWT y respuestas.</li>
+<li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/03-politicas-y-estado-inicial.md"><code>03-politicas-y-estado-inicial.md</code></a>: modo descubrimiento, activo y Presets por combinación.</li>
+<li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/catalogo-controles.md"><code>catalogo-controles.md</code></a>: tabla del índice, derivada de requisitos.</li>
+<li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/05-decisiones-tecnicas.md"><code>05-decisiones-tecnicas.md</code></a>: correspondencia con servicios AWS previstos.</li>
+</ul>
+<p class="detail">Esta página se debe actualizar cuando cambie el modelo conceptual de <code>insumo/</code>, no porque cambie la implementación. Contenido objetivo: algunas funciones aún pueden no estar desarrolladas.</p></section>
+<footer>Plataforma de gobernanza de agentes de IA · arquitectura conceptual desde insumo/ · revisión 2026-11-08</footer>
+</main></body></html>
