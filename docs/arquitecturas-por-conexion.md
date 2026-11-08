@@ -1,6 +1,6 @@
 # Arquitecturas conceptuales por combinación de conexiones
 
-**Fuente:** exclusivamente `insumo/` de [agentic-ai-governance-platform, rama u13-s0-otlp](https://github.com/enzo-loren/agentic-ai-governance-platform/tree/u13-s0-otlp/insumo). **Objeto:** describir el producto objetivo (Módulo A) independientemente del grado de implementación, del stack desplegado y de la ingeniería descubierta en los spikes. **Fecha:** 2026-11-08.
+**Fuente:** exclusivamente `insumo/` de [agentic-ai-governance-platform, rama main](https://github.com/enzo-loren/agentic-ai-governance-platform/tree/main/insumo). **Objeto:** describir el producto objetivo (Módulo A) independientemente del grado de implementación, del stack desplegado y de la ingeniería descubierta en los spikes. **Fecha:** 2026-11-08.
 
 La plataforma ofrece una sola Puerta Única. Las cuatro arquitecturas no son cuatro stacks ni cuatro productos: son cuatro **configuraciones de integración** que delimitan qué puede observar y controlar el perímetro sobre *cada solicitud y cada herramienta*. A es obligatoria; B y C se pueden sumar en cualquier orden y de forma parcial.
 
@@ -113,7 +113,7 @@ Para agente con **tools y usuarios humanos**, conexiones presentes **completas**
 | A+B | 67 % | 48 % |
 | A+B+C | 89 % | 59 % |
 
-Son puntos del **índice de cobertura del catálogo**, no un score absoluto de seguridad ni garantía de prevención. Máximo 89 % porque CTRL-25–27 están fuera del perímetro. Cuando faltan tools/usuarios o hay cobertura parcial/falla de evidencia, se usa la fórmula de [01-modelo-de-conexion §3](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/u13-s0-otlp/insumo/contexto/01-modelo-de-conexion.md), no estos valores como constantes.
+Son puntos del **índice de cobertura del catálogo**, no un score absoluto de seguridad ni garantía de prevención. Máximo 89 % porque CTRL-25–27 están fuera del perímetro. Cuando faltan tools/usuarios o hay cobertura parcial/falla de evidencia, se usa la fórmula de [01-modelo-de-conexion §3](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/01-modelo-de-conexion.md), no estos valores como constantes.
 
 ## 8. Relación conceptual con servicios AWS (no implica diseño final de infraestructura)
 
@@ -132,12 +132,12 @@ La elección de fachada, WAF, cantidades de recursos, timeout, topología VPC, c
 
 ## 9. Referencias canónicas por afirmación
 
-- [`insumo/index.md`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/u13-s0-otlp/insumo/index.md): jerarquía de fuentes.
-- [`insumo/requisitos.yaml`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/u13-s0-otlp/insumo/requisitos.yaml): requisitos y controles oficiales.
-- [`insumo/contexto/01-modelo-de-conexion.md`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/u13-s0-otlp/insumo/contexto/01-modelo-de-conexion.md): las cuatro combinaciones, medición de A/B/C, cobertura parcial y límites del perímetro.
-- [`insumo/contexto/02-contrato.md`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/u13-s0-otlp/insumo/contexto/02-contrato.md): Chat Completions, MCP, cabeceras, respuestas, evidencia y PII.
-- [`insumo/contexto/03-politicas-y-estado-inicial.md`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/u13-s0-otlp/insumo/contexto/03-politicas-y-estado-inicial.md): modos, Presets Cedar, diferencias por combinación.
-- [`insumo/contexto/catalogo-controles.md`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/u13-s0-otlp/insumo/contexto/catalogo-controles.md): catálogo y índices por combinación (derivado del YAML).
-- [`insumo/contexto/05-decisiones-tecnicas.md`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/u13-s0-otlp/insumo/contexto/05-decisiones-tecnicas.md): servicios de referencia para arquitectura lógica.
+- [`insumo/index.md`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/index.md): jerarquía de fuentes.
+- [`insumo/requisitos.yaml`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/requisitos.yaml): requisitos y controles oficiales.
+- [`insumo/contexto/01-modelo-de-conexion.md`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/01-modelo-de-conexion.md): las cuatro combinaciones, medición de A/B/C, cobertura parcial y límites del perímetro.
+- [`insumo/contexto/02-contrato.md`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/02-contrato.md): Chat Completions, MCP, cabeceras, respuestas, evidencia y PII.
+- [`insumo/contexto/03-politicas-y-estado-inicial.md`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/03-politicas-y-estado-inicial.md): modos, Presets Cedar, diferencias por combinación.
+- [`insumo/contexto/catalogo-controles.md`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/catalogo-controles.md): catálogo y índices por combinación (derivado del YAML).
+- [`insumo/contexto/05-decisiones-tecnicas.md`](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/05-decisiones-tecnicas.md): servicios de referencia para arquitectura lógica.
 
 **Criterio de mantenimiento:** cambiar estas cuatro vistas solo cuando cambie el `insumo/` canónico; no hacerlo por cambios en la rama de implementación. Si el requisito y su derivado discrepan, prevalece `requisitos.yaml`.
