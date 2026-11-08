@@ -2,6 +2,9 @@
 
 **Fecha de revisión:** 2026-11-08. **Región de referencia:** us-east-1. **Estado:** propuesta técnica para revisión; no acredita despliegue ni ejecución de pruebas en esta revisión.
 
+> **Separación de niveles:** la arquitectura conceptual del producto se describe en [Cuatro arquitecturas por conexión](arquitecturas-por-conexion.md), construida exclusivamente desde `insumo/` de `main`. Este documento es un contraste **secundario** de una implementación específica y un modelo de costos parcial; no determina qué arquitectura conceptual debe enseñar la web.
+
+
 > **Alcance epistémico.** Se inspeccionaron el requisito de origen, las decisiones y experimentos, las construcciones CDK y el sitio publicado. «Implementado en IaC» significa que el recurso se define en código en la rama indicada; no significa que esté desplegado hoy ni que la suite pase. Los precios públicos se aplican a hipótesis transparentes, no a consumo medido. El estado «S0 desplegado» pertenece a la fotografía histórica del 2026-11-01.
 
 ## 1. Fuentes y precedencia
@@ -27,7 +30,7 @@ Los requisitos decisivos incluyen descubrir antes de bloquear; pasar de sombra a
 
 ## 3. Arquitectura lógica propuesta
 
-\`\`\`mermaid
+```mermaid
 flowchart TB
     A["Agente externo | conexión A (obligatoria)"] -->|OpenAI Chat Completions HTTPS + gov_token| W["WAF de fachada"]
     A -->|"MCP | conexión B (opcional)"| W
@@ -51,7 +54,7 @@ flowchart TB
     API --> H["Aprobaciones | estados, separación de funciones, vencimiento"]
     H -->|"identidad interna y revalidación"| G
     B["Módulo B: agente de prueba | stack aparte"] -.-> A
-\`\`\`
+```
 
 **Advertencia:** la gráfica muestra un **objetivo acumulativo**. En la rama inspeccionada hay recursos de S0 y telemetría U13; Cedar, MCP de negocio, políticas, aprobaciones y búsqueda forense son ámbitos de implementación pendiente o que deben verificarse contra código y pruebas antes de etiquetarlos como disponibles. El diagrama **no** afirma que todos estén desplegados.
 
@@ -75,9 +78,9 @@ flowchart TB
 
 | Severidad | Publicación anterior / supuesto | Evidencia o corrección |
 |---|---|---|
-| Alta | Camino REST → Gateway, sin detallar Lambda intermedia | SP-01b y \`puerta.ts\`: existe fachada Lambda, IAM SigV4, policy de recurso y recuperación de encabezados |
+| Alta | Camino REST → Gateway, sin detallar Lambda intermedia | SP-01b y `puerta.ts`: existe fachada Lambda, IAM SigV4, policy de recurso y recuperación de encabezados |
 | Alta | Una Lambda REQUEST y una RESPONSE por turno | Hay **tres** Lambdas en ruta mínima, incluida fachada; además API de consola, simulado y procesos asincrónicos según uso |
-| Alta | 1 Web ACL + 4 reglas, IP Reputation/Common Rule Set | \`puerta.ts\`: 1 ACL de fachada con **1 regla de tasa**. \`consola.ts\`: **otra ACL** con **2 reglas de tasa**. No acreditar grupos administrados que CDK no define |
+| Alta | 1 Web ACL + 4 reglas, IP Reputation/Common Rule Set | `puerta.ts`: 1 ACL de fachada con **1 regla de tasa**. `consola.ts`: **otra ACL** con **2 reglas de tasa**. No acreditar grupos administrados que CDK no define |
 | Alta | «Costo total» por 10k/300k/3M turnos | No incluye tokens de Bedrock, APIs administrativas, polling de consola, log ingestion, SQS, reintentos, recolección OTLP, extracción, transferencias y casos de B+C |
 | Media | DynamoDB $1,25/M escritura y $0,25/M lectura | AWS muestra para DynamoDB Standard on-demand US East **$0,625/M WRU** y **$0,125/M RRU**, sujeto a operación y tamaño |
 | Media | Tres unidades de Guardrails por turno como constante universal | Una unidad cubre hasta 1.000 caracteres **por segmento/filtro facturable**; debe medirse y parametrizarse. S0 no usa ese guardrail |
@@ -111,14 +114,14 @@ flowchart TB
 
 | Componente | Precio de referencia y aplicación | Fuente |
 |---|---|---|
-| WAF | **$5/ACL/mes + $1/regla/mes + $0,60/M solicitudes**, para reglas personalizadas estándar. En IaC: 2 ACL y 3 reglas = **$13/mes** base | [AWS WAF pricing](https://aws.amazon.com/waf/pricing/) + \`puerta.ts\` y \`consola.ts\` |
+| WAF | **$5/ACL/mes + $1/regla/mes + $0,60/M solicitudes**, para reglas personalizadas estándar. En IaC: 2 ACL y 3 reglas = **$13/mes** base | [AWS WAF pricing](https://aws.amazon.com/waf/pricing/) + `puerta.ts` y `consola.ts` |
 | API Gateway REST regional | **$3,50/M solicitudes** primera banda + transferencia de salida, ilustrativa **$0,09/GB**. El polling consulta la API **distinta** | [API Gateway pricing](https://aws.amazon.com/api-gateway/pricing/) |
 | AgentCore Gateway | **$0,005/1.000 invocaciones de API** (ejemplos ListTools/InvokeTool/Ping); indexación y búsqueda adicionales. **Cobro preciso del path de inferencia debe confirmarse en billing** | [AgentCore pricing](https://aws.amazon.com/bedrock/agentcore/pricing/) |
 | Lambda | **$0,20/M invocaciones + $0,0000166667/GB-s**. Por inferencia hipotética: fachada 256 MiB × 3 s, REQUEST y RESPONSE cada una 256 MiB × 0,15 s; 3 invocaciones | [Lambda pricing](https://aws.amazon.com/lambda/pricing/) |
 | DynamoDB Standard on-demand | **$0,625/M WRU + $0,125/M RRU**. Hipótesis por turno: **4 WRU y 2 RRU** (incluye GSIs, no sustituyen medición). 25GB libres de almacenamiento sólo si se cumplen condiciones | [DynamoDB pricing](https://aws.amazon.com/dynamodb/pricing/) |
 | S3 evidencia | Estimación **$0,005 por 1.000 PUT + $0,023/GB-mes** Standard, sin suponer transición a otra clase; Object Lock requiere versionado | [S3 pricing](https://aws.amazon.com/s3/pricing/) |
 | Guardrail de texto (contenido) | **$0,15/1.000 unidades de texto** por el filtro. No sumar denied topics, PII managed o otros filtros si no están habilitados. Escenario con 0 o 3 unidades por turno | [Bedrock Guardrails](https://aws.amazon.com/bedrock/pricing/) |
-| Modelo | SP-03, precio de referencia regional para \`openai.gpt-oss-20b\`: **$0,07/M tokens entrada** y **$0,30/M salida**; \`120b\`: **$0,15/M y $0,60/M**. Debe reconfirmarse con Price List o Billing | [SP-03](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/u13-s0-otlp/modulo-a/docs/spikes/SP-03.md), [Bedrock](https://aws.amazon.com/bedrock/pricing/) |
+| Modelo | SP-03, precio de referencia regional para `openai.gpt-oss-20b`: **$0,07/M tokens entrada** y **$0,30/M salida**; `120b`: **$0,15/M y $0,60/M**. Debe reconfirmarse con Price List o Billing | [SP-03](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/u13-s0-otlp/modulo-a/docs/spikes/SP-03.md), [Bedrock](https://aws.amazon.com/bedrock/pricing/) |
 | AWS KMS | **$1/clave/mes** más solicitudes según uso y exenciones; estimador configurable, no asumir 2 llamadas por turno como hecho | [KMS pricing](https://aws.amazon.com/kms/pricing/) |
 | Secrets Manager | **$0,40/secret/mes**, lectura y rotaciones según uso; 1 secreto simulado como referencia | [Secrets Manager](https://aws.amazon.com/secrets-manager/pricing/) |
 | CloudWatch / OTLP | Logs por GB, alarmas/métricas, spans según destino y retención. El modelo incluye solo ingestión ilustrativa; **no** cubre toda observabilidad | [CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/) |
@@ -127,9 +130,9 @@ flowchart TB
 
 ### Fórmula reproducible (escenario ilustrativo)
 
-Variables: \`N\` completions/mes, \`I\` tokens de entrada y \`O\` de salida por completion, \`U\` unidades de Guardrails por completion; \`L_f\`, \`L_r\`, \`L_s\` GB-s de Lambda facade, request y response; \`W\` WRU y \`R\` RRU de Dynamo por completion; \`B\` bytes de respuesta, \`E\` bytes de evidencia por completion.
+Variables: `N` completions/mes, `I` tokens de entrada y `O` de salida por completion, `U` unidades de Guardrails por completion; `L_f`, `L_r`, `L_s` GB-s de Lambda facade, request y response; `W` WRU y `R` RRU de Dynamo por completion; `B` bytes de respuesta, `E` bytes de evidencia por completion.
 
-\`Total parcial = (2*5 + 3*1 + N*0.60/1e6) [WAF] + (N*3.50/1e6 + N*B/2^30*0.09) [API] + (N*5/1e6) [Gateway estimativo] + (3*N*0.20/1e6 + N*(L_f+L_r+L_s)*0.0000166667) [Lambda] + (N*W*0.625/1e6 + N*R*0.125/1e6) [DDB] + (N*5/1e6 + N*E/2^30*0.023) [S3 1 mes] + (N*U*0.15/1000) [filtro Guardrails] + (N*I*0.07/1e6 + N*O*0.30/1e6) [20b] + (1 + 0.40) [KMS+1 secreto].\`
+`Total parcial = (2*5 + 3*1 + N*0.60/1e6) [WAF] + (N*3.50/1e6 + N*B/2^30*0.09) [API] + (N*5/1e6) [Gateway estimativo] + (3*N*0.20/1e6 + N*(L_f+L_r+L_s)*0.0000166667) [Lambda] + (N*W*0.625/1e6 + N*R*0.125/1e6) [DDB] + (N*5/1e6 + N*E/2^30*0.023) [S3 1 mes] + (N*U*0.15/1000) [filtro Guardrails] + (N*I*0.07/1e6 + N*O*0.30/1e6) [20b] + (1 + 0.40) [KMS+1 secreto].`
 
 **No es TCO:** esta suma parcial excluye lectura/criptografía real de KMS, CloudWatch, almacenamiento adicional de índices, otros filtros, Cognito MAU, reintentos, consola, OTLP, SQS, target MCP, cross-AZ e impuestos. El simulador HTML muestra separadamente un CloudWatch ilustrativo. La «factura correcta» requiere métricas de operación, configuración y AWS Cost Explorer/Cost and Usage Report del cliente.
 
@@ -158,6 +161,6 @@ Variables: \`N\` completions/mes, \`I\` tokens de entrada y \`O\` de salida por 
 
 ## 8. Nota sobre la documentación pública
 
-Esta revisión no cambia las decisiones de producto de \`insumo/requisitos.yaml\`, no modifica el motor, no edita slices derivados y no fusiona ramas funcionales. Propone reemplazar el **diagrama público** por una lectura precisa, distinguiendo **implementado en IaC**, **objetivo** y **experimental**, y un simulador con hipótesis editables. El histórico de la arquitectura anterior permanece accesible mediante Git.
+Esta revisión no cambia las decisiones de producto de `insumo/requisitos.yaml`, no modifica el motor, no edita slices derivados y no fusiona ramas funcionales. Propone reemplazar el **diagrama público** por una lectura precisa, distinguiendo **implementado en IaC**, **objetivo** y **experimental**, y un simulador con hipótesis editables. El histórico de la arquitectura anterior permanece accesible mediante Git.
 
 **Fuentes AWS:** [WAF](https://aws.amazon.com/waf/pricing/), [AgentCore](https://aws.amazon.com/bedrock/agentcore/pricing/), [DynamoDB](https://aws.amazon.com/dynamodb/pricing/), [Bedrock](https://aws.amazon.com/bedrock/pricing/), [API Gateway](https://aws.amazon.com/api-gateway/pricing/), [Lambda](https://aws.amazon.com/lambda/pricing/), [S3](https://aws.amazon.com/s3/pricing/), [CloudWatch](https://aws.amazon.com/cloudwatch/pricing/), [KMS](https://aws.amazon.com/kms/pricing/), [Cognito](https://aws.amazon.com/cognito/pricing/), [WAF y AgentCore, anuncio 2026-06-29](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-waf-amazon-bedrock-agentcore/).
