@@ -30,9 +30,10 @@ footer{font-size:13px;color:#5b6b82;padding:16px 0 35px}ul{line-height:1.75}
 </style>
 </head>
 <body>
-<header><nav><a href="../index.html">Inicio</a><a href="./arquitectura.html">Arquitectura original</a><a href="../docs/arquitectura-aws-auditada.md">Informe técnico y fuentes</a></nav>
+<header><nav><a href="../index.html">Inicio</a><a href="./arquitecturas-por-conexion.html">4 arquitecturas desde insumo/</a><a href="./arquitectura.html">Mapa AWS original</a><a href="../docs/arquitectura-aws-auditada.md">Informe técnico y fuentes</a></nav>
 <h1>Arquitectura AWS auditada</h1><p>Plataforma de gobernanza de agentes IA · revisión del 8 de noviembre de 2026. Compara decisiones, resultados de spikes y CDK de la rama <code>u13-s0-otlp</code> con la arquitectura publicada. No implica que S1–S6 estén operativos ni desplegados.</p></header>
 <main>
+<section class="panel"><p class="notice"><b>Esta página examina decisiones de implementación y costos.</b> La explicación conceptual del producto se presenta por separado, en <a href="arquitecturas-por-conexion.html">las cuatro arquitecturas de conexión A, A+C, A+B y A+B+C</a>, redactadas exclusivamente desde insumo/.</p></section>
 <section class="panel"><h2>Lo que cambia en el diagrama</h2>
 <p class="lead">El camino de inferencia real incluye una <b>Lambda fachada entre API Gateway y AgentCore Gateway</b> (SP-01b), tres Lambdas por petición (fachada, REQUEST, RESPONSE), dos APIs REST y dos ACL de WAF en el producto. La evidencia primero se escribe en DynamoDB y después se copia asíncronamente a S3 Object Lock.</p>
 <div class="notice"><b>Importante:</b> los bloques verdes están definidos en IaC en la rama inspeccionada; amarillo representa capacidades objetivo o sujetas a pruebas. Tener un recurso en CDK no demuestra que la cuenta esté desplegada ni que una unidad AI-DLC haya pasado toda su validación.</div>
