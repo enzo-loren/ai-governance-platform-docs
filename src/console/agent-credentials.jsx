@@ -15,7 +15,7 @@ import Table from "@cloudscape-design/components/table";
 import StatusIndicator from "@cloudscape-design/components/status-indicator";
 import Badge from "@cloudscape-design/components/badge";
 import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
-import {usePrototype} from "./main.jsx";
+import {usePrototype,Explanation} from "./main.jsx";
 
 // DEMO: valores sin validez criptográfica ni conexión AWS. No usan credenciales reales.
 // La cadena ficticia SOLO se mantiene en el estado local del modal de revelación.
@@ -60,7 +60,7 @@ export function OneTimeCredential({reveal,onClose}){
     </div>
    </FormField>
    <CopyToClipboard textToCopy={example} copyButtonText="Copiar BASE_URL + API key" copySuccessText="Ejemplo copiado" copyErrorText="Error al copiar"/>
-   <Alert type="info">En producción, la credencial real se genera en el servidor, se almacena únicamente como hash y se valida en cada solicitud. La URL de ejemplo termina en .invalid y no admite tráfico.</Alert>
+   <Explanation>La clave real se genera en el servidor y se almacena como hash. La URL .invalid es un marcador de ejemplo, sin tráfico permitido.</Explanation>
   </SpaceBetween>
  </Modal>;
 }
@@ -103,7 +103,7 @@ export function AgentEnrollment(){
      <Button variant="primary" disabled={!valid} onClick={register}>Registrar y emitir API key</Button>
      <Badge color="grey">Cada agente tiene su propia credencial</Badge>
     </SpaceBetween>
-    <Box color="text-body-secondary" fontSize="body-s">Un agente nuevo nace en descubrimiento. La misma clave identifica ese agente en inferencia A y, si está conectado, en MCP B. No se asigna una clave global.</Box>
+    <Box color="text-body-secondary" fontSize="body-s">Modo inicial: descubrimiento. Cada agente usa su propia clave para A y B.</Box>
    </SpaceBetween>
   </Container>
   <Container header={<Header variant="h2" description={showExplanations?"Credenciales existentes ocultas: solo puede verse una nueva al emitirla.":undefined}>Agentes registrados</Header>}>
@@ -116,7 +116,7 @@ export function AgentEnrollment(){
      {id:"credentials",header:"API keys activas",cell:x=>activeCount(x)},
      {id:"id",header:"Identidad",cell:x=><Box fontFamily="monospace" fontSize="body-s">{x.id}</Box>}
     ]}/>
-    <Alert type="info">Las API keys existentes no pueden recuperarse desde la consola. La rotación, la revocación y la suspensión individual se gestionan en la versión S2 de esta pantalla.</Alert>
+    <Explanation>Las claves existentes no pueden recuperarse. Puedes rotarlas o revocarlas abajo desde S0; la suspensión individual se incorpora en S2.</Explanation>
     {agent&&<KeyValuePairs columns={2} items={[{label:"Agente seleccionado",value:agent.name},{label:"Credencial vigente",value:agent.tokens.filter(x=>x.status==="Activa").map(x=>"•••• "+x.suffix).join(" / ")||"Ninguna"}]}/>}
    </SpaceBetween>
   </Container>
