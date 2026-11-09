@@ -44,6 +44,7 @@ try{
   assert(content.includes("Sin conexión MCP")&&content.includes("41 %"),vp.name+" S1 no diferencia A de B/C");
   assert(content.includes("Cobertura medida")&&content.includes("Sin datos"),vp.name+" S1 presenta cobertura simulada como medida");
   assert(!content.includes("Ver los 27 controles"),vp.name+" S1 muestra inventario técnico al usuario");
+  assert(await page.getByTestId("editorial-board").count()===0,vp.name+" la pizarra editorial aparece sin pedir explicaciones");
   if(vp.name==="mobile")assert((await page.locator(".mobile-cards").first().innerText()).includes("ejecución aún queda fuera"),"S1 móvil oculta la diferencia entre intención y ejecución");
   await screenshot("s1-gobernanza");
 
@@ -113,7 +114,7 @@ try{
 
   await open("S6","s6-forensic");
   content=await text();
-  assert(content.includes("Ver texto de la regla aplicada")&&content.includes("no verificado"),vp.name+" auditoría no distingue política histórica de prueba AWS");
+  assert(content.includes("Ver texto de la regla aplicada")&&content.includes("Integridad sin verificar"),vp.name+" auditoría no distingue política histórica de prueba AWS");
   await page.getByText("Ver texto de la regla aplicada",{exact:true}).click();
   assert((await text()).includes("context.parametros.descuento"),vp.name+" regla histórica no disponible tras la apertura");
   await screenshot("s6-forense");
