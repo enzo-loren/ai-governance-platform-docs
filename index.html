@@ -6,8 +6,8 @@
 <meta name="description" content="Evolución visual del MVP de gobernanza de agentes: cada slice muestra únicamente las nuevas pantallas y los cambios que incorpora.">
 <meta name="theme-color" content="#101e36">
 <title>Evolución del producto · AI Governance Platform</title>
-<link rel="stylesheet" href="assets/roadmap-cloudscape-v2.css">
-<script src="assets/roadmap-cloudscape-v2.js" defer></script>
+<link rel="stylesheet" href="assets/roadmap-cloudscape-v3.css">
+<script src="assets/roadmap-cloudscape-v3.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#pantallas">Saltar a las pantallas</a>
@@ -19,7 +19,7 @@
 </header>
 <main>
  <section class="hero container" aria-labelledby="hero-title">
-  <div class="kicker"><span class="pin"></span> EVOLUCIÓN DEL MVP · MÓDULO A</div>
+  <div class="kicker"><span class="pin"></span> EVOLUCIÓN DEL MVP · MÓDULO A <span class="prototype-indicator">Demo · datos de ejemplo</span></div>
   <h1 id="hero-title">Qué cambia en cada slice.</h1>
   <p>Descubre qué pantallas aparecen o cambian en cada entrega. Abre cualquiera para recorrer el prototipo Cloudscape.</p>
   <div class="hero-note"><span class="note-symbol" aria-hidden="true">◇</span> <span>Prototipos <b>HTML navegables, con datos sintéticos</b>. Los controles simulan su comportamiento; no hay operaciones reales en AWS.</span></div>
@@ -38,6 +38,7 @@
     <p class="stage-promise" id="stage-promise"></p>
    </div>
    <div class="content-meta"><div class="stage-metrics" id="stage-metrics" aria-live="polite"></div>
+    <button type="button" id="toggle-explanations" class="explanations-toggle" aria-pressed="false" aria-controls="pantallas">Mostrar explicaciones</button>
     <div class="view-switch" role="group" aria-label="Elegir qué pantallas mostrar">
      <button id="mode-delta" type="button" class="is-active" aria-pressed="true">Solo cambios</button>
      <button id="mode-all" type="button" aria-pressed="false">Producto acumulado</button>
