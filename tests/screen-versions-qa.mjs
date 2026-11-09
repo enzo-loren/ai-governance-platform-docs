@@ -102,11 +102,10 @@ try{
      }
     }
    }
-   if(true){
-    await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
-    await page.waitForTimeout(80);
-    await page.screenshot({path:output+"/"+vp.name+"-"+screen.id+".png",fullPage:true});
-   }
+   // Capturar todas las vistas y ambas dimensiones; permite detectar truncamientos internos.
+   await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
+   await page.waitForTimeout(80);
+   await page.screenshot({path:output+"/"+vp.name+"-"+screen.id+".png",fullPage:true});
    results.push({viewport:vp.name,screen:screen.id,slice:screen.slice,versions:siblings.map(x=>x.slice),hasSelector:siblings.length>1});
   }
   // Vista acumulada: abrir una versión anterior no debe forzar a mostrar otra pantalla.
