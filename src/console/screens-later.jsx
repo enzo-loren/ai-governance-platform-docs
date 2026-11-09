@@ -140,32 +140,49 @@ function MCP(){
  </SpaceBetween>;
 }
 function Policy(){
- const {notify,helpOn,showExplanations}=usePrototype();
+ const {notify}=usePrototype();
  const [threshold,setThreshold]=useState("10");
  const [effect,setEffect]=useState({label:"Denegar",value:"DENY"});
  const [version,setVersion]=useState(3);
+ const [tab,setTab]=useState("builder");
+ const [cedar,setCedar]=useState('forbid(principal, action == Gov::Action::"UsarTool::actualizar_precio", resource)\nwhen { context.parametros.descuento > 10 };');
+ const [cedarStatus,setCedarStatus]=useState("Borrador · sin validación de esquema");
  const valid=threshold!==""&&Number.isFinite(Number(threshold))&&Number(threshold)>=0;
  const result=n=>valid&&effect.value==="DENY"&&n>Number(threshold)?"Denegado":"Permitido";
+ const build=<SpaceBetween size="m">
+  <ColumnLayout columns={2}>
+   <FormField label="Tool"><Input readOnly value="actualizar_precio"/></FormField>
+   <FormField label="Efecto"><Select selectedOption={effect} options={[{label:"Denegar",value:"DENY"},{label:"Permitir",value:"ALLOW"}]} onChange={({detail})=>setEffect(detail.selectedOption)}/></FormField>
+   <FormField label="Parámetro numérico"><Input readOnly value="descuento"/></FormField>
+   <FormField label="Condición: mayor que" errorText={!valid?"Introduce un umbral numérico no negativo.":undefined}><Input type="number" value={threshold} onChange={({detail})=>setThreshold(detail.value)}/></FormField>
+  </ColumnLayout>
+  <Box color={valid?"text-body-secondary":"text-status-error"} fontSize="body-s">{valid?(effect.value+" si descuento > "+threshold):"Borrador inválido"}</Box>
+  <Button variant="primary" disabled={!valid} onClick={()=>{
+   setVersion(v=>v+1);
+   notify("Versión de muestra creada. No se ejecutó Cedar real.");
+  }}>Guardar versión simulada</Button>
+ </SpaceBetween>;
+ const editor=<SpaceBetween size="m">
+  <FormField label="Política Cedar · borrador" description="El backend real debe validar sintaxis, esquema de tool, rol y parámetros antes de aplicarla.">
+   <Textarea rows={7} value={cedar} onChange={({detail})=>{setCedar(detail.value);setCedarStatus("Modificado · sin validar");}}/>
+  </FormField>
+  <StatusIndicator type="warning">{cedarStatus}</StatusIndicator>
+  <Button disabled={!cedar.trim()} onClick={()=>{
+   setCedarStatus("Borrador guardado localmente · sin validar");
+   notify("Borrador Cedar conservado en la DEMO. No se publicó una política.");
+  }}>Guardar borrador (demo)</Button>
+ </SpaceBetween>;
  return <SpaceBetween size="l">
-  <Panel title="Constructor de reglas" help="Una regla Cedar tipada valida el parámetro antes de guardar y se evalúa en la intención (A) y ejecución MCP (B).">
-   <SpaceBetween size="m">
-    <ColumnLayout columns={2}>
-     <FormField label="Tool"><Input readOnly value="actualizar_precio"/></FormField>
-     <FormField label="Efecto"><Select selectedOption={effect} options={[{label:"Denegar",value:"DENY"},{label:"Permitir",value:"ALLOW"}]} onChange={({detail})=>setEffect(detail.selectedOption)}/></FormField>
-     <FormField label="Parámetro numérico"><Input readOnly value="descuento"/></FormField>
-     <FormField label="Condición: mayor que" errorText={!valid?"Introduce un umbral numérico no negativo.":undefined}><Input type="number" value={threshold} onChange={({detail})=>setThreshold(detail.value)}/></FormField>
-    </ColumnLayout>
-    <Box color={valid?"text-body-secondary":"text-status-error"} fontSize="body-s">{valid?(effect.value+" si descuento > "+threshold):"Borrador inválido"}</Box>
-    <SpaceBetween direction="horizontal" size="s">
-     <Button variant="primary" disabled={!valid} onClick={()=>{setVersion(n=>n+1);notify("Versión "+(version+1)+" creada en el prototipo. No se cambió Cedar real.")}}>Guardar versión simulada</Button>
-     {showExplanations&&<Button onClick={()=>helpOn("Editor Cedar","El producto incluye un editor Cedar con validación contra el esquema. Esta maqueta muestra primero el constructor visual.")}>Editor Cedar · información</Button>}
-    </SpaceBetween>
-   </SpaceBetween>
+  <Panel title="Políticas del agente" help="POL-04 requiere un constructor y un editor Cedar validado contra el esquema de cada tool.">
+   <Tabs tabs={[{id:"builder",label:"Constructor visual",content:build},{id:"cedar",label:"Editor Cedar",content:editor}]} activeTabId={tab} onChange={({detail})=>setTab(detail.activeTabId)}/>
   </Panel>
-  <Panel title={"Simulación de la regla · v"+version}><ColumnLayout columns={2}>
-   <div><Box variant="h3">descuento = 8</Box><State value={result(8)}/></div>
-   <div><Box variant="h3">descuento = 25</Box><State value={result(25)}/></div>
-  </ColumnLayout></Panel>
+  <Panel title={"Matriz de la regla · v"+version}>
+   <ColumnLayout columns={2}>
+    <div><Box variant="h3">descuento = 8</Box><State value={result(8)}/></div>
+    <div><Box variant="h3">descuento = 25</Box><State value={result(25)}/></div>
+   </ColumnLayout>
+   <Box color="text-body-secondary" fontSize="body-s">Ejemplo determinista de un parámetro. La matriz automatizada de ≥30 escenarios y el parser Cedar real son requisitos de backend; no se ejecutan en esta maqueta.</Box>
+  </Panel>
  </SpaceBetween>;
 }
 function Guide(){
