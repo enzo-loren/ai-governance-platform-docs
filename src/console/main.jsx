@@ -40,7 +40,7 @@ function Application(){
  const [route,setRoute]=useState(fromLocation);
  const [help,setHelp]=useState(null);
  const [message,setMessage]=useState(null);
- const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"], approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"}});
+ const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"], approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},presentation:false});
  const [focusId,setFocusId]=useState(null);
  const preview=new URLSearchParams(location.search).get("preview")==="1";
  const slice=route.slice;
@@ -96,10 +96,10 @@ function Application(){
        const screen=q.get("screen");
        if(screen){event.preventDefault();navigate(screen)}
      }} />}
-   content={<div id="console-content">
+   content={<div id="console-content" className={simulation.presentation?"presentation-mode":""}>
       <SpaceBetween size="l">
        {!preview&&<div className="prototype-controls">
-        <div><span className="prototype-tag">PROTOTIPO INTERACTIVO · DATOS SINTÉTICOS</span>
+        <div className="prototype-description"><span className="prototype-tag">PROTOTIPO INTERACTIVO · DATOS SINTÉTICOS</span>
         <Box variant="small" color="text-body-secondary">No conectado a AWS. Las acciones se simulan localmente.</Box></div>
         <FormField label="Corte del producto">
          <Select selectedOption={{label:slice+" · "+data.stages[sliceIndex(slice)].name,value:slice}}
