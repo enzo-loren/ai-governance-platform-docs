@@ -19,13 +19,13 @@ const expected={
  "s0-connect":"Registrar agente",
  "s0-live":"Flujo de solicitudes",
  "s1-coverage":"Qué ocurre en la plataforma",
- "s1-inventory":"Inventario de tools",
+ "s1-inventory":"Tools detectadas",
  "s1-shadow":"Historia de la transacción",
  "s2-activate":"Impacto de activar",
  "s2-limits":"Presupuesto",
  "s3-identity":"Principal efectivo",
  "s3-user-spend":"Presupuesto",
- "s4-mcp":"Herramientas y destinos",
+ "s4-mcp":"Tools por MCP",
  "s4-policy":"Constructor visual",
  "s4-guide":"Instrucciones por conexión",
  "s5-approvals":"Solicitudes",
@@ -72,8 +72,8 @@ try{
    if(await board.count()){
     const toggle=board.getByText("Pizarra editorial y trazabilidad",{exact:true});
     assert(await toggle.isVisible(),prefix+" no muestra título de pizarra");
-    const closed=await board.locator('button[aria-expanded="false"]').count();
-    assert(closed>=1,prefix+" no abre la pizarra plegada");
+    const beforeOpen=await board.getByText("Decisión editorial:",{exact:false}).isVisible().catch(()=>false);
+    assert(!beforeOpen,prefix+" muestra el contenido de la pizarra sin abrirla");
     await toggle.click();
     assert((await board.innerText()).includes("Decisión editorial"),prefix+" perdió la decisión editorial");
    }
