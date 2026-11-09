@@ -56,7 +56,11 @@ function Application(){
  const [route,setRoute]=useState(fromLocation);
  const [help,setHelp]=useState(null);
  const [message,setMessage]=useState(null);
- const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"], approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},presentation:false,selectedAgentId:"agt-demo",agentRegistry:[{id:"agt-demo",name:"agente-demo",owner:"Operador plataforma",mode:"Descubrimiento",model:"bedrock-a",tokens:[{id:"cred-demo-1",suffix:"D3MO",status:"Activa",created:"Demo inicial"}]}]});
+ const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},presentation:false,selectedAgentId:"agt-demo",agentRegistry:[{id:"agt-demo",name:"agente-demo",owner:"Operador plataforma",mode:"Descubrimiento",model:"bedrock-a",tokens:[{id:"cred-demo-1",suffix:"D3MO",status:"Activa",created:"Demo inicial"}],
+discoveredTools:["consultar_ficha","actualizar_precio","eliminar_registro","procesar_lote"],
+toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"],
+toolReviews:{},toolSettings:{},
+mcpTargets:[{id:"lambda-demo",type:"AWS Lambda",secret:"IAM / AgentCore Identity",status:"Registrado (demo)"},{id:"openapi-demo",type:"OpenAPI HTTPS",secret:"API key / Secrets Manager",status:"Registrado (demo)"}]}]});
  const slice=route.slice;
  const active=findScreen(route.screen)||data.screens[0];
  const visible=useMemo(()=>latestScreens(slice),[slice]);
