@@ -97,7 +97,29 @@ try{
   check(await page.getByText("Esta acción modifica solo los datos de muestra",{exact:false}).count()>0,
     viewport.name+" el modo limpio oculta una confirmación de seguridad");
 
-  results.push({viewport:viewport.name,roadmapToggle:true,consoleToggle:true,deepLinks:true,cleanDefault:true,protectedConfirmations:true});
+  // Regresión reportada por el usuario: al abrir directamente Ruta forense S6
+  // deben verse título de producto y el interruptor; nunca la vieja pregunta.
+  await page.goto(base+"assets/console.html?slice=S6&screen=s6-forensic",{waitUntil:"domcontentloaded"});
+  await page.locator("#governance-root h1").first().waitFor({timeout:12000});
+  check((await page.locator("#governance-root h1").first().textContent()).trim()==="Ruta forense",
+    viewport.name+" S6: sigue mostrando pregunta antigua en lugar del título");
+  const s6Toggle=page.locator(".explanations-switch input[type=checkbox]");
+  check(await s6Toggle.isVisible(),viewport.name+" S6: el interruptor no es visible");
+  check(!await s6Toggle.isChecked(),viewport.name+" S6: no inicia limpio");
+  check(await page.getByRole("button",{name:"¿Qué muestra?"}).count()===0,
+    viewport.name+" S6: el botón contextual aparece sin pedirlo");
+  check(await page.locator(".prototype-footer").count()===0,
+    viewport.name+" S6: aparecen requisitos al iniciar");
+  await page.screenshot({path:output+"/"+viewport.name+"-s6-forense-limpia.png",fullPage:true});
+  await page.getByText("Mostrar explicaciones",{exact:true}).click();
+  check(await s6Toggle.isChecked(),viewport.name+" S6: el interruptor no activa explicaciones");
+  check(await page.getByRole("button",{name:"¿Qué muestra?"}).count()===1,
+    viewport.name+" S6: faltan ayudas tras activar el interruptor");
+  check(await page.locator(".prototype-footer").count()===1,
+    viewport.name+" S6: faltan fuentes tras activar el interruptor");
+  await page.screenshot({path:output+"/"+viewport.name+"-s6-forense-explicaciones.png",fullPage:true});
+
+  results.push({viewport:viewport.name,roadmapToggle:true,consoleToggle:true,deepLinks:true,cleanDefault:true,forensicS6:true,protectedConfirmations:true});
   verifyErrors();
   await page.close();
  }
