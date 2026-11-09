@@ -245,6 +245,7 @@ function ActiveAgent(){
  const mode=selected.mode;
  const [modelEdit,setModelEdit]=useState(null);
  const [presetEdit,setPresetEdit]=useState(null);
+ const [presetPreview,setPresetPreview]=useState(false);
  const models=selectOptions([["bedrock-a","Modelo del catálogo A"],["bedrock-b","Modelo del catálogo B"],["simulado","Simulado, si está disponible"]]);
  const presets=selectOptions([["1","1 · Caja Negra Segura"],["2","2 · Operación Supervisada"],["3","3 · Blindaje Estricto"]]);
  const model=selected.model||"bedrock-a";
@@ -275,7 +276,7 @@ function ActiveAgent(){
  };
  const saveSettings=()=>{
   updateSelected({model:modelEdit?.value||model,preset:presetEdit?.value||preset});
-  setModelEdit(null);setPresetEdit(null);
+  setModelEdit(null);setPresetEdit(null);setPresetPreview(false);
   notify("Modelos y Preset del agente "+selected.name+" cambiados en DEMO. No se aplicaron a AWS.");
  };
  const options=modelEdit||models.find(x=>x.value===model)||models[0];
@@ -304,13 +305,24 @@ function ActiveAgent(){
       <Select selectedOption={options} options={models} onChange={({detail})=>setModelEdit(detail.selectedOption)}/>
      </FormField>
      <FormField label="Preset de políticas">
-      <Select selectedOption={policyOption} options={presets} onChange={({detail})=>setPresetEdit(detail.selectedOption)}/>
+      <Select selectedOption={policyOption} options={presets} onChange={({detail})=>{setPresetEdit(detail.selectedOption);setPresetPreview(false)}}/>
      </FormField>
     </ColumnLayout>}
     {mode!=="Retirado"&&<SpaceBetween size="s">
      {policyOption.value==="2"&&<Alert type="warning">Preset 2 exige identidad C para escrituras y conexión B para aprobar herramientas críticas. Lo que falte se deniega con motivo explícito.</Alert>}
      {policyOption.value==="3"&&<Alert type="warning">Preset 3 deniega por defecto hasta contar con reglas nominales por rol y tool.</Alert>}
-     <Button disabled={!modelEdit&&!presetEdit} onClick={saveSettings}>Guardar configuración (demo)</Button>
+     {presetEdit&&presetEdit.value!==preset&&<SpaceBetween size="s">
+      <Button onClick={()=>setPresetPreview(true)}>Simular impacto del Preset</Button>
+      {presetPreview&&<Alert type="warning" header="Comparación ilustrativa, no reevaluación real">
+       <KeyValuePairs columns={2} items={[
+        {label:"Preset actual",value:"Preset "+preset+" · 3 posibles denegaciones"},
+        {label:"Preset propuesto",value:"Preset "+presetEdit.value+" · "+(presetEdit.value==="3"?"5":"2")+" posibles denegaciones"},
+        {label:"Tool que cambiaría",value:"actualizar_precio · ejemplo de transacción"},
+        {label:"Evidencia",value:"Falta reevaluar el tráfico real"}
+       ]}/>
+      </Alert>}
+     </SpaceBetween>}
+     <Button disabled={(!modelEdit&&!presetEdit)||!!(presetEdit&&presetEdit.value!==preset&&!presetPreview)} onClick={saveSettings}>Guardar configuración (demo)</Button>
     </SpaceBetween>}
    </SpaceBetween>
   </Container>
