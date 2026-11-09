@@ -60,7 +60,9 @@ try{
     check(!await explanations.isChecked(),vp.id+"/"+view+" inicia con explicaciones activadas");
     await page.getByText("Mostrar explicaciones",{exact:true}).click();
     check(await explanations.isChecked(),vp.id+"/"+view+" el switch no se activó");
-    await page.getByRole("button",{name:"¿Qué muestra?"}).click();
+    check(await page.getByRole("button",{name:"¿Qué muestra?"}).count()===0,"La consola debe iniciar limpia");
+  await page.getByText("Mostrar explicaciones",{exact:true}).click();
+  await page.getByRole("button",{name:"¿Qué muestra?"}).click();
     check(await page.getByText("Esta explicación describe el diseño previsto",{exact:false}).count()>0,
       vp.id+"/"+view+" la ayuda no abre");
     await page.keyboard.press("Escape");
