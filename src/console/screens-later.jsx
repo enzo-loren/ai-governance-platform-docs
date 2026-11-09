@@ -478,6 +478,11 @@ function Forensic(){
  const [seal,setSeal]=useState(false);
  const record=audit.find(x=>x.id===simulation.selectedTraceId)||audit[0];
  const blocked=record.decision==="Denegado";
+ const originalPolicies={
+  "descuento_máximo · v3":'forbid(principal, action == Gov::Action::"UsarTool::actualizar_precio", resource) when { context.parametros.descuento > 10 };',
+  "Preset 1 · v1":'forbid(principal, action == Gov::Action::"UsarTool::eliminar_registro", resource);',
+  "Preset 2 · v2":'forbid(principal, action == Gov::Action::"UsarTool::cambiar_fondo", resource) unless { context.aprobado == true };'
+ };
  const events=[
   {id:1,name:"Solicitud",reason:record.who+" · "+record.agent+" · "+record.channel},
   {id:2,name:record.channel==="mcp"?"Invocación MCP":"Inferencia del modelo",reason:record.tool+" · "+record.model+" · "+record.connections},
@@ -492,7 +497,7 @@ function Forensic(){
     {label:"Canal y conexiones",value:record.channel+" · "+record.connections},
     {label:"Decisión",value:<State value={record.decision}/>},
     {label:"Modelo",value:record.model},
-    {label:"Correlación",value:"tool_call_id / inferida (demo)"}
+    {label:"Correlación",value:record.channel==="mcp"?"tool_call_id / MCP (demo)":"tool_call_id / intención (demo)"}
    ]}/>
   </Container>
   <ColumnLayout columns={2}>
@@ -510,10 +515,13 @@ function Forensic(){
       {label:"Autor del último cambio",value:record.author},
       {label:"Detalle seleccionado",value:events.find(x=>x.id===step)?.reason||""}
      ]}/>
+     <Box variant="h3">Texto histórico de la regla · versión de esta transacción</Box>
+     <Box fontFamily="monospace" fontSize="body-s">{originalPolicies[record.policy]||"Texto histórico no disponible"}</Box>
+     <Explanation>Al editar una política, el producto debe conservar el texto original asociado con cada decisión, no sustituirlo por la versión actual.</Explanation>
     </Panel>
     <Panel title="Sello de evidencia">
      <SpaceBetween size="m">
-      <StatusIndicator type="success">Object Lock GOVERNANCE · contrato objetivo</StatusIndicator>
+      <StatusIndicator type="warning">Object Lock GOVERNANCE · no verificado</StatusIndicator>
       <KeyValuePairs columns={1} items={[
        {label:"Objeto",value:"evidencia/"+record.id+".json (ejemplo)"},
        {label:"Retención",value:"Configurada por despliegue; no medida en esta DEMO"},
