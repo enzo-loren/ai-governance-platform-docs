@@ -60,9 +60,7 @@ try{
     check(!await explanations.isChecked(),vp.id+"/"+view+" inicia con explicaciones activadas");
     await page.getByText("Mostrar explicaciones",{exact:true}).click();
     check(await explanations.isChecked(),vp.id+"/"+view+" el switch no se activó");
-    check(await page.getByRole("button",{name:"¿Qué muestra?"}).count()===0,"La consola debe iniciar limpia");
-  await page.getByText("Mostrar explicaciones",{exact:true}).click();
-  await page.getByRole("button",{name:"¿Qué muestra?"}).click();
+    await page.getByRole("button",{name:"¿Qué muestra?"}).click();
     check(await page.getByText("Esta explicación describe el diseño previsto",{exact:false}).count()>0,
       vp.id+"/"+view+" la ayuda no abre");
     await page.keyboard.press("Escape");
@@ -89,6 +87,8 @@ try{
  await page.locator("#governance-root h1").first().waitFor({timeout:12000});
  check(page.url().includes("console.html?slice=S4"),"Enlace Navegar no abre app HTML");
  check(await page.locator('[class*="awsui_"]').count()>10,"Navegación no usa Cloudscape");
+ check(await page.getByRole("button",{name:"¿Qué muestra?"}).count()===0,"La consola debe iniciar limpia");
+ await page.getByText("Mostrar explicaciones",{exact:true}).click();
  await page.getByRole("button",{name:"¿Qué muestra?"}).click();
  await page.keyboard.press("Escape");
  check(errors.length===0,"Errores JS desde roadmap "+JSON.stringify(errors));
