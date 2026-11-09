@@ -146,26 +146,61 @@ function Coverage(){
  </SpaceBetween>;
 }
 function Inventory(){
- const {helpOn}=usePrototype();
+ const {notify}=usePrototype();
  const [filter,setFilter]=useState("");
  const [selected,setSelected]=useState(null);
- const items=dummyTools.filter(x=>x.id.includes(filter.toLowerCase()));
+ const [overrides,setOverrides]=useState({});
+ const classes=[{value:"Lectura",label:"Lectura"},{value:"Escritura",label:"Escritura"},{value:"Destructiva",label:"Destructiva o crítica"},{value:"Sin clasificar",label:"Sin clasificar"}];
+ const [draftClass,setDraftClass]=useState(classes[0]);
+ const items=dummyTools.map(tool=>({...tool,...overrides[tool.id]}))
+  .filter(tool=>tool.id.toLowerCase().includes(filter.toLowerCase()));
+ const open=tool=>{
+  setSelected(tool);
+  setDraftClass(classes.find(option=>option.value===tool.kind)||classes[3]);
+ };
+ const reviewed=items.filter(tool=>tool.status==="Revisada").length;
+ const unclassified=items.filter(tool=>tool.kind==="Sin clasificar").length;
+ const confirm=()=>{
+  if(!selected)return;
+  setOverrides(prev=>({...prev,[selected.id]:{kind:draftClass.value,status:"Revisada"}}));
+  notify("Clasificación de "+selected.id+" revisada solo en esta DEMO.");
+  setSelected(null);
+ };
  return <SpaceBetween size="l">
-  <Panel title="Clasificación automática" info="Las herramientas se descubren desde el campo tools de la inferencia. Su clase es una sugerencia y requiere revisión.">
-   <ColumnLayout columns={3}><SmallKpi title="Declaradas" value="4" context="Payload de inferencia"/><SmallKpi title="Sin clasificar" value="1" context="Revisión necesaria"/><SmallKpi title="MCP" value="0" context="B se incorpora en S4"/></ColumnLayout>
+  <Panel title="Descubrimiento de herramientas" info="INF-02: cada declaración de tools se cataloga por agente y versión de esquema; la clase automática es sugerida, no una aprobación.">
+   <ColumnLayout columns={3}>
+    <SmallKpi title="Detectadas" value="4" context="Inferencias simuladas"/>
+    <SmallKpi title="Sin clasificar" value={String(unclassified)} context="Requieren revisión"/>
+    <SmallKpi title="Revisadas" value={String(reviewed)} context="Confirmadas por operador (demo)"/>
+   </ColumnLayout>
   </Panel>
   <Table items={items} trackBy="id" header={<Header variant="h2">Inventario de tools</Header>}
    filter={<TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Filtrar por nombre"/>}
    columnDefinitions={[
-    {id:"name",header:"Tool",cell:x=><Button variant="link" onClick={()=>setSelected(x)}>{x.id}</Button>},
-    {id:"kind",header:"Clase sugerida",cell:x=>x.kind},
-    {id:"schema",header:"Esquema",cell:x=>x.schema},
-    {id:"state",header:"Revisión",cell:x=>x.status==="Aprobada"?<StatusIndicator type="success">Sugerida</StatusIndicator>:<StatusIndicator type="warning">Pendiente</StatusIndicator>},
-    {id:"coverage",header:"Ejecución",cell:()=><StatusIndicator type="stopped">Fuera de la puerta</StatusIndicator>}
+    {id:"name",header:"Tool",cell:tool=><Button variant="link" onClick={()=>open(tool)}>{tool.id}</Button>},
+    {id:"kind",header:"Clase",cell:tool=>tool.kind},
+    {id:"schema",header:"Esquema",cell:tool=>tool.schema},
+    {id:"state",header:"Clasificación",cell:tool=><StatusIndicator type={tool.status==="Revisada"?"success":"warning"}>{tool.status==="Revisada"?"Revisada":"Sugerida · revisar"}</StatusIndicator>},
+    {id:"coverage",header:"Ejecución",cell:()=><StatusIndicator type="stopped">Fuera de MCP</StatusIndicator>}
    ]}/>
-  <Explanation>En S1 se observa la intención del modelo. El control de ejecución real por MCP llega en S4.</Explanation>
-  <Modal visible={!!selected} header={selected?.id||"Tool"} onDismiss={()=>setSelected(null)} footer={<Box float="right"><Button onClick={()=>setSelected(null)}>Cerrar</Button></Box>}>
-   <KeyValuePairs columns={2} items={[{label:"Clase sugerida",value:selected?.kind||""},{label:"Versión del esquema",value:selected?.schema||""},{label:"Estado",value:selected?.status||""},{label:"Canal",value:"A · inferencia"}]}/>
+  <Explanation>En S1 se observa la intención del modelo, no la ejecución local. En S4 las tools que pasan por MCP pueden gobernarse también al ejecutarse. La aprobación de una tool es independiente de revisar su clase.</Explanation>
+  <Modal visible={!!selected} header={selected?.id||"Revisar clasificación"} onDismiss={()=>setSelected(null)}
+   footer={<Box float="right"><SpaceBetween direction="horizontal" size="s">
+    <Button onClick={()=>setSelected(null)}>Cancelar</Button>
+    <Button variant="primary" onClick={confirm}>Confirmar clase (demo)</Button>
+   </SpaceBetween></Box>}>
+   <SpaceBetween size="m">
+    <KeyValuePairs columns={2} items={[
+     {label:"Clase inferida",value:dummyTools.find(tool=>tool.id===selected?.id)?.kind||""},
+     {label:"Versión de esquema",value:selected?.schema||""},
+     {label:"Estado",value:selected?.status==="Revisada"?"Revisada":"Sugerida · sin validar"},
+     {label:"Canal",value:"A · intención, no ejecución"}
+    ]}/>
+    <FormField label="Clasificación revisada">
+     <Select selectedOption={draftClass} options={classes} onChange={({detail})=>setDraftClass(detail.selectedOption)}/>
+    </FormField>
+    <Box fontSize="body-s" color="text-body-secondary">Revisar la clasificación no habilita automáticamente la ejecución: la aprobación y el control MCP son pasos separados.</Box>
+   </SpaceBetween>
   </Modal>
  </SpaceBetween>;
 }
