@@ -6,8 +6,8 @@
 <meta name="description" content="Evolución visual del MVP de gobernanza de agentes: cada slice muestra únicamente las nuevas pantallas y los cambios que incorpora.">
 <meta name="theme-color" content="#101e36">
 <title>Evolución del producto · AI Governance Platform</title>
-<link rel="stylesheet" href="assets/slices.css">
-<script src="assets/slices.js" defer></script>
+<link rel="stylesheet" href="assets/roadmap-cloudscape-v2.css">
+<script src="assets/roadmap-cloudscape-v2.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#pantallas">Saltar a las pantallas</a>
@@ -21,31 +21,43 @@
  <section class="hero container" aria-labelledby="hero-title">
   <div class="kicker"><span class="pin"></span> EVOLUCIÓN DEL MVP · MÓDULO A</div>
   <h1 id="hero-title">Qué cambia en cada slice.</h1>
-  <p>Una entrega a la vez. Explora las pantallas nuevas o modificadas en una consola HTML con componentes Cloudscape.</p>
+  <p>Descubre qué pantallas aparecen o cambian en cada entrega. Abre cualquiera para recorrer el prototipo Cloudscape.</p>
   <div class="hero-note"><span class="note-symbol" aria-hidden="true">◇</span> <span>Prototipos <b>HTML navegables, con datos sintéticos</b>. Los controles simulan su comportamiento; no hay operaciones reales en AWS.</span></div>
  </section>
 
  <section class="timeline container" aria-label="Seleccionar slice">
   <div class="timeline-head"><span>RECORRIDO DEL PRODUCTO</span><span>7 ENTREGAS · S0–S6</span></div>
-  <div id="steps" class="steps" role="group" aria-label="Etapas del MVP"></div>
+  <div id="steps" class="steps" role="group" aria-label="Etapas del MVP"><a class="step step-fallback" href="assets/console.html?slice=S0&amp;screen=s0-connect">S0 · Fundación · Abrir consola</a></div>
  </section>
 
  <section id="pantallas" class="content container" aria-labelledby="section-title">
   <div class="content-top">
    <div>
     <div class="stage-label" id="stage-code">SLICE 0 · FUNDACIÓN</div>
-    <h2 id="section-title">Fundación</h2>
+    <h2 id="section-title" tabindex="-1">Fundación</h2>
     <p class="stage-promise" id="stage-promise"></p>
    </div>
    <div class="content-meta"><div class="stage-metrics" id="stage-metrics" aria-live="polite"></div>
-    <div class="view-switch" aria-label="Modo de visualización">
+    <div class="view-switch" role="group" aria-label="Elegir qué pantallas mostrar">
      <button id="mode-delta" type="button" class="is-active" aria-pressed="true">Solo cambios</button>
      <button id="mode-all" type="button" aria-pressed="false">Producto acumulado</button>
     </div>
    </div>
   </div>
-  <div class="gallery-label"><span id="gallery-label">Pantallas de esta entrega</span><span id="gallery-count"></span></div>
-  <div id="gallery" class="gallery" aria-live="polite"></div>
+  <div class="gallery-label"><span id="gallery-label">Pantallas de esta entrega</span><span id="gallery-count" role="status"></span></div>
+  <div id="gallery" class="gallery" aria-live="polite">
+   <article class="screen-card fallback-card">
+    <div class="screen-meta"><span class="screen-eyebrow">S0 · Fundación</span><span class="delta-new">Nueva</span></div>
+    <div class="fallback-illustration"><span class="fallback-icon" aria-hidden="true">▦</span><span>Consola de agentes · Cloudscape</span></div>
+    <div class="card-bottom"><div><h3>Alta del agente</h3><p>¿Cómo conecto un agente?</p></div><a class="open-screen" href="assets/console.html?slice=S0&amp;screen=s0-connect">Explorar <span aria-hidden="true">↗</span></a></div>
+   </article>
+   <article class="screen-card fallback-card">
+    <div class="screen-meta"><span class="screen-eyebrow">S0 · Fundación</span><span class="delta-new">Nueva</span></div>
+    <div class="fallback-illustration"><span class="fallback-icon" aria-hidden="true">≋</span><span>Flujo en vivo · Cloudscape</span></div>
+    <div class="card-bottom"><div><h3>Flujo en vivo</h3><p>¿Qué está pasando ahora?</p></div><a class="open-screen" href="assets/console.html?slice=S0&amp;screen=s0-live">Explorar <span aria-hidden="true">↗</span></a></div>
+   </article>
+  </div>
+  <noscript><p class="fallback-message">Activa JavaScript para elegir otros slices. Puedes abrir las dos pantallas iniciales usando «Explorar».</p></noscript>
   <div class="lower-nav"><button id="prev-slice" type="button">← Slice anterior</button><button id="next-slice" type="button">Siguiente slice →</button></div>
  </section>
 
