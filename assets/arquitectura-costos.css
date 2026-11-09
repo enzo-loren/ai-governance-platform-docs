@@ -1,0 +1,97 @@
+/* Calculadora bajo la arquitectura: reglas confinadas a .aws-costs.
+ * No modifica el lienzo SVG ni sus controles A/B/C. */
+.aws-costs{
+  --costs-ink:#18344e;--costs-muted:#52677e;--costs-stroke:#d5e1ed;
+  max-width:1180px;margin:48px auto 38px;padding:28px 28px 22px;
+  border:1px solid #c8d8e8;border-radius:16px;background:#fff;
+  box-shadow:0 6px 24px rgba(20,50,78,.045);color:var(--costs-ink);
+}
+.aws-costs *{box-sizing:border-box}
+.aws-costs .costs-header{display:flex;align-items:start;justify-content:space-between;gap:24px;margin-bottom:23px}
+.aws-costs .costs-eyebrow{margin:0 0 7px;color:#24649e;letter-spacing:.095em;font-size:11px;font-weight:850}
+.aws-costs h2{font-size:clamp(22px,2.4vw,30px);letter-spacing:-.035em;line-height:1.2;margin:0 0 9px}
+.aws-costs .costs-header p:not(.costs-eyebrow){margin:0;color:var(--costs-muted);font-size:14px;line-height:1.6;max-width:780px}
+.aws-costs .costs-region{flex:0 0 auto;border:1px solid var(--costs-stroke);border-radius:8px;padding:8px 11px;color:#3b5875;font-size:12px;font-weight:800;white-space:nowrap}
+.aws-costs .costs-scenarios{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.aws-costs .costs-scenario{
+  text-align:left;min-width:0;display:flex;align-items:start;flex-direction:column;gap:5px;
+  padding:17px 18px;border:1.5px solid #cfdeeb;border-radius:11px;background:#f9fbfe;
+  color:#1c405f;transition:border-color .12s,background .12s;min-height:158px
+}
+.aws-costs .costs-scenario:hover{border-color:#6ca0ce;background:#f0f7ff}
+.aws-costs .costs-scenario[aria-pressed=true]{background:#edf6ff;border-color:#1673be;box-shadow:inset 0 0 0 1px #1673be}
+.aws-costs .costs-scenario-label{font-size:11px;color:#356a99;font-weight:800;text-transform:uppercase;letter-spacing:.055em}
+.aws-costs .costs-scenario strong{font-size:14px;line-height:1.4}
+.aws-costs .costs-scenario-total{margin-top:7px;font-size:clamp(21px,2.5vw,30px);letter-spacing:-.035em;line-height:1.05;font-weight:850;color:#153c61;font-variant-numeric:tabular-nums}
+.aws-costs .costs-scenario small{font-size:12px;line-height:1.5;color:#536c85}
+.aws-costs .costs-settings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:22px 0}
+.aws-costs label{font-size:12px;line-height:1.45;font-weight:750;color:#375370;display:block;min-width:0}
+.aws-costs input,.aws-costs select{display:block;width:100%;margin-top:7px;height:41px;border-radius:8px;border:1px solid #adc3d9;background:#fff;padding:8px 11px;color:#152f49;font:inherit;font-size:14px;font-weight:550;font-variant-numeric:tabular-nums;max-width:none}
+.aws-costs input:focus-visible,.aws-costs select:focus-visible,.aws-costs button:focus-visible,.aws-costs summary:focus-visible,.aws-costs a:focus-visible,.aws-costs .costs-table-scroll:focus-visible{outline:3px solid #e9a01e;outline-offset:2px}
+.aws-costs .costs-selected{display:flex;justify-content:space-between;align-items:end;gap:18px;flex-wrap:wrap;padding:17px 21px;background:#eef7f3;border-left:4px solid #118269;border-radius:8px;margin-bottom:20px}
+.aws-costs .costs-value-label,.aws-costs .costs-unit span{display:block;color:#375c51;font-size:12px;font-weight:700;line-height:1.4}
+.aws-costs .costs-big-value{display:block;margin-top:4px;font-size:clamp(27px,3vw,37px);color:#12634e;font-weight:850;letter-spacing:-.035em;line-height:1.1;font-variant-numeric:tabular-nums}
+.aws-costs .costs-unit{text-align:right}
+.aws-costs .costs-unit output{display:block;margin-top:6px;color:#245d4f;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.aws-costs .costs-table-scroll{overflow-x:auto;border:1px solid var(--costs-stroke);border-radius:10px}
+.aws-costs .costs-table{width:100%;border-collapse:collapse;font-size:13px;min-width:610px}
+.aws-costs .costs-table th{background:#f0f5fa;font-weight:800;color:#304f70;text-align:left;padding:12px 14px;border-bottom:1px solid #d9e5ef}
+.aws-costs .costs-table td{padding:12px 14px;border-bottom:1px solid #e6edf3;vertical-align:top;color:#2a435b;line-height:1.45}
+.aws-costs .costs-table tr:last-child td{border-bottom:0}
+.aws-costs .costs-table td:first-child{font-weight:750;color:#193a57}
+.aws-costs .costs-table .costs-money,.aws-costs .costs-table th:last-child{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.aws-costs .costs-details{margin-top:13px;border:1px solid var(--costs-stroke);border-radius:10px;background:#fbfcfe}
+.aws-costs .costs-details summary{padding:14px 17px;list-style:none;cursor:pointer;font-size:14px;font-weight:800;color:#1d598f;display:flex;flex-wrap:wrap;gap:9px;align-items:center;min-height:49px}
+.aws-costs .costs-details summary::-webkit-details-marker{display:none}
+.aws-costs .costs-details summary::before{content:"+";display:inline-grid;place-items:center;width:20px;height:20px;line-height:1;background:#e8f1fa;border:1px solid #bcd1e4;border-radius:5px;font-size:16px}
+.aws-costs .costs-details[open] summary::before{content:"−"}
+.aws-costs .costs-details summary span{font-size:12px;font-weight:550;color:#667c92}
+.aws-costs .costs-advanced-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:3px 17px 18px}
+.aws-costs .costs-small{margin:0 17px 17px;color:#60748a;font-size:12px;line-height:1.6}
+.aws-costs .costs-notes{padding:0 17px 16px;color:#435c74;font-size:13px;line-height:1.65}
+.aws-costs .costs-notes p{margin:9px 0}
+.aws-costs .costs-notes a{color:#1663a2}
+.aws-costs .costs-disclaimer{margin:15px 1px 0;color:#647b90;font-size:12px;line-height:1.5}
+@media(max-width:800px){
+ .aws-costs{margin:26px 8px 30px;padding:20px 18px}
+ .aws-costs .costs-header{display:block}
+ .aws-costs .costs-region{display:inline-block;margin-top:12px}
+ .aws-costs .costs-settings{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .aws-costs .costs-advanced-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:570px){
+ .aws-costs{padding:18px 13px;margin:22px 0 28px;border-radius:12px}
+ .aws-costs .costs-header{margin-bottom:15px}
+ .aws-costs .costs-scenarios{grid-template-columns:1fr;gap:9px}
+ .aws-costs .costs-scenario{min-height:auto;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto auto;gap:2px 9px;padding:12px 14px}
+ .aws-costs .costs-scenario-label{grid-column:1;grid-row:1}
+ .aws-costs .costs-scenario strong{grid-column:1;grid-row:2}
+ .aws-costs .costs-scenario-total{grid-column:2;grid-row:1/3;justify-self:end;align-self:center;margin:0;font-size:23px}
+ .aws-costs .costs-scenario small{grid-column:1/-1;grid-row:3}
+ .aws-costs .costs-settings,.aws-costs .costs-advanced-grid{grid-template-columns:1fr}
+ .aws-costs .costs-settings{gap:11px;margin:17px 0}
+ .aws-costs .costs-selected{padding:14px 15px}
+ .aws-costs .costs-unit{text-align:left}
+ .aws-costs .costs-details summary{align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){.aws-costs *{transition:none!important}}
+
+/* Acceso directo visible incluso en la barra responsive. */
+.costs-shortcut{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 12px;border:1px solid #acc9df;border-radius:9px;color:#145b8f;background:#f2f8fd;font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap}
+.costs-shortcut:hover{background:#e1f1fc;text-decoration:underline}
+.costs-shortcut:focus-visible{outline:3px solid #e9a01e;outline-offset:2px}
+.aws-costs{scroll-margin-top:24px}
+
+/* Móvil: un desglose completo por tarjeta evita ocultar los precios a la derecha.
+ * La tabla mantiene sus encabezados semánticos para lectores de pantalla. */
+@media(max-width:570px){
+ .aws-costs .costs-table-scroll{overflow:visible;border:0;border-radius:0}
+ .aws-costs .costs-table{display:block;min-width:0;border-collapse:separate}
+ .aws-costs .costs-table thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+ .aws-costs .costs-table tbody{display:grid;gap:9px}
+ .aws-costs .costs-table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"service price" "assumption assumption";align-items:start;gap:5px 12px;padding:12px 13px;background:#f9fbfe;border:1px solid #d6e1ec;border-radius:9px}
+ .aws-costs .costs-table tbody td{display:block;min-width:0;padding:0!important;border:0!important;font-size:12px;line-height:1.45;overflow-wrap:break-word}
+ .aws-costs .costs-table tbody td:first-child{grid-area:service;font-size:13px;font-weight:800;color:#193a57}
+ .aws-costs .costs-table tbody td:nth-child(2){grid-area:assumption;color:#52687f}
+ .aws-costs .costs-table tbody td:nth-child(3){grid-area:price;justify-self:end;text-align:right;font-size:14px;font-weight:800;color:#124d7e;white-space:nowrap}
+}

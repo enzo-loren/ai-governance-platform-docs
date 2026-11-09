@@ -1,0 +1,41 @@
+name: Arquitectura AWS · calculadora de costos
+on:
+  push:
+    branches:
+      - feat/costos-aws-al-pie-arquitectura
+  pull_request:
+    paths:
+      - 'assets/arquitectura.html'
+      - 'assets/arquitectura-costos.css'
+      - 'assets/arquitectura-costos.js'
+      - 'tests/architecture-costs-qa.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: architecture-costs-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  estimate-ui:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Instalar Playwright
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save playwright@1.56.1 --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Validar precios, desglose, arquitectura y responsive en Chromium
+        run: node tests/architecture-costs-qa.mjs
+      - name: Capturas y reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-costs-qa
+          path: artifacts/architecture-costs-qa/
+          retention-days: 14
