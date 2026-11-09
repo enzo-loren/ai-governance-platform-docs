@@ -328,9 +328,9 @@ function ActiveAgent(){
      <FormField label="Modelo permitido" description={showExplanations?"Cambio individual de catálogo; se aplica en ≤10 s en el producto real.":undefined}>
       <Select selectedOption={options} options={models} onChange={({detail})=>setModelEdit(detail.selectedOption)}/>
      </FormField>
-     <FormField label="Preset de políticas">
+     <div data-testid="preset-policy-select"><FormField label="Preset de políticas">
       <Select selectedOption={policyOption} options={presets} onChange={({detail})=>{setPresetEdit(detail.selectedOption);setPresetPreview(false)}}/>
-     </FormField>
+     </FormField></div>
     </ColumnLayout>}
     {mode!=="Retirado"&&<SpaceBetween size="s">
      {policyOption.value==="2"&&<Alert type="warning">Preset 2 exige identidad C para escrituras y conexión B para aprobar herramientas críticas. Lo que falte se deniega con motivo explícito.</Alert>}
