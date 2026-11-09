@@ -98,7 +98,7 @@ const links=[
 {from:'approval',to:'approver',type:'b',label:'decisión',p:'M2030 990 H2120',tx:2042,ty:975},
 {from:'approver',to:'approvalRun',type:'b',label:'aprobada',p:'M2412 993 H2460',tx:2398,ty:970},
 {from:'approvalRun',to:'entry',type:'b',label:'identidad interna · D-13',p:'M2575 930 V816 H990 V496 H962',tx:2265,ty:805},
-{from:'oidc',to:'request',type:'c',label:'JWKS + claims',p:'M2423 727 H2390 V835 H1390 V374 H1351',tx:2268,ty:824},
+{from:'oidc',to:'request',type:'c',label:'JWKS + claims',p:'M2423 727 H2390 V835 H1390 V374 H1351',tx:2185,ty:806},
 {from:'console',to:'api',type:'admin',label:'REST',p:'M777 997 H834',tx:786,ty:977},
 {from:'api',to:'apiLambda',type:'admin',label:'JWT',p:'M1089 997 H1149',tx:1105,ty:977},
 {from:'apiLambda',to:'cognitoAdmin',type:'admin',label:'auth',p:'M1404 996 H1435',tx:1393,ty:978},
