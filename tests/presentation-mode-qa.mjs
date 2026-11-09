@@ -92,6 +92,10 @@ try{
    }
    await page.screenshot({path:output+"/"+viewport.name+"-"+id+".png",fullPage:true});
    if(viewport.name==="1080p"&&id==="s0-live"){
+    // Elegir pasos manualmente pausa la rotación; reanudar antes de probar pausa.
+    if(await page.getByRole("button",{name:"Reanudar"}).count()){
+     await page.getByRole("button",{name:"Reanudar"}).click();
+    }
     await page.getByRole("button",{name:"Pausar"}).click();
     const before=await page.locator(".gov-present-feature h2").textContent();
     await page.waitForTimeout(4800);
