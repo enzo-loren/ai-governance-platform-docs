@@ -21,6 +21,8 @@ import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
 import Textarea from "@cloudscape-design/components/textarea";
 import ExpandableSection from "@cloudscape-design/components/expandable-section";
 import {usePrototype,Explanation} from "./main.jsx";
+import {AgentSelector,selectedFrom} from "./agent-credentials.jsx";
+import {mcpFor,approvalsFor,supervisionFor,setMcpFor,setApprovalsFor,setSupervisionFor} from "./agent-tool-state.js";
 
 const tools=[
  {id:"consultar_ficha",kind:"Lectura",target:"Lambda MCP",approved:true,when:"Permitido"},
@@ -47,13 +49,13 @@ function State({value}){
  return <StatusIndicator type={types[value]||"info"}>{value}</StatusIndicator>;
 }
 function MCP(){
- const {simulation,setSimulation,notify,helpOn,showExplanations,slice}=usePrototype();
+ const {simulation,setSimulation,notify,helpOn,showExplanations,slice,navigate}=usePrototype();
  const rank=Number(slice.slice(1));
- const agent=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)||simulation.agentRegistry[0];
+ const agent=selectedFrom(simulation);
  const [filter,setFilter]=useState("");
  const [row,setRow]=useState(null);
- const approved=simulation.approvedTools||[];
- const supervision=simulation.supervision||{};
+ const approved=approvalsFor(simulation,agent.id);
+ const supervision=supervisionFor(simulation,agent.id);
  const [targetName,setTargetName]=useState("");
  const [targetType,setTargetType]=useState({value:"lambda",label:"AWS Lambda"});
  const [targetModal,setTargetModal]=useState(false);
@@ -61,14 +63,14 @@ function MCP(){
   {id:"lambda-demo",type:"AWS Lambda",secret:"IAM / AgentCore Identity",status:"Registrado (demo)"},
   {id:"openapi-demo",type:"OpenAPI HTTPS",secret:"API key / Secrets Manager",status:"Registrado (demo)"}
  ]);
- const mcp=simulation.toolsMcp;
+ const mcp=mcpFor(simulation,agent.id);
  const filtered=tools.map(x=>({...x,...(simulation.toolOverrides?.[agent.id+":"+x.id]||{}),schema:simulation.toolSchemaVersions?.[agent.id+":"+x.id]||"v1"})).filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
  const toggle=(id,checked)=>{
-  setSimulation(prev=>({...prev,toolsMcp:checked?[...new Set([...prev.toolsMcp,id])]:prev.toolsMcp.filter(name=>name!==id)}));
+  setSimulation(prev=>{const old=mcpFor(prev,agent.id);return setMcpFor(prev,agent.id,checked?[...new Set([...old,id])]:old.filter(name=>name!==id));});
   notify("Cobertura MCP de la demostración actualizada.");
  };
  const decision=x=>!mcp.includes(x.id)?"Fuera de la puerta":approved.includes(x.id)?"Permitido":agent.mode==="Descubrimiento"?"En sombra":"Denegado";
- const changeSupervision=(id,value)=>setSimulation(prev=>({...prev,supervision:{...prev.supervision,[id]:value}}));
+ const changeSupervision=(id,value)=>setSimulation(prev=>setSupervisionFor(prev,agent.id,{...supervisionFor(prev,agent.id),[id]:value}));
  const register=()=>{
   if(!targetName.trim())return;
   if(targets.some(x=>x.id.toLowerCase()===targetName.trim().toLowerCase())){notify("Ya existe un target con ese nombre.","error");return}
@@ -77,6 +79,7 @@ function MCP(){
   notify("Target registrado en la demostración. No se creó ningún recurso AWS.");
  };
  return <SpaceBetween size="l">
+  <SpaceBetween direction="horizontal" size="s"><AgentSelector/><Button onClick={()=>navigate("s1-inventory")}>Volver al catálogo</Button></SpaceBetween>
   <ColumnLayout columns={3}>
    <Panel title="Tools declaradas"><div className="kpi-value">4</div><Box color="text-body-secondary">En inferencia A</Box></Panel>
    <Panel title="Tools por MCP"><div className="kpi-value">{mcp.length} de 4</div><Box color="text-body-secondary">Cobertura B parcial</Box></Panel>
@@ -126,7 +129,7 @@ function MCP(){
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s">
     <Button onClick={()=>setRow(null)}>Cerrar</Button>
     {row&&<Button variant="primary" onClick={()=>{
-     setSimulation(prev=>({...prev,approvedTools:approved.includes(row.id)?prev.approvedTools.filter(id=>id!==row.id):[...prev.approvedTools,row.id]}));
+     setSimulation(prev=>{const old=approvalsFor(prev,agent.id);return setApprovalsFor(prev,agent.id,old.includes(row.id)?old.filter(id=>id!==row.id):[...old,row.id]);});
      notify("Aprobación de "+row.id+" modificada únicamente en DEMO.");
      setRow(null);
     }}>{approved.includes(row?.id)?"Quitar aprobación (demo)":"Aprobar tool (demo)"}</Button>}
@@ -245,8 +248,8 @@ function Guide(){
  const [tab,setTab]=useState("a");
  const agent=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)||simulation.agentRegistry[0];
  const hasC=Number(slice.slice(1))>=3;
- const hasB=Number(slice.slice(1))>=4&&simulation.toolsMcp.length>0;
- const connectedB=hasB?simulation.toolsMcp.length:0;
+ const connectedB=Number(slice.slice(1))>=4?mcpFor(simulation,agent.id).length:0;
+ const hasB=connectedB>0;
  const missingB=4-connectedB;
  const placeholder="<AGENT_TOKEN_DE_"+agent.name.toUpperCase().replace(/[^A-Z0-9]+/g,"_")+">";
  const currentMax=hasB?(hasC?89:67):(hasC?56:41);
@@ -300,8 +303,9 @@ function Approvals(){
  const {simulation,setSimulation,notify}=usePrototype();
  const [selected,setSelected]=useState("APR42");
  const [confirm,setConfirm]=useState(null);
- const supervision=simulation.supervision||{};
- const setSupervision=update=>setSimulation(prev=>({...prev,supervision:typeof update==="function"?update(prev.supervision||{}):update}));
+ const selectedAgent=selectedFrom(simulation);
+ const supervision=supervisionFor(simulation,selectedAgent.id);
+ const setSupervision=update=>setSimulation(prev=>{const old=supervisionFor(prev,selectedAgent.id);return setSupervisionFor(prev,selectedAgent.id,typeof update==="function"?update(old):update);});
  const [supervisionTool,setSupervisionTool]=useState({label:"cambiar_fondo",value:"cambiar_fondo"});
  const actors=[
   {value:"elena",label:"Elena · aprobadora",role:"aprobador",name:"Elena"},
