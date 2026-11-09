@@ -43,14 +43,17 @@ function Panel({title,children,actions,help}){
  return <Container header={<Header variant="h2" info={showExplanations&&help?<Button variant="link" onClick={()=>helpOn(title,help)}>¿Qué significa?</Button>:undefined} actions={actions}>{title}</Header>}>{children}</Container>;
 }
 function State({value}){
- const types={Permitido:"success",Denegado:"error",Pendiente:"pending",Vencida:"warning","Fuera de la puerta":"stopped"};
+ const types={Permitido:"success",Denegado:"error",Pendiente:"pending",Vencida:"warning","En sombra":"info","Fuera de la puerta":"stopped"};
  return <StatusIndicator type={types[value]||"info"}>{value}</StatusIndicator>;
 }
 function MCP(){
- const {simulation,setSimulation,notify,helpOn,showExplanations}=usePrototype();
+ const {simulation,setSimulation,notify,helpOn,showExplanations,slice}=usePrototype();
+ const rank=Number(slice.slice(1));
+ const agent=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)||simulation.agentRegistry[0];
  const [filter,setFilter]=useState("");
  const [row,setRow]=useState(null);
- const [approved,setApproved]=useState(["consultar_ficha","actualizar_precio"]);
+ const approved=simulation.approvedTools||[];
+ const supervision=simulation.supervision||{};
  const [targetName,setTargetName]=useState("");
  const [targetType,setTargetType]=useState({value:"lambda",label:"AWS Lambda"});
  const [targetModal,setTargetModal]=useState(false);
@@ -59,12 +62,13 @@ function MCP(){
   {id:"openapi-demo",type:"OpenAPI HTTPS",secret:"API key / Secrets Manager",status:"Registrado (demo)"}
  ]);
  const mcp=simulation.toolsMcp;
- const filtered=tools.filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
+ const filtered=tools.map(x=>({...x,...(simulation.toolOverrides?.[agent.id+":"+x.id]||{}),schema:simulation.toolSchemaVersions?.[agent.id+":"+x.id]||"v1"})).filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
  const toggle=(id,checked)=>{
   setSimulation(prev=>({...prev,toolsMcp:checked?[...new Set([...prev.toolsMcp,id])]:prev.toolsMcp.filter(name=>name!==id)}));
   notify("Cobertura MCP de la demostración actualizada.");
  };
- const decision=x=>!mcp.includes(x.id)?"Fuera de la puerta":approved.includes(x.id)?"Permitido":"Denegado";
+ const decision=x=>!mcp.includes(x.id)?"Fuera de la puerta":approved.includes(x.id)?"Permitido":agent.mode==="Descubrimiento"?"En sombra":"Denegado";
+ const changeSupervision=(id,value)=>setSimulation(prev=>({...prev,supervision:{...prev.supervision,[id]:value}}));
  const register=()=>{
   if(!targetName.trim())return;
   if(targets.some(x=>x.id.toLowerCase()===targetName.trim().toLowerCase())){notify("Ya existe un target con ese nombre.","error");return}
@@ -86,7 +90,7 @@ function MCP(){
      {id:"secret",header:"Autenticación hacia el target",cell:x=>x.secret},
      {id:"status",header:"Estado",cell:x=><StatusIndicator type="success">{x.status}</StatusIndicator>}
     ]}/>
-    <Box color="text-body-secondary" fontSize="body-s">Una credencial de target no es el agent_token. El agente presenta su propia key para A y B; la puerta inyecta las credenciales de Lambda/OpenAPI sin exponerlas al agente.</Box>
+    <Explanation>La clave del agente autentica A y B. Las claves propias de cada target se guardan en AgentCore Identity o Secrets Manager y no se entregan al agente.</Explanation>
    </SpaceBetween>
   </Container>
   <div className="desktop-table">
@@ -96,8 +100,11 @@ function MCP(){
     columnDefinitions={[
      {id:"name",header:"Tool",cell:x=><Button variant="link" onClick={()=>setRow(x)}>{x.id}</Button>},
      {id:"class",header:"Clase",cell:x=>x.kind},
+     {id:"schema",header:"Esquema",cell:x=>x.schema},
      {id:"target",header:"Destino",cell:x=>mcp.includes(x.id)?x.target:"Local"},
      {id:"approved",header:"Aprobación",cell:x=><StatusIndicator type={approved.includes(x.id)?"success":"warning"}>{approved.includes(x.id)?"Aprobada":"Pendiente / no aprobada"}</StatusIndicator>},
+     {id:"supervision",header:"Supervisión",cell:x=>rank>=5?({autonoma:"Autónoma",notificar:"Notificar",requiere_aprobacion:"Requiere aprobación"}[supervision[x.id]]||"Autónoma"):"Disponible desde S5"},
+     {id:"usage",header:"Último uso",cell:x=>x.id==="procesar_lote"?"No observado":"Hace 12 min (demo)"},
      {id:"state",header:"Decisión",cell:x=><State value={decision(x)}/>},
      {id:"toggle",header:"Usar MCP (demo)",cell:x=><Toggle checked={mcp.includes(x.id)} onChange={({detail})=>toggle(x.id,detail.checked)}>MCP</Toggle>}
     ]}/>
@@ -109,7 +116,7 @@ function MCP(){
      <SpaceBetween size="s">
       <State value={decision(x)}/>
       <StatusIndicator type={approved.includes(x.id)?"success":"warning"}>{approved.includes(x.id)?"Aprobada":"Pendiente"}</StatusIndicator>
-      <KeyValuePairs columns={2} items={[{label:"Clase",value:x.kind},{label:"Destino",value:mcp.includes(x.id)?x.target:"Local"}]}/>
+      <KeyValuePairs columns={2} items={[{label:"Clase",value:x.kind},{label:"Esquema",value:x.schema},{label:"Destino",value:mcp.includes(x.id)?x.target:"Local"},{label:"Supervisión",value:rank>=5?supervision[x.id]:"Disponible en S5"}]}/>
       <Button variant="link" onClick={()=>setRow(x)}>Ver detalle de tool</Button>
      </SpaceBetween>
     </Container>)}
@@ -119,13 +126,18 @@ function MCP(){
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s">
     <Button onClick={()=>setRow(null)}>Cerrar</Button>
     {row&&<Button variant="primary" onClick={()=>{
-     setApproved(old=>old.includes(row.id)?old.filter(id=>id!==row.id):[...old,row.id]);
+     setSimulation(prev=>({...prev,approvedTools:approved.includes(row.id)?prev.approvedTools.filter(id=>id!==row.id):[...prev.approvedTools,row.id]}));
      notify("Aprobación de "+row.id+" modificada únicamente en DEMO.");
      setRow(null);
     }}>{approved.includes(row?.id)?"Quitar aprobación (demo)":"Aprobar tool (demo)"}</Button>}
    </SpaceBetween></Box>}>
    <SpaceBetween size="m">
-    <KeyValuePairs columns={2} items={[{label:"Clase",value:row?.kind||""},{label:"Destino",value:row?.target||""},{label:"Cobertura B",value:row&&mcp.includes(row.id)?"MCP":"Local"},{label:"Aprobación",value:row&&approved.includes(row.id)?"Aprobada":"Pendiente"}]}/>
+    <KeyValuePairs columns={2} items={[{label:"Clase",value:row?.kind||""},{label:"Esquema",value:row?.schema||""},{label:"Destino",value:row?.target||""},{label:"Cobertura B",value:row&&mcp.includes(row.id)?"MCP":"Local"},{label:"Aprobación",value:row&&approved.includes(row.id)?"Aprobada":"Pendiente"}]}/>
+    {rank>=5&&row&&<FormField label="Nivel de supervisión">
+     <Select selectedOption={[{value:"autonoma",label:"Autónoma"},{value:"notificar",label:"Notificar"},{value:"requiere_aprobacion",label:"Requiere aprobación"}].find(x=>x.value===supervision[row.id])||{value:"autonoma",label:"Autónoma"}}
+      options={[{value:"autonoma",label:"Autónoma"},{value:"notificar",label:"Notificar"},{value:"requiere_aprobacion",label:"Requiere aprobación"}]}
+      onChange={({detail})=>changeSupervision(row.id,detail.selectedOption.value)}/>
+    </FormField>}
     <Alert type="info">En activo, una tool pendiente o no aprobada se deniega; en descubrimiento la evaluación de esa regla puede operar en sombra. Esta acción solo modifica una muestra.</Alert>
    </SpaceBetween>
   </Modal>
