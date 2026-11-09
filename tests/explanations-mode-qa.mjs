@@ -64,13 +64,13 @@ try{
   await page.locator(".screen-card .open-screen").first().click();
   await page.locator("#governance-root h1").first().waitFor({timeout:15000});
   check(page.url().includes("slice=S4")&&page.url().includes("explain=1"),viewport.name+" consola: enlace equivocado");
-  let switcher=page.getByRole("checkbox",{name:"Mostrar explicaciones"});
+  let switcher=page.locator(".explanations-switch input[type=checkbox]");
   check(await switcher.isChecked(),viewport.name+" consola: el modo no se hereda");
   check(await page.getByRole("button",{name:"¿Qué muestra?"}).count()===1,viewport.name+" consola: no muestra ayuda contextual");
   check(await page.locator(".prototype-footer").isVisible(),viewport.name+" consola: no muestra fuentes al activar explicaciones");
   await page.screenshot({path:output+"/"+viewport.name+"-consola-explicaciones.png",fullPage:true});
 
-  await switcher.uncheck();
+  await page.getByText("Mostrar explicaciones",{exact:true}).click();
   check(!await switcher.isChecked(),viewport.name+" consola: ayuda no desactivada");
   check(await page.getByRole("button",{name:"¿Qué muestra?"}).count()===0,viewport.name+" consola: explicación quedó visible");
   check(await page.locator(".prototype-footer").count()===0,viewport.name+" consola: pie verboso visible");
@@ -84,12 +84,12 @@ try{
   await page.getByRole("button",{name:"Mostrar explicaciones"}).click();
   await page.locator(".screen-card .open-screen").first().click();
   await page.locator("#governance-root h1").first().waitFor();
-  check(await page.getByRole("checkbox",{name:"Mostrar explicaciones"}).isChecked(),viewport.name+" activación repetida no funciona");
+  check(await page.locator(".explanations-switch input[type=checkbox]").isChecked(),viewport.name+" activación repetida no funciona");
 
   // Al volver a una nueva visita limpia, la ayuda NO persiste de forma sorprendente.
   await page.goto(base+"assets/console.html?slice=S5&screen=s5-approvals",{waitUntil:"domcontentloaded"});
   await page.locator("#governance-root h1").first().waitFor();
-  check(!await page.getByRole("checkbox",{name:"Mostrar explicaciones"}).isChecked(),viewport.name+" visita nueva activa ayuda por defecto");
+  check(!await page.locator(".explanations-switch input[type=checkbox]").isChecked(),viewport.name+" visita nueva activa ayuda por defecto");
   check(await page.getByText("Elena · aprobadora",{exact:true}).count()>0,viewport.name+" desapareció la identidad de aprobación");
   const pending=await page.getByRole("button",{name:"Aprobar (demo)"}).count();
   check(pending>0,viewport.name+" desaparece acción esencial de aprobación");
