@@ -57,7 +57,6 @@ function Application(){
  const [help,setHelp]=useState(null);
  const [message,setMessage]=useState(null);
  const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"], approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},presentation:false});
- const [focusId,setFocusId]=useState(null);
  const slice=route.slice;
  const active=findScreen(route.screen)||data.screens[0];
  const visible=useMemo(()=>latestScreens(slice),[slice]);
@@ -122,17 +121,19 @@ function Application(){
         </div>
         <div className="prototype-actions">
          {revisions.length>1?
-          <FormField label="Versión de esta pantalla">
-           <Select
-            selectedOption={{label:slice+" · "+data.stages[sliceIndex(slice)].name,value:slice}}
-            options={revisions.map(version=>({
-             label:version.slice+" · "+data.stages[sliceIndex(version.slice)].name,
-             value:version.slice
-            }))}
-            onChange={({detail})=>switchSlice(detail.selectedOption.value)}
-            ariaLabel="Elegir versión de esta pantalla"/>
-          </FormField>
-          :<div className="screen-version-single">
+          <div data-testid="screen-version-selector">
+           <FormField label="Versión de esta pantalla">
+            <Select
+             selectedOption={{label:slice+" · "+data.stages[sliceIndex(slice)].name,value:slice}}
+             options={revisions.map(version=>({
+              label:version.slice+" · "+data.stages[sliceIndex(version.slice)].name,
+              value:version.slice
+             }))}
+             onChange={({detail})=>switchSlice(detail.selectedOption.value)}
+             ariaLabel="Elegir versión de esta pantalla"/>
+           </FormField>
+          </div>
+          :<div className="screen-version-single" data-testid="screen-version-static">
             <Badge color="grey">{slice} · {data.stages[sliceIndex(slice)].name}</Badge>
            </div>}
          <div className="explanations-switch">
@@ -144,7 +145,7 @@ function Application(){
        </div>}
        <ContentLayout header={<Header variant="h1" description={showExplanations?active.question:undefined}
         info={showExplanations?<Button variant="link" onClick={()=>helpOn(active.title,"Esta pantalla corresponde a "+active.slice+". "+active.question+" Los datos y acciones son simulados y están delimitados por los requisitos "+active.requirements.join(", ")+".")}>¿Qué muestra?</Button>:undefined}
-        actions={undefined}>
+        >
           {active.title}
        </Header>}>
          <SpaceBetween size="l">
