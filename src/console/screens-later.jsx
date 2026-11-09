@@ -280,7 +280,8 @@ function Approvals(){
    </SpaceBetween>
   </Container>
   <ColumnLayout columns={2}>
-   <div className="desktop-table"><Table items={requests} trackBy="id" header={<Header variant="h2">Solicitudes</Header>}
+   <div className="approval-list-column">
+    <div className="desktop-table"><Table items={requests} trackBy="id" header={<Header variant="h2">Solicitudes</Header>}
     columnDefinitions={[
      {id:"name",header:"Operación",cell:x=><Button variant="link" onClick={()=>setSelected(x.id)}>{x.id} · {x.name}</Button>},
      {id:"state",header:"Estado",cell:x=><StatusIndicator type={status(x.id)==="Pendiente"?"pending":status(x.id)==="Vencida"?"warning":"success"}>{status(x.id)}</StatusIndicator>},
@@ -298,6 +299,7 @@ function Approvals(){
       </div>)}
      </SpaceBetween>
     </Container>
+   </div>
    </div>
    <Panel title={"Solicitud "+chosen.id} help="HITL-02/03: aprobación separada de funciones, no ejecución sin aprobación, caducidad y consulta por gov_aprobacion_estado.">
     <SpaceBetween size="m">
