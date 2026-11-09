@@ -46,3 +46,6 @@ body{background:#f8f9fc;scroll-behavior:smooth}
  #governance-root table{min-width:610px;table-layout:auto}
  #governance-root table th,#governance-root table td{white-space:normal;overflow-wrap:normal;word-break:normal;min-width:90px}
 }
+
+.mobile-request{padding:10px 12px;border:1px solid #dae2eb;border-radius:8px;min-width:0;background:#fff}
+.mobile-request [class*="awsui_button"]{overflow-wrap:anywhere;text-align:left;white-space:normal}
