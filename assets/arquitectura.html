@@ -1,95 +1,256 @@
 <!doctype html>
-<html lang="es-CL"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Cuatro diagramas de las conexiones A, A+C, A+B y A+B+C de la plataforma de gobernanza de agentes IA.">
-<title>Arquitecturas por conexión · AI Governance Platform</title>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Una arquitectura interactiva de AI Governance Platform: activa herramientas MCP (B) e identidad (C) sobre la conexión de inferencia (A).">
+<title>Arquitectura interactiva · AI Governance Platform</title>
 <style>
-:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#f5f8fc;color:#172e4a}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0}
-a{color:#1862aa}a:focus-visible{outline:3px solid #f2ab3e;outline-offset:3px}
-.wrap{max-width:1240px;margin:0 auto;padding:0 22px}
-.hero{background:#122944;color:white;padding:32px 0 40px}
-.hero .top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
-.hero .tag{font-size:12px;letter-spacing:.10em;text-transform:uppercase;font-weight:700;color:#bdd9f6}
-.hero .top a{font-size:13px;color:#c8e1ff;text-decoration:none}
-.hero h1{font-size:clamp(31px,4vw,50px);letter-spacing:-.035em;line-height:1.12;margin:29px 0 13px}
-.hero p{font-size:17px;color:#d2e2f3;line-height:1.6;max-width:700px;margin:0}
-.pills{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}
-.pills a{background:#2c4566;color:#fff;border:1px solid #4f6e91;border-radius:30px;text-decoration:none;padding:9px 15px;font-size:14px;font-weight:650}
-.pills a:hover{background:#43678c}
-.intro{padding:29px 0 9px;max-width:930px;font-size:15px;line-height:1.6;color:#425873}
-.intro strong{color:#173653}
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding-bottom:22px}
-.card{background:white;border:1px solid #d5e0eb;border-radius:15px;box-shadow:0 5px 19px #14273b0b;overflow:hidden}
-.captionHead{display:flex;gap:14px;align-items:flex-start;padding:21px 22px 12px}
-.code{display:inline-block;background:var(--accent);color:#fff;padding:8px 12px;border-radius:10px;font-weight:800;min-width:58px;text-align:center;flex:0 0 auto}
-.card h2{font-size:21px;margin:0 0 5px;line-height:1.3}
-.card p{font-size:14px;color:#4b5f75;margin:0;line-height:1.5}
-.graphic{padding:0 5px 2px;overflow-x:auto;overscroll-behavior-x:contain}
-.graphic svg{display:block;width:100%;height:auto;border-radius:8px}
-.foot{display:flex;gap:16px;justify-content:space-between;align-items:center;margin:4px 20px 18px;border-top:1px solid #e0e7ee;padding-top:12px;font-size:12px;color:#485d76;line-height:1.55}
-.foot>div:first-child{max-width:390px}.tiny{font-weight:800;color:#855a2f;text-transform:uppercase;font-size:10px;letter-spacing:.075em;display:block}
-.stat{white-space:nowrap;color:var(--accent);font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
-.stat small{display:block;font-size:10px;font-weight:500;color:#53697d}
-.note{font-size:12px;line-height:1.65;color:#53667c;margin:5px 0 24px}
-.extra{background:white;border-radius:14px;border:1px solid #dbe4ec;padding:17px 22px;margin:10px 0 30px}
-.extra summary{font-size:16px;font-weight:720;cursor:pointer;padding:3px 0}
-.extra p,.extra ul{font-size:14px;color:#42546d;line-height:1.7}
-.extra .links{display:flex;flex-wrap:wrap;gap:14px}
-.bottom{display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:13px;color:#637890;padding-bottom:35px}
-.bottom a{white-space:nowrap}
-@media(max-width:1000px){.cards{grid-template-columns:1fr}.graphic svg{width:min(100%,900px);margin:auto}}
-@media(max-width:580px){.wrap{padding:0 13px}.hero{padding:23px 0 30px}.hero h1{margin:18px 0 12px}.captionHead{padding:16px 14px 10px}.card h2{font-size:18px}.graphic svg{width:750px;max-width:none}.graphic{padding-bottom:5px}.foot{margin:7px 14px 16px}.extra{padding:14px 16px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#17304e;background:#f4f7fb;font-synthesis:none}
+*{box-sizing:border-box}body{margin:0}button{font:inherit}a{color:#155caa}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #eb9f22;outline-offset:4px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.hero{background:#122b49;color:#fff;padding:27px 0 36px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.eyebrow{font-size:12px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:#bed7f1}
+.top a{font-size:13px;color:#d2e8ff}
+h1{font-size:clamp(30px,4.4vw,50px);line-height:1.12;letter-spacing:-.035em;margin:24px 0 12px}
+.hero p{max-width:770px;font-size:16px;line-height:1.55;color:#d6e4f5;margin:0}
+main{padding-top:24px}
+.controls{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;background:#fff;border:1px solid #d5e1ef;padding:17px 22px;border-radius:16px 16px 0 0}
+.controls h2{font-size:18px;margin:0 0 5px}
+.controls p{font-size:13px;color:#566983;margin:0;line-height:1.45}
+.switches{display:flex;gap:10px;flex-wrap:wrap}
+.switch{min-width:175px;display:flex;gap:11px;align-items:center;text-align:left;cursor:pointer;border-radius:11px;background:#fff;border:2px solid #d5e2ee;padding:10px 14px;color:#243b58;transition:background .15s,border-color .15s}
+.switch:hover{background:#f6f9fc}
+.switch[aria-pressed=true]{border-color:var(--c);background:var(--bg)}
+.switch .indicator{display:grid;place-items:center;flex:0 0 auto;width:28px;height:28px;border:2px solid #b4c5d5;border-radius:8px;color:#5b7084;font-weight:850;font-size:14px}
+.switch[aria-pressed=true] .indicator{background:var(--c);color:white;border-color:var(--c)}
+.switch strong{font-size:14px;display:block;line-height:1.3}
+.switch small{font-size:12px;color:#526981}
+.switch[data-connection=b]{--c:#008a77;--bg:#e9faf5}
+.switch[data-connection=c]{--c:#7752bc;--bg:#f1ebfc}
+.board{background:#fff;border:1px solid #d5e1ef;border-top:0;border-radius:0 0 16px 16px;overflow:hidden}
+.board-top{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 4px;gap:16px;flex-wrap:wrap}
+.current{display:flex;align-items:center;gap:12px}
+.code{background:#1f62ba;color:white;border-radius:9px;padding:7px 12px;font-weight:850;letter-spacing:.02em;white-space:nowrap}
+.current h2{font-size:18px;margin:0}
+.metric{text-align:right}
+.metric strong{display:block;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;color:#204d84}
+.metric span{font-size:11px;color:#60718b}
+.scroll-hint{display:none;text-align:center;color:#63758a;font-size:12px;padding:8px}
+.diagram-scroll{overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding:4px 13px 16px}
+svg{display:block;width:100%;height:auto;margin:auto;max-width:1100px}
+svg text{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+.node{fill:#fff;stroke:#c7d7e7;stroke-width:2}
+.node-title{font-size:19px;font-weight:750;fill:#17304e}
+.node-sub{font-size:14px;fill:#50647e}
+.small-text{font-size:13px;fill:#60758b}
+.line-a{fill:none;stroke:#2771c6;stroke-width:4;stroke-linecap:round}
+.line-b{fill:none;stroke:#008a77;stroke-width:4;stroke-linecap:round}
+.line-c{fill:none;stroke:#7752bc;stroke-width:4;stroke-linecap:round}
+.line-out{fill:none;stroke:#a2aeba;stroke-width:2.5;stroke-dasharray:7 7}
+.label-a{font-size:15px;fill:#165fa8;font-weight:750}
+.label-b{font-size:15px;fill:#007966;font-weight:750}
+.label-c{font-size:15px;fill:#6b42aa;font-weight:750}
+[data-when]{display:none}
+.diagram-key{display:flex;flex-wrap:wrap;gap:9px 18px;padding:0 22px 17px;font-size:12px;color:#52677f}
+.key{display:flex;align-items:center;gap:7px}
+.swatch{height:4px;width:21px;border-radius:3px;background:#2771c6}
+.swatch.b{background:#008a77}.swatch.c{background:#7752bc}.swatch.out{height:0;border-top:2px dashed #9aabbc;background:transparent}
+.explanation{border-top:1px solid #dce5ee;display:grid;grid-template-columns:1.25fr 1fr;gap:26px;padding:19px 22px;background:#fafdff}
+.explanation h3{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#57718b;margin:0 0 6px}
+.explanation p{font-size:14px;line-height:1.55;margin:0;color:#2f4864}
+.disclaimer{font-size:12px;line-height:1.65;color:#566b83;margin:15px 0 21px}
+.more{background:#fff;border:1px solid #d5e1ef;border-radius:12px;padding:16px 20px;margin-bottom:30px}
+.more summary{font-size:14px;font-weight:740;cursor:pointer}
+.more p{font-size:13px;line-height:1.65;color:#425a75}
+.more .links{display:flex;flex-wrap:wrap;gap:10px 20px;font-size:13px}
+.end{padding:0 0 33px;font-size:12px;color:#667b91}
+@media(max-width:850px){
+.wrap{padding:0 15px}
+.controls{align-items:flex-start}
+.switch{min-width:0}
+.explanation{grid-template-columns:1fr;gap:15px}
+.diagram-scroll svg{width:980px;max-width:none}
+.scroll-hint{display:block}
+.board-top{align-items:flex-start}
+}
+@media(max-width:520px){
+.hero{padding:21px 0 28px}.hero h1{margin-top:18px}
+.controls{padding:15px}
+.switches{width:100%}.switch{flex:1 1 140px;padding:9px}
+.board-top{padding:15px 16px 0}
+.diagram-key{padding:0 16px 16px}
+.explanation{padding:16px}
+.metric strong{font-size:20px}
+}
+@media(prefers-reduced-motion:reduce){.switch{transition:none}}
 </style>
-</head><body>
+</head>
+<body>
 <header class="hero"><div class="wrap">
-<div class="top"><span class="tag">Plataforma de gobernanza de agentes IA</span><a href="../index.html">Volver al inicio</a></div>
-<h1>Una plataforma.<br>Cuatro maneras de conectarla.</h1>
-<p>La inferencia siempre pasa por la puerta. Conectar herramientas o identidad amplía lo que la plataforma puede controlar.</p>
-<nav class="pills" aria-label="Navegar por conexión"><a href="#a">A · Inferencia</a><a href="#ac">A+C · Identidad</a><a href="#ab">A+B · Herramientas</a><a href="#abc">A+B+C · Combinada</a></nav>
+<div class="top"><span class="eyebrow">Plataforma de gobernanza de agentes IA</span><a href="../index.html">Volver al inicio</a></div>
+<h1>Una arquitectura.<br>Conexiones a demanda.</h1>
+<p>La inferencia pasa por la puerta (A). Activa B o C para ver qué cambia al gobernar herramientas o incorporar identidad del usuario. Las dos conexiones son independientes.</p>
 </div></header>
 <main class="wrap">
-<p class="intro"><strong>A</strong> es la conexión básica. <strong>B</strong> incorpora herramientas por MCP y <strong>C</strong> incorpora identidad verificada. Puedes agregar B o C en cualquier orden: no son etapas secuenciales.</p>
-<div class="cards">
-<section class="card" id="a" style="--accent:#2b6bd5" aria-labelledby="h-a">
-<div class="captionHead"><span class="code">A</span><div><h2 id="h-a">Solo inferencia</h2><p>El agente y el modelo pasan por la puerta. Las herramientas externas todavía no.</p></div></div>
-<div class="graphic" role="group" aria-label="Diagrama generado de la conexión A">
-  <svg viewBox="8 118 750 297" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arquitectura A: Solo inferencia. El agente y el modelo pasan por la puerta. Las herramientas externas todavía no." preserveAspectRatio="xMidYMid meet"><image href="imagenes/arquitecturas-conexiones.png" width="1536" height="1024" /></svg>
+<section class="controls" aria-label="Configurar conexiones">
+<div><h2>¿Qué conecta el agente?</h2><p>A · Inferencia está siempre activa. Elige las conexiones adicionales.</p></div>
+<div class="switches">
+<button type="button" class="switch" data-connection="b" id="toggle-b" aria-pressed="false" aria-controls="architecture">
+<span class="indicator" aria-hidden="true">+</span><span><strong>B · Tools MCP</strong><small>Controlar ejecución</small></span></button>
+<button type="button" class="switch" data-connection="c" id="toggle-c" aria-pressed="false" aria-controls="architecture">
+<span class="indicator" aria-hidden="true">+</span><span><strong>C · Identidad</strong><small>Gobernar por usuario</small></span></button>
 </div>
-<div class="foot"><div><span class="tiny">Límite</span> La ejecución de una tool fuera de MCP no se controla.</div><div class="stat" aria-label="Índice de cobertura de catálogo con todas las conexiones presentes en modo activo">41 %<small> cobertura*</small></div></div>
 </section>
-<section class="card" id="ac" style="--accent:#1b9162" aria-labelledby="h-ac">
-<div class="captionHead"><span class="code">A+C</span><div><h2 id="h-ac">Inferencia + identidad</h2><p>La misma inferencia, ahora con usuario verificado y reglas por rol.</p></div></div>
-<div class="graphic" role="group" aria-label="Diagrama generado de la conexión A+C">
-  <svg viewBox="767 118 760 297" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arquitectura A+C: Inferencia + identidad. La misma inferencia, ahora con usuario verificado y reglas por rol." preserveAspectRatio="xMidYMid meet"><image href="imagenes/arquitecturas-conexiones.png" width="1536" height="1024" /></svg>
+<section class="board" id="architecture" aria-labelledby="view-title">
+<div class="board-top">
+<div class="current"><span class="code" id="view-code">A</span><h2 id="view-title">Solo inferencia</h2></div>
+<div class="metric"><strong id="view-score">41 %</strong><span>Índice del catálogo de controles*</span></div>
 </div>
-<div class="foot"><div><span class="tiny">Límite</span> La identidad no incorpora por sí sola la ejecución de herramientas.</div><div class="stat" aria-label="Índice de cobertura de catálogo con todas las conexiones presentes en modo activo">56 %<small> cobertura*</small></div></div>
+<p class="scroll-hint">Desliza el diagrama horizontalmente para explorarlo.</p>
+<div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagrama de arquitectura; desplazamiento horizontal en pantallas pequeñas">
+<svg viewBox="0 0 1080 580" role="img" aria-labelledby="svg-title svg-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="svg-title">Arquitectura conceptual de AI Governance Platform</title>
+<desc id="svg-desc">Conexión A activa: inferencia entre el agente, la puerta y el modelo. La herramienta externa y el salto usuario a agente quedan fuera del perímetro.</desc>
+<defs>
+<marker id="arrow-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#2771c6"/></marker>
+<marker id="arrow-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#008a77"/></marker>
+<marker id="arrow-c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#7752bc"/></marker>
+<marker id="arrow-out" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#9aabbc"/></marker>
+</defs>
+<!-- El usuario se autentica en la aplicación del cliente; esa conexión no pasa por la puerta. -->
+<rect class="node" x="65" y="62" rx="13" width="220" height="97"/>
+<text class="node-title" x="88" y="99">Usuario</text>
+<text class="node-sub" x="88" y="123">Aplicación del cliente</text>
+<path class="line-out" d="M175 159 V236" marker-end="url(#arrow-out)"/>
+<text class="small-text" x="190" y="194">Fuera de la puerta</text>
+<!-- A: agente - gateway - modelo -->
+<rect x="55" y="226" rx="15" width="240" height="128" fill="#edf5ff" stroke="#9cc1ea" stroke-width="2"/>
+<text class="node-title" x="80" y="265">Agente</text>
+<text class="node-sub" x="80" y="291">Aplicación del cliente</text>
+<text class="small-text" x="80" y="321">agent_token</text>
+<path class="line-a" d="M295 290 H380" marker-end="url(#arrow-a)" marker-start="url(#arrow-a)"/>
+<text class="label-a" x="305" y="270">A · Inferencia</text>
+<rect x="380" y="212" rx="17" width="300" height="160" fill="#e7f1fe" stroke="#6aa6e5" stroke-width="2.5"/>
+<text class="node-title" x="408" y="252">Puerta de gobernanza</text>
+<path d="M405 266 H657" stroke="#c1d8f0" stroke-width="1.5"/>
+<text class="node-sub" x="408" y="293">Inferencia y tool_calls</text>
+<g data-when="b">
+<text class="label-b" x="408" y="318">B · Ejecución y aprobación</text>
+</g>
+<g data-when="c">
+<text class="label-c" x="408" y="344">C · Reglas por usuario</text>
+</g>
+<path class="line-a" d="M680 290 H845" marker-end="url(#arrow-a)" marker-start="url(#arrow-a)"/>
+<text class="label-a" x="718" y="270">Modelo</text>
+<rect x="845" y="236" rx="15" width="185" height="108" fill="#edf5ff" stroke="#9cc1ea" stroke-width="2"/>
+<text class="node-title" x="870" y="281">Modelo IA</text>
+<text class="node-sub" x="870" y="307">Solicitudes / salidas</text>
+<!-- Tool externa: posibilidad explícita incluso con B parcial. -->
+<path class="line-out" d="M115 354 V443" marker-end="url(#arrow-out)"/>
+<rect x="65" y="443" rx="13" width="220" height="82" fill="#f5f7f9" stroke="#a9b6c4" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="88" y="475" fill="#4c5e72" font-size="17" font-weight="740">Tool externa</text>
+<text x="88" y="499" fill="#68788b" font-size="13">si no pasa por MCP</text>
+<text x="65" y="546" fill="#697a8f" font-size="12">Ejecución fuera del perímetro</text>
+<!-- B: ida a la puerta por MCP y ejecución real en target. -->
+<g data-when="b">
+<path class="line-b" d="M240 354 V402 H485 V372" marker-end="url(#arrow-b)"/>
+<text class="label-b" x="308" y="393">B · MCP</text>
+<path class="line-b" d="M608 372 V480 H845" marker-end="url(#arrow-b)"/>
+<text class="label-b" x="689" y="462">Ejecución gobernada</text>
+<rect x="845" y="438" rx="13" width="185" height="87" fill="#e9faf5" stroke="#71cbb9" stroke-width="2"/>
+<text x="865" y="472" fill="#006e5f" font-size="18" font-weight="740">Tool MCP</text>
+<text x="865" y="496" fill="#366f68" font-size="13">Target registrado</text>
+</g>
+<!-- C: JWT provisto por el cliente y reenviado por el agente. -->
+<g data-when="c">
+<path class="line-c" d="M295 248 H327 V182 H529 V212" marker-end="url(#arrow-c)"/>
+<rect x="355" y="154" rx="9" width="162" height="34" fill="#f1ebfc" stroke="#d3c0f4"/>
+<text class="label-c" x="366" y="176">C · JWT del usuario</text>
+</g>
+</svg>
+</div>
+<div class="diagram-key">
+<span class="key"><span class="swatch"></span>A · Inferencia</span>
+<span class="key" data-when="b"><span class="swatch b"></span>B · MCP</span>
+<span class="key" data-when="c"><span class="swatch c"></span>C · Identidad</span>
+<span class="key"><span class="swatch out"></span>Fuera de la puerta</span>
+</div>
+<div class="explanation" aria-live="polite" aria-atomic="true">
+<div><h3>Qué controla esta configuración</h3><p id="view-summary">La puerta observa solicitudes y respuestas del modelo, además de las intenciones de usar herramientas.</p></div>
+<div><h3>Límite principal</h3><p id="view-limit">La ejecución de herramientas externas no se controla; el principal de las políticas es el agente.</p></div>
+</div>
 </section>
-<section class="card" id="ab" style="--accent:#248bc1" aria-labelledby="h-ab">
-<div class="captionHead"><span class="code">A+B</span><div><h2 id="h-ab">Inferencia + herramientas</h2><p>La puerta controla también las herramientas conectadas por MCP.</p></div></div>
-<div class="graphic" role="group" aria-label="Diagrama generado de la conexión A+B">
-  <svg viewBox="8 435 752 282" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arquitectura A+B: Inferencia + herramientas. La puerta controla también las herramientas conectadas por MCP." preserveAspectRatio="xMidYMid meet"><image href="imagenes/arquitecturas-conexiones.png" width="1536" height="1024" /></svg>
-</div>
-<div class="foot"><div><span class="tiny">Límite</span> Sin C, las reglas se aplican al agente, no a una persona identificada.</div><div class="stat" aria-label="Índice de cobertura de catálogo con todas las conexiones presentes en modo activo">67 %<small> cobertura*</small></div></div>
-</section>
-<section class="card" id="abc" style="--accent:#bf7633" aria-labelledby="h-abc">
-<div class="captionHead"><span class="code">A+B+C</span><div><h2 id="h-abc">Gobernanza combinada</h2><p>Las decisiones consideran agente, identidad del usuario y ejecución de tools.</p></div></div>
-<div class="graphic" role="group" aria-label="Diagrama generado de la conexión A+B+C">
-  <svg viewBox="769 435 758 282" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arquitectura A+B+C: Gobernanza combinada. Las decisiones consideran agente, identidad del usuario y ejecución de tools." preserveAspectRatio="xMidYMid meet"><image href="imagenes/arquitecturas-conexiones.png" width="1536" height="1024" /></svg>
-</div>
-<div class="foot"><div><span class="tiny">Límite</span> Solo se controlan las solicitudes y tools que efectivamente atraviesan la puerta.</div><div class="stat" aria-label="Índice de cobertura de catálogo con todas las conexiones presentes en modo activo">89 %<small> cobertura*</small></div></div>
-</section>
-</div>
-<p class="note">* Índices del catálogo de controles definidos en <code>insumo/</code>, para modo activo, agente con tools y usuarios, conexiones completas y evidencia disponible. No son porcentajes absolutos de seguridad. En la práctica B y C pueden ser parciales.</p>
-<details class="extra"><summary>Ver explicación técnica, límites y fuentes</summary>
-<p>Los diagramas representan el modelo de conexiones y usan iconos AWS ilustrativos, no una topología obligatoria de despliegue. No describen la implementación actual de cada rama. La ejecución de tools fuera del canal MCP no se controla. La identidad C depende de que el agente reenvíe un JWT válido; el salto usuario → agente queda a cargo del cliente.</p>
+<p class="disclaimer">* Los porcentajes son referencias del <strong>índice de cobertura del catálogo</strong> de <code>insumo/</code>, no porcentajes de seguridad: modo activo, agente con tools y usuarios, conexiones completas y evaluaciones con evidencia. En la práctica, B se mide por tools integradas y C por solicitudes con JWT válido; ambas pueden ser parciales. La página representa el diseño conceptual objetivo, no el despliegue AWS ni la conexión efectiva de un agente.</p>
+<details class="more"><summary>Fuentes, explicaciones y diagramas anteriores</summary>
+<p>El salto usuario → agente es responsabilidad del cliente. C requiere que el agente reenvíe un JWT válido (en inferencia y, cuando corresponda, en MCP). B controla la ejecución de herramientas solo cuando pasan por la puerta. Un agente aún puede utilizar otros caminos de red o credenciales. Las aprobaciones humanas y la separación de funciones dependen de las reglas aplicables, no solo de activar las conexiones.</p>
 <div class="links">
 <a href="../docs/arquitecturas-por-conexion.md">Explicación conceptual completa</a>
-<a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/01-modelo-de-conexion.md">Fuente: modelo de conexión</a>
-<a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/catalogo-controles.md">Fuente: controles y cobertura</a>
-<a href="arquitectura-aws-original.html">Mapa AWS anterior</a>
+<a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/01-modelo-de-conexion.md">Modelo de conexiones</a>
+<a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/requisitos.yaml">Requisitos fuente de verdad</a>
+<a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/catalogo-controles.md">Índice de cobertura</a>
+<a href="arquitectura-aws-original.html">Arquitectura AWS histórica</a>
+<a href="imagenes/arquitecturas-conexiones.png">Infografía anterior</a>
 </div>
 </details>
-<div class="bottom"><span>Ilustración generada para esta documentación · 2026-11-08</span><a href="imagenes/arquitecturas-conexiones.png" target="_blank" rel="noopener">Ver infografía original en tamaño completo</a></div>
-</main></body></html>
+<footer class="end">Arquitectura conceptual · basada en <code>insumo/</code> · Las vistas A, A+B, A+C y A+B+C comparten el mismo perímetro.</footer>
+</main>
+<script>
+(function () {
+  'use strict';
+  var options = {
+    a:   { b:false, c:false, title:'Solo inferencia', score:'41 %',
+      summary:'La puerta observa solicitudes y respuestas del modelo, además de las intenciones de usar herramientas.',
+      limit:'La ejecución de herramientas externas no se controla; las políticas se atribuyen al agente.' },
+    ab:  { b:true, c:false, title:'Inferencia + herramientas', score:'67 %',
+      summary:'A incorpora la ejecución de tools que atraviesan MCP: reglas por parámetros, credenciales y aprobaciones cuando corresponda.',
+      limit:'Sin C las reglas no identifican al usuario final. Las herramientas que no pasan por MCP siguen fuera.' },
+    ac:  { b:false, c:true, title:'Inferencia + identidad', score:'56 %',
+      summary:'A añade identidad verificada en las solicitudes con JWT válido: reglas por rol, límites individuales y evidencia atribuida.',
+      limit:'C no controla por sí sola la ejecución de herramientas externas; la identidad depende de cada JWT recibido.' },
+    abc: { b:true, c:true, title:'Inferencia + herramientas + identidad', score:'89 %',
+      summary:'Ambos canales pueden aplicar reglas con identidad verificada, controlar tools MCP y exigir aprobaciones con separación de funciones.',
+      limit:'Solo quedan gobernadas las solicitudes y herramientas que realmente cruzan la puerta; B y C pueden ser parciales.' }
+  };
+  var buttons = {b:document.getElementById('toggle-b'),c:document.getElementById('toggle-c')};
+  var elements = {code:document.getElementById('view-code'),title:document.getElementById('view-title'),score:document.getElementById('view-score'),summary:document.getElementById('view-summary'),limit:document.getElementById('view-limit'),desc:document.getElementById('svg-desc')};
+  var state = {b:false,c:false};
+  function key(){return 'a' + (state.b?'b':'') + (state.c?'c':'');}
+  function render(){
+    var v=options[key()];
+    ['b','c'].forEach(function(name){
+      buttons[name].setAttribute('aria-pressed',String(state[name]));
+      buttons[name].querySelector('.indicator').textContent=state[name]?'✓':'+';
+      document.querySelectorAll('[data-when="' + name + '"]').forEach(function(el){
+        el.style.display=state[name]?'':'none';
+        el.setAttribute('aria-hidden',String(!state[name]));
+      });
+    });
+    elements.code.textContent=key().toUpperCase().replace('AB','A+B').replace('AC','A+C').replace('ABC','A+B+C');
+    elements.title.textContent=v.title;
+    elements.score.textContent=v.score;
+    elements.summary.textContent=v.summary;
+    elements.limit.textContent=v.limit;
+    elements.desc.textContent='Conexión ' + elements.code.textContent + ': ' + v.summary + ' ' + v.limit;
+  }
+  function applyHash(){
+    var k=location.hash.slice(1).toLowerCase();
+    if(!Object.prototype.hasOwnProperty.call(options,k)){k='a';}
+    state.b=options[k].b;state.c=options[k].c;
+    render();
+  }
+  Object.keys(buttons).forEach(function(name){
+    buttons[name].addEventListener('click',function(){
+      state[name]=!state[name];
+      history.replaceState(null,'','#'+key());
+      render();
+    });
+  });
+  window.addEventListener('hashchange',applyHash);
+  applyHash();
+}());
+</script>
+</body>
+</html>
