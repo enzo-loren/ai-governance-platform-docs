@@ -98,13 +98,10 @@ function MCP(){
     header={<Header variant="h2" info={showExplanations?<Button variant="link" onClick={()=>helpOn("Cobertura B","La ejecución solo se controla si la tool pasa por un target MCP registrado. El catálogo de inferencia por sí solo no controla una ejecución local.")}>¿Qué cubre B?</Button>:undefined}>Herramientas y destinos</Header>}
     filter={<TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Filtrar tools"/>}
     columnDefinitions={[
-     {id:"name",header:"Tool",cell:x=><Button variant="link" onClick={()=>setRow(x)}>{x.id}</Button>},
+     {id:"name",header:"Tool",width:190,cell:x=><Button variant="link" onClick={()=>setRow(x)}>{x.id}</Button>},
      {id:"class",header:"Clase",cell:x=>x.kind},
-     {id:"schema",header:"Esquema",cell:x=>x.schema},
      {id:"target",header:"Destino",cell:x=>mcp.includes(x.id)?x.target:"Local"},
      {id:"approved",header:"Aprobación",cell:x=><StatusIndicator type={approved.includes(x.id)?"success":"warning"}>{approved.includes(x.id)?"Aprobada":"Pendiente / no aprobada"}</StatusIndicator>},
-     {id:"supervision",header:"Supervisión",cell:x=>rank>=5?({autonoma:"Autónoma",notificar:"Notificar",requiere_aprobacion:"Requiere aprobación"}[supervision[x.id]]||"Autónoma"):"Disponible desde S5"},
-     {id:"usage",header:"Último uso",cell:x=>x.id==="procesar_lote"?"No observado":"Hace 12 min (demo)"},
      {id:"state",header:"Decisión",cell:x=><State value={decision(x)}/>},
      {id:"toggle",header:"Usar MCP (demo)",cell:x=><Toggle checked={mcp.includes(x.id)} onChange={({detail})=>toggle(x.id,detail.checked)}>MCP</Toggle>}
     ]}/>
@@ -132,7 +129,7 @@ function MCP(){
     }}>{approved.includes(row?.id)?"Quitar aprobación (demo)":"Aprobar tool (demo)"}</Button>}
    </SpaceBetween></Box>}>
    <SpaceBetween size="m">
-    <KeyValuePairs columns={2} items={[{label:"Clase",value:row?.kind||""},{label:"Esquema",value:row?.schema||""},{label:"Destino",value:row?.target||""},{label:"Cobertura B",value:row&&mcp.includes(row.id)?"MCP":"Local"},{label:"Aprobación",value:row&&approved.includes(row.id)?"Aprobada":"Pendiente"}]}/>
+    <KeyValuePairs columns={2} items={[{label:"Clase",value:row?.kind||""},{label:"Esquema",value:row?.schema||""},{label:"Destino",value:row?.target||""},{label:"Cobertura B",value:row&&mcp.includes(row.id)?"MCP":"Local"},{label:"Aprobación",value:row&&approved.includes(row.id)?"Aprobada":"Pendiente"},{label:"Supervisión",value:rank>=5?({autonoma:"Autónoma",notificar:"Notificar",requiere_aprobacion:"Requiere aprobación"}[supervision[row?.id]]||"Autónoma"):"Disponible desde S5"},{label:"Último uso",value:row?.id==="procesar_lote"?"No observado":"Hace 12 min (demo)"}]}/>
     {rank>=5&&row&&<FormField label="Nivel de supervisión">
      <Select selectedOption={[{value:"autonoma",label:"Autónoma"},{value:"notificar",label:"Notificar"},{value:"requiere_aprobacion",label:"Requiere aprobación"}].find(x=>x.value===supervision[row.id])||{value:"autonoma",label:"Autónoma"}}
       options={[{value:"autonoma",label:"Autónoma"},{value:"notificar",label:"Notificar"},{value:"requiere_aprobacion",label:"Requiere aprobación"}]}
