@@ -24,3 +24,10 @@ body{background:#f8f9fc;scroll-behavior:smooth}
  .step-entry{padding:9px 12px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.prototype-description{display:grid;gap:5px;align-items:start}
+.prototype-tag{display:block;font-family:inherit;font-weight:800;font-size:12px;letter-spacing:.06em}
+.presentation-mode h1{font-size:clamp(30px,3.2vw,44px)!important}
+.presentation-mode .kpi-value{font-size:clamp(36px,4vw,50px)}
+.presentation-mode .prototype-footer{display:none}
+.presentation-mode .step-entry{font-size:18px}
