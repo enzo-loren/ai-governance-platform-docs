@@ -44,6 +44,19 @@ try{
   assert(loc.costsTop>loc.diagramBottom,vp.name+" costs overlap map");
   assert(loc.sections===1,vp.name+" duplicate section");
   assert(loc.docOverflow<8,vp.name+" document horizontal overflow "+loc.docOverflow);
+  if(vp.name==="mobile"){
+    const cards=await page.locator("#costs-rows tr").evaluateAll(rows=>rows.map(row=>{
+      const a=row.getBoundingClientRect(),last=row.cells[2]?.getBoundingClientRect();
+      return {width:a.width,right:a.right,priceRight:last?.right,priceVisible:last?.width>0};
+    }));
+    assert(cards.length===10,vp.name+" no hay diez tarjetas de servicios");
+    assert(cards.every(card=>card.priceVisible&&card.priceRight<=vp.width-8),
+      vp.name+" algún precio quedó recortado "+JSON.stringify(cards));
+    const overflow=await page.locator(".costs-table").evaluate(el=>el.scrollWidth-el.clientWidth);
+    assert(overflow<4,vp.name+" desglose aún requiere scroll horizontal: "+overflow);
+  }
+  await page.locator(".aws-costs").screenshot({path:folder+"/"+vp.name+"-default-costs.png"});
+
   // Three scenarios reproduce the audited model with different fixed-cost absorption.
   await page.locator('.costs-scenario[data-volume="10000"]').click();
   assert(await page.locator("#costs-n").inputValue()==="10000",vp.name+" scenario 10k not applied");
