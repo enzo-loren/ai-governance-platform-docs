@@ -159,29 +159,33 @@ function Coverage(){
  </SpaceBetween>;
 }
 function Inventory(){
- const {notify,showExplanations}=usePrototype();
+ const {simulation,setSimulation,notify,showExplanations}=usePrototype();
+ const agent=selectedFrom(simulation);
  const [filter,setFilter]=useState("");
  const [selected,setSelected]=useState(null);
  const [draft,setDraft]=useState({kind:"Lectura",approval:"Pendiente de revisión"});
- const [reviews,setReviews]=useState({});
+ const reviews=agent.toolReviews||{};
+ useEffect(()=>setSelected(null),[agent.id]);
  const classes=selectOptions([["Lectura","Lectura"],["Escritura","Escritura"],["Destructiva","Destructiva o crítica"],["Sin clasificar","Sin clasificar"]]);
  const approvals=selectOptions([["Pendiente de revisión","Pendiente de revisión"],["Aprobada","Aprobada"],["No aprobada","No aprobada"]]);
  const info=x=>reviews[x.id]||{kind:x.kind,approval:"Pendiente de revisión",confirmed:false};
- const items=dummyTools.filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
+ const observed=dummyTools.filter(x=>(agent.discoveredTools||[]).includes(x.id));
+ const items=observed.filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
  const open=x=>{
   const current=info(x);
   setDraft(current);setSelected(x);
  };
  const save=()=>{
   if(!selected)return;
-  setReviews(prev=>({...prev,[selected.id]:{...draft,confirmed:true}}));
+  setSimulation(prev=>({...prev,agentRegistry:prev.agentRegistry.map(x=>x.id===agent.id?{...x,toolReviews:{...(x.toolReviews||{}),[selected.id]:{...draft,confirmed:true}}}:x)}));
   notify("Clasificación de "+selected.id+" revisada solo en la DEMO.");
   setSelected(null);
  };
  return <SpaceBetween size="l">
+  <AgentSelector/>
   <ColumnLayout columns={3}>
-   <SmallKpi title="Declaradas por inferencia A" value="4" context="Datos de demostración"/>
-   <SmallKpi title="Sin clasificar" value={dummyTools.filter(x=>info(x).kind==="Sin clasificar").length.toString()} context="Requieren revisión"/>
+   <SmallKpi title="Declaradas por inferencia A" value={String(observed.length)} context={"Agente "+agent.name+" · demo"}/>
+   <SmallKpi title="Sin clasificar" value={observed.filter(x=>info(x).kind==="Sin clasificar").length.toString()} context="Requieren revisión"/>
    <SmallKpi title="Ejecutadas por MCP" value="0" context="La conexión B llega en S4"/>
   </ColumnLayout>
   <Container header={<Header variant="h2" description={showExplanations?"Clases inferidas de anotaciones y patrones; un operador confirma o corrige.":undefined}>Catálogo de tools declaradas</Header>}>
@@ -195,7 +199,7 @@ function Inventory(){
      {id:"state",header:"Clasificación",cell:x=><StatusIndicator type={info(x).confirmed?"success":"warning"}>{info(x).confirmed?"Confirmada":"Sugerida"}</StatusIndicator>},
      {id:"approval",header:"Aprobación",cell:x=><StatusIndicator type={info(x).approval==="Aprobada"?"success":"warning"}>{info(x).approval}</StatusIndicator>},
      {id:"coverage",header:"Ejecución",cell:()=><StatusIndicator type="stopped">Fuera de MCP</StatusIndicator>}
-    ]}/>
+    ]} empty={<Box color="text-body-secondary">Aún no hay tools observadas para este agente. Aparecerán con su primer payload de inferencia que declare tools.</Box>}/>
    </div>
    <div className="mobile-cards">
     <SpaceBetween size="s">
@@ -212,7 +216,7 @@ function Inventory(){
        <Button variant="link" onClick={()=>open(x)}>Revisar clasificación</Button>
       </SpaceBetween>
      </Container>)}
-     {!items.length&&<Box color="text-body-secondary">Sin tools para este filtro.</Box>}
+     {!items.length&&<Box color="text-body-secondary">Aún no hay tools para este agente o filtro. Se descubrirán desde inferencia A.</Box>}
     </SpaceBetween>
    </div>
   </Container>
