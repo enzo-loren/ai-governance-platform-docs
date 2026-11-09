@@ -1,0 +1,8 @@
+{
+  "version": "ecc8065b395cbb85",
+  "algorithm": "sha256",
+  "inputs": [
+    "app.js",
+    "app.css"
+  ]
+}

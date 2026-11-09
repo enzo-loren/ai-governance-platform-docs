@@ -22,6 +22,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Instalar dependencias reproduciblemente
+        run: npm ci --no-audit --no-fund
+      - name: Compilar Cloudscape y versionar recursos de navegador
+        run: |
+          npm run build
+          npm run check:assets
       - name: Prepare site
         run: |
           mkdir _site

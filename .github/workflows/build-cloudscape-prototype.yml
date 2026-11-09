@@ -4,8 +4,11 @@ on:
     branches:
       - feat/cloudscape-navegacion-slices
       - feature/vista-limpia-explicaciones-opcionales
+      - fix/cloudscape-bundle-versionado-vista-limpia
     paths:
       - package.json
+      - 'scripts/stamp-console-assets.mjs'
+      - 'tests/console-build-integrity.mjs'
       - vite.config.mjs
       - 'src/console/**'
       - 'assets/console-data.json'
@@ -23,9 +26,11 @@ jobs:
         with:
           node-version: '22'
       - name: Instalar dependencias y fijar versiones
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Crear bundle estático Cloudscape para GitHub Pages
         run: npm run build
+      - name: Verificar coherencia entre bundle y HTML
+        run: npm run check:assets
       - name: Validar archivos estáticos de salida
         run: |
           test -s assets/console-build/app.js
@@ -35,7 +40,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/console-build/ package-lock.json
+          git add assets/console-build/ assets/console.html index.html package-lock.json
           if ! git diff --cached --quiet; then
             git commit -m "build: compilar prototipo Cloudscape para hosting estático"
             git push origin "HEAD:${GITHUB_REF_NAME}"
