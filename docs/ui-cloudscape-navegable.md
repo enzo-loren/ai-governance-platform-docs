@@ -26,6 +26,12 @@ La fuente canónica de **comportamiento** sigue siendo [insumo/requisitos.yaml](
 
 Basado en la [documentación oficial de Cloudscape](https://cloudscape.design/get-started/for-developers/using-cloudscape-components/): \`AppLayout\`, \`TopNavigation\`, \`SideNavigation\`, \`ContentLayout\`, \`Header\`, \`Container\`, \`Table\`, \`TextFilter\`, \`FormField\`, \`Input\`, \`Select\`, \`Modal\`, \`Alert\`, \`StatusIndicator\`, \`ProgressBar\`, \`Tabs\`, \`Toggle\`, \`KeyValuePairs\`, \`CopyToClipboard\`, \`Flashbar\`, \`Badge\` y utilidades. La capa propia sólo organiza la portada, los KPI y los eventos narrativos, dentro de los límites permitidos por \`04-ux.md\` §7.
 
+## Revisión adicional de diseño frontend (skill de comunidad)
+
+Se contrastó la UI con la skill pública [Frontend Design · PracticalSwan](https://github.com/PracticalSwan/agent-skills/blob/main/frontend-design/SKILL.md), en particular sus criterios de accesibilidad como requisito no negociable, jerarquía del contenido, adaptabilidad, interacción completa y comprobación en navegador. Se adoptó también la secuencia propuesta por [better-web-ui/frontend-design](https://github.com/aladicf/better-web-ui/blob/main/skills/frontend-design/SKILL.md): claridad y jerarquía en escala de grises, escala limitada de tipografía y espaciado, color solo para significado semántico, divulgación progresiva y controles reconocibles.
+
+Aplicación concreta: componentes Cloudscape reales en vez de figuras estáticas, respuestas y estados con icono más texto, acciones con confirmación visible, rutas sin páginas falsas, tests de Chrome en escritorio/móvil y tarjetas para aprobaciones en móvil (la tabla de escritorio estrechaba el nombre de la operación). Una prueba automática sin errores **no certifica** contraste AA, accesibilidad completa ni fidelidad de implementación; estas verificaciones continúan siendo parte de la aceptación del producto.
+
 ## Skill de comunidad usada como revisión
 
 [UI/UX Pro Max — referencia de comunidad](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/blob/main/src/ui-ux-pro-max/templates/base/quick-reference.md): prioridad de accesibilidad, acciones con foco visible y nombre accesible, tamaño táctil, un sistema de iconos consistente, tipografía legible, márgenes y agrupación, colores semánticos, navegación predecible, acciones con feedback y reducción de movimiento. No se importó código de esta skill: se usó su guía pública como checklist junto con las reglas de Cloudscape y las de \`insumo/contexto/04-ux.md\`.
