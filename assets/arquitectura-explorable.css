@@ -39,16 +39,16 @@ svg .node{cursor:pointer}
 svg .node:focus-visible .node-card{stroke:#f09a18;stroke-width:4}
 svg .node-title{fill:#193752;font-size:19px;font-weight:800}
 svg .node-line{fill:#4c667d;font-size:14px;font-weight:570}
-svg .node-id{fill:#70869b;font-size:12px;font-weight:800;letter-spacing:.06em}
+
 svg .node[aria-disabled=true]{cursor:default}
-svg .edge{fill:none;stroke:#9ab0c4;stroke-width:3.1;stroke-linejoin:round;stroke-linecap:round}
-svg .edge.a{stroke:#276fca;stroke-width:5}
-svg .edge.b{stroke:#008d77;stroke-width:5}
-svg .edge.c{stroke:#7c56bd;stroke-width:5}
+svg .edge{fill:none;stroke:#9ab0c4;stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round;opacity:.85;cursor:help}
+svg .edge.a{stroke:#276fca;stroke-width:4.1;opacity:1}
+svg .edge.b{stroke:#008d77;stroke-width:4.1;opacity:1}
+svg .edge.c{stroke:#7c56bd;stroke-width:4.1;opacity:1}
 svg .edge.storage{stroke:#9b6d2b;stroke-width:3.4}
 svg .edge.out{stroke:#8b9aab;stroke-dasharray:9 7}
 svg .edge.alt{stroke:#b8752e;stroke-dasharray:10 7}
-svg .edge-label{font-size:15px;font-weight:800;fill:#506983;paint-order:stroke;stroke:#f7fbff;stroke-width:7}
+svg .edge-label{font-size:15px;font-weight:800;fill:#506983;paint-order:stroke;stroke:#f7fbff;stroke-width:7;pointer-events:none}
 svg .edge-label.a{fill:#1e63b4}svg .edge-label.b{fill:#087a67}svg .edge-label.c{fill:#7045b5}svg .edge-label.alt{fill:#b16b21}
 svg .tab{font-size:15px;fill:#4c647b;font-weight:750}
 svg .scoring{font-weight:850;font-size:20px;fill:#1a5fa8}
@@ -63,8 +63,18 @@ svg .popup-close{cursor:pointer}
 svg .popup-close text{fill:#fff;font-size:24px;font-weight:900}
 svg .missing-node .node-card{fill:#f5f7f9;stroke:#b1bfca;stroke-dasharray:8 6}
 svg .missing-node .node-title{fill:#596d80}
+svg #edges g:hover>.edge{opacity:1;stroke-width:5.2}
 svg .note-rect{fill:#edf2f9;stroke:#d2dfeb;stroke-width:1.7}
 svg .note-text{font-size:14px;font-weight:690;fill:#4a657c}
+.node-inspector{position:absolute;right:16px;top:16px;z-index:3;max-height:calc(100% - 70px);width:min(560px,calc(100% - 32px));overflow:auto;padding:18px 20px;border:1px solid #648fb8;border-radius:14px;background:#102a45;color:#eef6ff;box-shadow:0 14px 34px rgba(10,31,53,.24)}
+.node-inspector[hidden]{display:none}
+.inspector-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:12px;border-bottom:1px solid #456886}
+.inspector-heading strong{display:block;font-size:19px;line-height:1.3}
+.inspector-heading small{display:block;color:#b7d0e8;font-size:12px;line-height:1.5;margin-top:5px}
+.inspector-heading button{flex-shrink:0;display:grid;place-items:center;width:37px;height:37px;background:#335777;color:white;border:1px solid #7090ac;border-radius:8px;font-size:25px;cursor:pointer}
+.node-inspector ul{margin:13px 0 1px;padding-left:21px;display:grid;gap:10px;font-size:13px;line-height:1.5}
+.node-inspector li::marker{color:#81baff}
 @media(max-width:1000px){.appbar{padding:14px 18px}.toolbar{padding:12px}.help{display:none}.frame{height:72vh;min-height:540px}}
-@media(max-width:600px){.appbar{padding:13px 15px}.eyebrow{font-size:9px;letter-spacing:.05em}.toolbar{gap:9px;flex-wrap:wrap}.toggle small,.staticchip small{font-size:10px}.toggle,.staticchip{padding:8px}.selectwrap{width:100%;justify-content:space-between}.selectwrap select{flex:1}.extras{width:100%}.zoomset{margin-left:auto}main{padding:7px}.frame{height:68vh;min-height:480px}.maphelp{font-size:10px;max-width:93%}.statusline{align-items:flex-start}.legend{width:100%;flex-wrap:wrap}}
+.node-inspector[hidden]{display:none}
+@media(max-width:600px){.appbar{padding:13px 15px}.eyebrow{font-size:9px;letter-spacing:.05em}.toolbar{gap:9px;flex-wrap:wrap}.toggle small,.staticchip small{font-size:10px}.toggle,.staticchip{padding:8px}.selectwrap{width:100%;justify-content:space-between}.selectwrap select{flex:1}.extras{width:100%}.zoomset{margin-left:auto}main{padding:7px}.frame{height:68vh;min-height:480px}.maphelp{font-size:10px;max-width:93%}.node-inspector{top:auto;bottom:10px;right:10px;width:calc(100% - 20px);max-height:65%;padding:14px}.inspector-heading strong{font-size:16px}.node-inspector ul{font-size:12px}.statusline{align-items:flex-start}.legend{width:100%;flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
