@@ -103,11 +103,16 @@ try{
    await interactive.locator("#governance-root h1").first().waitFor({timeout:12000});
  }
  await enter("S0","s0-connect");
- check(await interactive.locator('input[value="gov_demo_sin_validez"]').count()===0,
-   "S0: token de ejemplo no debe aparecer antes del alta");
- await interactive.getByRole("button",{name:"Dar de alta",exact:true}).click();
- check(await interactive.locator('input[value="gov_demo_sin_validez"]').count()===1,
-   "S0: alta debe mostrar ejemplo de credencial solo después de crear");
+ check(await interactive.locator('input[value^="gov_demo_"]').count()===0,
+   "S0: ningún token, ni siquiera ficticio, debe mostrarse antes de la emisión");
+ await interactive.getByRole("textbox",{name:"Nombre del agente"}).fill("agente-qa");
+ await interactive.getByRole("textbox",{name:"Responsable"}).fill("QA");
+ await interactive.getByRole("button",{name:"Registrar y emitir API key"}).click();
+ const issued=await interactive.locator('input[type="password"]').first().inputValue();
+ check(issued.startsWith("gov_demo_"),"S0: no se muestra una credencial de demostración individual al registrarse");
+ await interactive.getByRole("button",{name:"He guardado la credencial"}).click();
+ check(await interactive.locator('input[value^="gov_demo_"]').count()===0,
+   "S0: la clave emitida se quedó visible después de cerrar la entrega única");
  await enter("S2","s2-activate");
  await interactive.getByRole("button",{name:"Modo presentación"}).click();
  check(await interactive.locator(".presentation-mode").count()===1,
