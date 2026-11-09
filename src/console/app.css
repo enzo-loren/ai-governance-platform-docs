@@ -3,7 +3,7 @@ html,body,#governance-root{min-height:100%;margin:0}
 body{background:#f8f9fc;scroll-behavior:smooth}
 #console-top{position:sticky;top:0;z-index:101;border-bottom:1px solid #d5dbe4}
 #console-content{padding:0 0 26px}
-.prototype-controls{padding:13px 18px;border:1px solid #dce3ec;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.prototype-controls{padding:11px 17px;border:1px solid #dce3ec;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .prototype-controls>div:last-child{min-width:230px}
 .prototype-tag{font-size:12px;letter-spacing:.07em;font-weight:800;color:#19558f}
 .prototype-footer{border-top:1px solid #d9e2ec;padding:15px 0 20px;display:grid;gap:7px}
@@ -49,3 +49,15 @@ body{background:#f8f9fc;scroll-behavior:smooth}
 
 .mobile-request{padding:10px 12px;border:1px solid #dae2eb;border-radius:8px;min-width:0;background:#fff}
 .mobile-request [class*="awsui_button"]{overflow-wrap:anywhere;text-align:left;white-space:normal}
+
+/* Un solo panel de control, discreto y Cloudscape. No es documentación de producto. */
+.prototype-actions{display:flex;align-items:center;justify-content:flex-end;gap:22px;flex-wrap:wrap}
+.prototype-actions>div:first-child{min-width:210px}
+.prototype-status{display:flex;align-items:center;gap:8px}
+.explanations-switch{display:flex;align-items:center;min-height:38px}
+.prototype-controls .explanations-switch [class*="awsui_label"]{font-weight:650}
+@media(max-width:700px){
+ .prototype-actions{width:100%;display:grid;gap:15px;grid-template-columns:1fr}
+ .prototype-actions>div:first-child{min-width:0}
+ .prototype-status{margin-bottom:2px}
+}

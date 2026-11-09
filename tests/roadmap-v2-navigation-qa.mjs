@@ -30,7 +30,7 @@ try{
   await page.route('**/assets/slices.js',route=>route.fulfill({status:200,contentType:'application/javascript',body:'throw Error("SCRIPT_ANTIGUO_INCOMPATIBLE")'}));
   await page.goto(base,{waitUntil:'domcontentloaded'});
   await page.locator('.screen-card .open-screen').first().waitFor({timeout:12000});
-  const script=await page.locator('script[src*="roadmap-cloudscape-v2"]').getAttribute('src');
+  const script=await page.locator('script[src*="roadmap-cloudscape-v3"]').getAttribute('src');
   check(!!script,scenario.name+' no usa JS con ruta versionada');
   check(await page.locator('[data-stage]').count()===7,scenario.name+' no presenta siete cortes');
   for(const [stage,expected] of Object.entries(counts)){

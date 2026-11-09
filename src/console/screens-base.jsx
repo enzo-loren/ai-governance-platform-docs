@@ -19,7 +19,7 @@ import CopyToClipboard from "@cloudscape-design/components/copy-to-clipboard";
 import Toggle from "@cloudscape-design/components/toggle";
 import Tabs from "@cloudscape-design/components/tabs";
 import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
-import {usePrototype} from "./main.jsx";
+import {usePrototype,Explanation} from "./main.jsx";
 
 const SIM="Simulación local: ningún dato fue guardado ni se invocó AWS.";
 const STATUS={
@@ -41,7 +41,8 @@ function Decision({state,reason}){
  return <SpaceBetween size="xxs">{state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={STATUS[state]||"info"}>{state}</StatusIndicator>}{reason&&<Box color="text-body-secondary" fontSize="body-s">{reason}</Box>}</SpaceBetween>;
 }
 function Why({title,children}){
- const {helpOn}=usePrototype();
+ const {helpOn,showExplanations}=usePrototype();
+ if(!showExplanations)return null;
  return <Button variant="link" onClick={()=>helpOn(title,children)}>¿Por qué?</Button>;
 }
 function Panel({title,children,info,actions}){
@@ -63,14 +64,14 @@ const users=[
  {value:"elena",label:"Elena · aprobadora",name:"elena.aprobadora",role:"aprobador",pii:true,requests:2,spent:17},
  {value:"workload",label:"Sin usuario · solo_workload",name:"solo_workload",role:"agente",pii:false,requests:4,spent:14}
 ];
-function Banner({children,type="info"}){return <Alert type={type}>{children}</Alert>}
+function Banner({children,type="info"}){return <Explanation type={type}>{children}</Explanation>}
 function SmallKpi({title,value,context}){
  return <div className="kpi-item"><Box color="text-body-secondary" fontSize="body-s">{title}</Box><div className="kpi-value">{value}</div><Box color="text-body-secondary" fontSize="body-s">{context}</Box></div>;
 }
 const parseVal=x=>Number(String(x).replace(",","."));
 const selectOptions=(list)=>list.map(([value,label])=>({value,label}));
 function BasicAgents(){
- const {simulation,setSimulation,notify,helpOn}=usePrototype();
+ const {simulation,setSimulation,notify,helpOn,showExplanations}=usePrototype();
  const [agent,setAgent]=useState(simulation.agent);
  const [model,setModel]=useState({value:"bedrock-a",label:"Modelo del catálogo A"});
  const [created,setCreated]=useState(false);
@@ -79,10 +80,10 @@ function BasicAgents(){
   <Panel title="Nuevo agente" info="S0: registro, dueño y credencial. El agente nace en el modo inicial de la configuración.">
    <ColumnLayout columns={2} variant="text-grid">
     <SpaceBetween size="m">
-     <FormField label="Nombre del agente" description="Identificador visible en la consola">
+     <FormField label="Nombre del agente" description={showExplanations?"Identificador visible en la consola":undefined}>
       <Input value={agent} onChange={({detail})=>setAgent(detail.value)} />
      </FormField>
-     <FormField label="Modelo inicial" description="Configurable desde el catálogo">
+     <FormField label="Modelo inicial" description={showExplanations?"Configurable desde el catálogo":undefined}>
       <Select selectedOption={model} options={models} onChange={({detail})=>setModel(detail.selectedOption)}/>
      </FormField>
      <FormField label="Responsable"><Input readOnly value="Operador plataforma" /></FormField>
@@ -97,8 +98,8 @@ function BasicAgents(){
      {created ? <>
       <FormField label="agent_token (ficticio)"><Input readOnly value="gov_demo_sin_validez"/></FormField>
       <CopyToClipboard textToCopy={'BASE_URL={gateway}/inference/v1\nAPI_KEY=gov_demo_sin_validez'} copyButtonText="Copiar ejemplo" copySuccessText="Ejemplo copiado" copyErrorText="No se pudo copiar"/>
-      <Alert type="success">Ejemplo de credencial visible tras el alta simulada. No se generó ni guardó un token real.</Alert>
-     </> : <Alert type="info">Al dar de alta el agente aparecerá la credencial de demostración. En el sistema real se muestra una sola vez.</Alert>}
+      <Alert type="success">Credencial de ejemplo creada. No se generó ni guardó un token real.</Alert>
+     </> : <Explanation>Al registrar el agente aparecerá una credencial de ejemplo. El token de producción se muestra una sola vez.</Explanation>}
     </SpaceBetween>
    </ColumnLayout>
   </Panel>
@@ -133,7 +134,7 @@ function Live(){
     {id:"action",header:"Evidencia",cell:x=><Button variant="link" onClick={()=>setSelection(x)}>Ver registro</Button>}
    ]}
    empty={<Box textAlign="center" padding="l">No hay eventos con estos filtros.</Box>}/>
-  <Alert type={paused?"warning":"info"}>{paused?"Vista pausada; la plataforma no se ha suspendido.":"Vista de demostración. La evidencia se indexa antes de responder y se copia a S3 con Object Lock GOVERNANCE."}</Alert>
+  {paused?<Alert type="warning">Vista pausada. El agente sigue funcionando.</Alert>:<Explanation>La evidencia se indexa antes de responder y se replica a S3 Object Lock GOVERNANCE.</Explanation>}
   <Modal visible={!!selection} onDismiss={()=>setSelection(null)} header={"Registro "+(selection?.id||"")} footer={<Box float="right"><Button variant="primary" onClick={()=>setSelection(null)}>Cerrar</Button></Box>}>
    <SpaceBetween size="s">
     <Decision state={selection?.state||"Permitido"} reason={selection?.reason}/>
@@ -159,11 +160,11 @@ function Coverage(){
     {c:"Políticas de tools",state:"En sombra",reason:"Se evalúan sin bloquear por política"},
     {c:"Ejecución fuera de MCP",state:"No disponible",reason:"El agente ejecuta localmente"}
    ]} columnDefinitions={[
-    {id:"c",header:"Control",cell:x=>x.c},{id:"state",header:"Estado",cell:x=>{x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":"stopped"}>{x.state}</StatusIndicator>}},
+    {id:"c",header:"Control",cell:x=>x.c},{id:"state",header:"Estado",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":"stopped"}>{x.state}</StatusIndicator>},
     {id:"reason",header:"Por qué",cell:x=>x.reason}
    ]}/>
   </Panel>
-  <Alert type="warning">Fuera del perímetro: red/IAM del agente, autenticación usuario→agente y aviso final de IA.</Alert>
+  <Explanation type="warning">Fuera del perímetro: red/IAM del agente, autenticación usuario→agente y aviso final de IA.</Explanation>
  </SpaceBetween>;
 }
 function Inventory(){
@@ -184,7 +185,7 @@ function Inventory(){
     {id:"state",header:"Revisión",cell:x=>x.status==="Aprobada"?<StatusIndicator type="success">Sugerida</StatusIndicator>:<StatusIndicator type="warning">Pendiente</StatusIndicator>},
     {id:"coverage",header:"Ejecución",cell:()=><StatusIndicator type="stopped">Fuera de la puerta</StatusIndicator>}
    ]}/>
-  <Alert>En S1 se observa la intención del modelo. El control de ejecución real de tools MCP llega en S4.</Alert>
+  <Explanation>En S1 se observa la intención del modelo. El control de ejecución real por MCP llega en S4.</Explanation>
   <Modal visible={!!selected} header={selected?.id||"Tool"} onDismiss={()=>setSelected(null)} footer={<Box float="right"><Button onClick={()=>setSelected(null)}>Cerrar</Button></Box>}>
    <KeyValuePairs columns={2} items={[{label:"Clase sugerida",value:selected?.kind||""},{label:"Versión del esquema",value:selected?.schema||""},{label:"Estado",value:selected?.status||""},{label:"Canal",value:"A · inferencia"}]}/>
   </Modal>
@@ -206,12 +207,12 @@ function Shadow(){
   </Panel>
   <Panel title="Detalle de la evaluación">
    <KeyValuePairs columns={3} items={[{label:"Componente",value:history.find(x=>x.id===selected)?.n},{label:"Motivo",value:history.find(x=>x.id===selected)?.why},{label:"Trace ID",value:"TRC-DEMO-7"}]}/>
-   <Alert type="info">Las políticas Cedar permanecen en sombra; guardrail y enmascaramiento de datos personales conservan su propia semántica de intervención.</Alert>
+   <Explanation>En descubrimiento, Cedar evalúa en sombra. Guardrail y PII conservan su propia semántica de intervención.</Explanation>
   </Panel>
  </SpaceBetween>;
 }
 function ActiveAgent(){
- const {simulation,setSimulation,notify}=usePrototype();
+ const {simulation,setSimulation,notify,showExplanations}=usePrototype();
  const [dialog,setDialog]=useState(null);
  const mode=simulation.mode;
  const apply=()=>{
@@ -228,15 +229,15 @@ function ActiveAgent(){
   </SpaceBetween>}>
    <ColumnLayout columns={3}><SmallKpi title="Modo" value={mode} context="Estado simulado"/><SmallKpi title="Modelo permitido" value="1" context="Catálogo configurado"/><SmallKpi title="Preset" value="1" context="Caja Negra Segura"/></ColumnLayout>
   </Panel>
-  <ColumnLayout columns={2}>
+  <ColumnLayout columns={showExplanations?2:1}>
    <Panel title="Impacto antes de activar" info="REG-01: el operador recibe las denegaciones que habrían ocurrido y la lista de tools sin clasificar antes de confirmar el cambio.">
     <SpaceBetween size="m"><SmallKpi title="Denegaciones en sombra" value="3" context="Ventana de prueba"/><StatusIndicator type="warning">2 tools pendientes de revisión</StatusIndicator></SpaceBetween>
    </Panel>
-   <Panel title="Qué cambia en modo activo"><SpaceBetween size="m">
+   {showExplanations&&<Panel title="Qué cambia en modo activo"><SpaceBetween size="m">
     <Decision state="Denegado" reason="Tool destructiva no permitida · Preset 1"/>
     <Decision state="Denegado" reason="Modelo no habilitado por el agente"/>
     <StatusIndicator type="error">Falla cerrada si falla el motor de políticas</StatusIndicator>
-   </SpaceBetween></Panel>
+   </SpaceBetween></Panel>}
   </ColumnLayout>
   <Modal visible={!!dialog} header={dialog==="activate"?"Confirmar paso a activo":"Suspender agente"} onDismiss={()=>setDialog(null)}
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setDialog(null)}>Cancelar</Button><Button variant="primary" onClick={apply}>Confirmar simulación</Button></SpaceBetween></Box>}>
@@ -269,13 +270,14 @@ function Limits({byUser=false}){
     <Button variant="primary" disabled={!isValid} onClick={()=>{setSimulation(x=>({...x,budget:parseVal(budget),rate:parseVal(rate)}));notify("Límites actualizados en el prototipo. "+SIM)}}>Guardar límites (simulación)</Button>
    </SpaceBetween>
   </Panel>
-  <Alert type="info">La plataforma real permite cambios en caliente, umbrales 50/80/100 y acciones de alerta, 429 o 403. Nada se guarda en esta demostración.</Alert>
+  <Explanation>El sistema objetivo permite cambiar límites sin despliegue, con alertas y respuestas 429/403. Esta vista solo simula los valores.</Explanation>
  </SpaceBetween>;
 }
 function Identity(){
+ const {showExplanations}=usePrototype();
  const [user,setUser]=useState(users[0]);
  return <SpaceBetween size="l">
-  <FormField label="Principal de la solicitud" description="Conexión C: se valida el JWT contra emisor, vigencia, firma y audiencia.">
+  <FormField label="Principal de la solicitud" description={showExplanations?"Conexión C valida el JWT: firma, emisor, vigencia y audiencia.":undefined}>
    <Select selectedOption={{label:user.label,value:user.value}} options={users.map(x=>({label:x.label,value:x.value}))} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
   </FormField>
   <ColumnLayout columns={2}>
@@ -286,7 +288,7 @@ function Identity(){
     </SpaceBetween>
    </Panel>
   </ColumnLayout>
-  <Alert type="info">Sin X-Gov-User-Token, el agente opera como solo_workload. Esto no autentica la sesión entre usuario y aplicación cliente.</Alert>
+  <Explanation>Sin X-Gov-User-Token, se utiliza solo_workload. La puerta no autentica el tramo usuario → aplicación → agente.</Explanation>
  </SpaceBetween>;
 }
 

@@ -4,10 +4,14 @@ on:
     branches:
       - feat/cloudscape-navegacion-slices
       - fix/roadmap-cloudscape-cache-navigation-ux
+      - feature/vista-limpia-explicaciones-opcionales
     paths:
       - 'assets/slices.js'
       - 'assets/slices.css'
       - 'assets/roadmap-cloudscape-v2.js'
+      - 'assets/roadmap-cloudscape-v3.js'
+      - 'assets/roadmap-cloudscape-v3.css'
+      - 'tests/explanations-mode-qa.mjs'
       - 'assets/roadmap-cloudscape-v2.css'
       - 'tests/roadmap-v2-navigation-qa.mjs'
       - 'assets/console.html'
@@ -22,6 +26,9 @@ on:
       - 'assets/slices.js'
       - 'assets/slices.css'
       - 'assets/roadmap-cloudscape-v2.js'
+      - 'assets/roadmap-cloudscape-v3.js'
+      - 'assets/roadmap-cloudscape-v3.css'
+      - 'tests/explanations-mode-qa.mjs'
       - 'assets/roadmap-cloudscape-v2.css'
       - 'tests/roadmap-v2-navigation-qa.mjs'
       - 'assets/console.html'
@@ -50,10 +57,14 @@ jobs:
           npm ci --no-audit --no-fund
           npm install --no-save playwright@1.56.1
           npx playwright install --with-deps chromium
+      - name: Recompilar Cloudscape desde el commit evaluado
+        run: npm run build
       - name: Verify real Cloudscape UI and navigation
         run: node tests/cloudscape-ui-qa.mjs
       - name: Verify cache isolation, navigation and accessibility of roadmap
         run: node tests/roadmap-v2-navigation-qa.mjs
+      - name: Verificar modo limpio y ayuda opcional en portada y consola
+        run: node tests/explanations-mode-qa.mjs
       - name: Attach screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
@@ -62,4 +73,5 @@ jobs:
           path: |
             artifacts/cloudscape-qa/
             artifacts/roadmap-v2/
+            artifacts/explanations-mode/
           retention-days: 14
