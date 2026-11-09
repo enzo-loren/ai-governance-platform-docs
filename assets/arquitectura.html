@@ -5,6 +5,7 @@
 <meta name="description" content="Mapa arquitectónico AWS interactivo de AI Governance Platform desde insumo/: inferencia A, herramientas MCP B, identidad C, políticas, evidencia y consola.">
 <title>Arquitectura AWS interactiva · AI Governance Platform</title>
 <link rel="stylesheet" href="arquitectura-explorable.css">
+<link rel="stylesheet" href="arquitectura-costos.css">
 </head>
 <body>
 <header class="appbar">
@@ -57,6 +58,96 @@
    <span id="view-score" aria-label="Índice de cobertura del catálogo bajo supuestos">41 % · catálogo*</span>
    <span class="legend"><i class="ink a"></i>A <i class="ink b"></i>B <i class="ink c"></i>C <i class="ink neutral"></i>soporte <i class="ink out"></i>fuera del perímetro</span>
  </div>
+
+ <section class="aws-costs" id="costos" aria-labelledby="costs-title">
+  <header class="costs-header">
+   <div>
+    <p class="costs-eyebrow">ESTIMADOR DE COSTOS · AWS</p>
+    <h2 id="costs-title">¿Cuánto cuesta operar esta arquitectura?</h2>
+    <p>Escenarios mensuales y costo por servicio. Referencia ilustrativa de la implementación auditada, no factura ni costo total de propiedad.</p>
+   </div>
+   <span class="costs-region">USD/mes · us-east-1</span>
+  </header>
+  <div class="costs-scenarios" role="group" aria-label="Seleccionar volumen mensual de inferencias">
+   <button type="button" class="costs-scenario" data-volume="10000" aria-pressed="false">
+    <span class="costs-scenario-label">Demo / MVP</span>
+    <strong>10.000 solicitudes</strong>
+    <output id="costs-scenario-10000" class="costs-scenario-total">—</output>
+    <small id="costs-scenario-unit-10000">Estimación mensual</small>
+   </button>
+   <button type="button" class="costs-scenario" data-volume="300000" aria-pressed="true">
+    <span class="costs-scenario-label">Piloto</span>
+    <strong>300.000 solicitudes</strong>
+    <output id="costs-scenario-300000" class="costs-scenario-total">—</output>
+    <small id="costs-scenario-unit-300000">Estimación mensual</small>
+   </button>
+   <button type="button" class="costs-scenario" data-volume="3000000" aria-pressed="false">
+    <span class="costs-scenario-label">Escala</span>
+    <strong>3.000.000 solicitudes</strong>
+    <output id="costs-scenario-3000000" class="costs-scenario-total">—</output>
+    <small id="costs-scenario-unit-3000000">Estimación mensual</small>
+   </button>
+  </div>
+  <div class="costs-settings" aria-label="Supuestos principales de la estimación">
+   <label>Solicitudes de inferencia / mes
+    <input type="number" id="costs-n" value="300000" min="0" max="1000000000" step="1000" inputmode="numeric">
+   </label>
+   <label>Modelo
+    <select id="costs-model">
+     <option value="20">gpt-oss-20b · SP-03</option>
+     <option value="120">gpt-oss-120b · SP-03</option>
+     <option value="none">Simulado · sin consumo del modelo</option>
+    </select>
+   </label>
+   <label>Guardrails · unidades por solicitud
+    <select id="costs-guard">
+     <option value="0">0 · sin filtro facturado</option>
+     <option value="1">1 unidad</option>
+     <option value="3" selected>3 unidades</option>
+     <option value="6">6 unidades</option>
+    </select>
+   </label>
+  </div>
+  <div class="costs-selected">
+   <div>
+    <span class="costs-value-label">Estimación parcial del escenario</span>
+    <output id="costs-monthly" class="costs-big-value" aria-live="polite">—</output>
+   </div>
+   <div class="costs-unit"><span>Por solicitud · incluye costos fijos</span><output id="costs-per-request">—</output></div>
+  </div>
+  <div class="costs-table-scroll" role="region" tabindex="0" aria-label="Desglose de costos mensuales por servicio">
+   <table class="costs-table">
+    <thead><tr><th scope="col">Servicio AWS</th><th scope="col">Supuesto aplicado</th><th scope="col">USD/mes</th></tr></thead>
+    <tbody id="costs-rows"><tr><td colspan="3">Cargando cálculo… <a href="arquitectura-auditada.html#costos">Consultar el estimador original</a>.</td></tr></tbody>
+   </table>
+  </div>
+  <details class="costs-details">
+   <summary>Ajustar supuestos avanzados <span>Duración, tokens, registros y evidencia</span></summary>
+   <div class="costs-advanced-grid">
+    <label>Tokens de entrada / solicitud <input id="costs-inputTokens" type="number" min="0" max="10000000" step="100" value="1000"></label>
+    <label>Tokens de salida / solicitud <input id="costs-outputTokens" type="number" min="0" max="10000000" step="100" value="300"></label>
+    <label>Duración Lambda fachada (s) <input id="costs-lambdaTime" type="number" min="0" max="900" step="0.1" value="3"></label>
+    <label>DynamoDB · WRU / solicitud <input id="costs-wru" type="number" min="0" max="100000" step="1" value="4"></label>
+    <label>DynamoDB · RRU / solicitud <input id="costs-rru" type="number" min="0" max="100000" step="1" value="2"></label>
+    <label>Evidencia S3 (KiB / solicitud) <input id="costs-evidence" type="number" min="0" max="100000" step="1" value="4"></label>
+    <label>CloudWatch Logs (KiB / solicitud) <input id="costs-logs" type="number" min="0" max="100000" step="0.1" value="2"></label>
+    <label>Solicitudes API administración / mes <input id="costs-api" type="number" min="0" max="1000000000" step="1000" value="30000"></label>
+    <label>Retención S3 · meses equivalentes <input id="costs-months" type="number" min="1" max="120" step="1" value="1"></label>
+   </div>
+   <p class="costs-small">Base: dos ACL WAF, tres reglas, dos API Gateway REST, una fachada Lambda de 256 MiB y dos interceptores de 0,15 s cada uno. Los 30.000 llamados administrativos se mantienen constantes entre los tres escenarios.</p>
+  </details>
+  <details class="costs-details costs-scope">
+   <summary>Qué incluye, qué falta y de dónde salen los precios</summary>
+   <div class="costs-notes">
+    <p><strong>Alcance:</strong> este cálculo corresponde al escenario de implementación AWS auditado de inferencia A. El diagrama superior muestra un <em>diseño conceptual</em>; su configuración A, A+B, A+C o A+B+C no representa automáticamente los cargos de tráfico MCP o identidad. El precio de Gateway aplicado a inferencia es una <strong>hipótesis pendiente de verificación con Billing</strong>.</p>
+    <p><strong>Excluye:</strong> tráfico y targets MCP (B), identidad/Cognito y usuarios federados (C), workflows de aprobaciones HITL, otros filtros Guardrails, métricas y alarmas adicionales, X-Ray/OTLP, SQS, SNS, KMS por solicitud, transferencias/egreso, almacenamiento extra de DynamoDB/GSIs, retries y otras operaciones de consola, free tier, impuestos y descuentos. No equivale a TCO.</p>
+    <p><strong>Tarifas:</strong> referencias on-demand us-east-1 de la <a href="arquitectura-auditada.html">calculadora AWS auditada</a> (revisión 8 nov. 2026) y <a href="../docs/arquitectura-aws-auditada.md">método y supuestos completos</a>. Tokens de Bedrock basados en SP-03 (29 oct. 2026). Validar tarifas actuales, volumen facturado y configuración de la cuenta antes de presupuestar.</p>
+    <p class="costs-links">Fuentes oficiales: <a href="https://aws.amazon.com/waf/pricing/" target="_blank" rel="noopener noreferrer">WAF</a> · <a href="https://aws.amazon.com/api-gateway/pricing/" target="_blank" rel="noopener noreferrer">API Gateway</a> · <a href="https://aws.amazon.com/bedrock/agentcore/pricing/" target="_blank" rel="noopener noreferrer">AgentCore</a> · <a href="https://aws.amazon.com/lambda/pricing/" target="_blank" rel="noopener noreferrer">Lambda</a> · <a href="https://aws.amazon.com/bedrock/pricing/" target="_blank" rel="noopener noreferrer">Bedrock</a> · <a href="https://aws.amazon.com/dynamodb/pricing/" target="_blank" rel="noopener noreferrer">DynamoDB</a> · <a href="https://aws.amazon.com/s3/pricing/" target="_blank" rel="noopener noreferrer">S3</a> · <a href="https://calculator.aws/" target="_blank" rel="noopener noreferrer">Pricing Calculator</a>.</p>
+   </div>
+  </details>
+  <p class="costs-disclaimer">Importes aproximados, no cotización. No se descuentan tramos gratuitos. El consumo real del modelo y los controles puede variar.</p>
+ </section>
 </main>
 <script src="arquitectura-explorable.js" defer></script>
+<script src="arquitectura-costos.js" defer></script>
 </body></html>
