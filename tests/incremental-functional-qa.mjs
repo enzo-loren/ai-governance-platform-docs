@@ -41,7 +41,7 @@ try{
 
   await open("S1","s1-coverage");
   let content=await text();
-  assert(content.includes("Sin conexión MCP")&&content.includes("41 %"),vp.name+" S1 no diferencia A de B/C");
+  assert(content.includes("Sin conexión MCP")&&content.includes("Sin identidad de usuario"),vp.name+" S1 no diferencia A de B/C");
   assert(content.includes("Cobertura medida")&&content.includes("Sin datos"),vp.name+" S1 presenta cobertura simulada como medida");
   assert(!content.includes("Ver los 27 controles"),vp.name+" S1 muestra inventario técnico al usuario");
   assert(await page.getByTestId("editorial-board").count()===0,vp.name+" la pizarra editorial aparece sin pedir explicaciones");
@@ -50,13 +50,13 @@ try{
 
   await open("S3","s1-coverage");
   content=await text();
-  assert(content.includes("2 de 3 JWT válidos")&&content.includes("56 %"),vp.name+" S3 no hereda tarjeta y C");
+  assert(content.includes("2 de 3 JWT válidos")&&content.includes("Sin conexión MCP"),vp.name+" S3 no hereda tarjeta y C");
   assert(content.includes("Acumulado hasta S3"),vp.name+" S3 perdió el contexto del corte");
   await screenshot("s3-gobernanza");
 
   await open("S4","s1-coverage");
   content=await text();
-  assert(content.includes("3 de 4 tools")&&content.includes("89 %"),vp.name+" S4 no incorpora B+C a tarjeta");
+  assert(content.includes("3 de 4 tools por MCP")&&content.includes("2 de 3 JWT válidos"),vp.name+" S4 no incorpora B+C a tarjeta");
   await screenshot("s4-gobernanza");
 
   await open("S6","s0-live");

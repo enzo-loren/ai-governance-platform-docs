@@ -11,6 +11,7 @@ on:
       - feat/auditoria-integral-vistas-ux
       - fix/presentation-mode-s2-functional
       - feat/auditoria-progresion-vistas-s0-s6
+      - feat/auditoria-editorial-integral-15-vistas
     paths:
       - 'assets/slices.js'
       - 'assets/slices.css'
@@ -32,6 +33,7 @@ on:
       - 'tests/cloudscape-ui-qa.mjs'
       - 'tests/presentation-mode-qa.mjs'
       - 'tests/incremental-functional-qa.mjs'
+      - 'tests/editorial-sweep-qa.mjs'
       - '.github/workflows/cloudscape-ui-qa.yml'
   pull_request:
     paths:
@@ -55,6 +57,7 @@ on:
       - 'tests/cloudscape-ui-qa.mjs'
       - 'tests/presentation-mode-qa.mjs'
       - 'tests/incremental-functional-qa.mjs'
+      - 'tests/editorial-sweep-qa.mjs'
   workflow_dispatch:
 concurrency:
   group: cloudscape-qa-${{ github.ref }}
@@ -93,6 +96,8 @@ jobs:
         run: node tests/presentation-mode-qa.mjs
       - name: Evolución funcional acumulada S0-S6 y capturas de pantalla
         run: node tests/incremental-functional-qa.mjs
+      - name: Auditoría editorial de las 15 versiones en escritorio y móvil
+        run: node tests/editorial-sweep-qa.mjs
       - name: Attach screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
@@ -106,4 +111,5 @@ jobs:
             artifacts/agent-security-qa/
             artifacts/presentation-qa/
             artifacts/incremental-functional-qa/
+            artifacts/editorial-sweep/
           retention-days: 14
