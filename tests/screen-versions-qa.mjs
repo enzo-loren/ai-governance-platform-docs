@@ -37,7 +37,7 @@ async function verifyChrome(page,screen,viewport){
   return visible&&/(open|show|abrir|mostrar).*(navigation|navegación)|(?:menu|menú) de navegación/i.test(label);
  }).map(el=>el.getAttribute("aria-label")));
  check(menuButtons.length===0,viewport+" "+screen.id+" conserva hamburguesa "+JSON.stringify(menuButtons));
- check(await page.getByText("Volver a slices",{exact:true}).count()===1,
+ check(await page.getByRole("link",{name:"Volver a slices"}).count()===1,
   viewport+" "+screen.id+" no presenta regreso al roadmap");
  check(await page.locator("#governance-root h1").first().textContent()===screen.title,
   viewport+" "+screen.id+" título no corresponde a versión solicitada");
@@ -96,7 +96,7 @@ try{
       check(new URL(page.url()).searchParams.get("slice")===other.slice,
        vp.name+" "+screen.id+" cambio de versión no actualiza slice");
       await page.goBack({waitUntil:"domcontentloaded"});
-      await pageReady(page);
+      await page.waitForFunction(title=>document.querySelector("#governance-root h1")?.textContent===title,screen.title);
       check((await page.locator("#governance-root h1").first().textContent())===screen.title,
        vp.name+" "+screen.id+" el historial no restaura la pantalla original");
      }
