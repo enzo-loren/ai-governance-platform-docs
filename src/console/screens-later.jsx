@@ -432,6 +432,7 @@ function Search(){
     <Button variant="primary" onClick={()=>setApplied({query,decision:decision.value,model:model.value,channel:channel.value,connections:connections.value,period})}>Buscar</Button>
    </SpaceBetween>
   </Panel>
+  <div className="desktop-table">
   <Table items={items} trackBy="id" header={<Header variant="h2" counter={"("+items.length+")"}>Resultados</Header>}
    columnDefinitions={[
     {id:"id",header:"Trace ID",cell:x=><Button variant="link" onClick={()=>show(x)}>{x.id}</Button>},
@@ -440,6 +441,22 @@ function Search(){
     {id:"action",header:"Detalle",cell:x=><Button variant="link" onClick={()=>show(x)}>Ver ruta forense</Button>}
    ]}
    empty={<Box textAlign="center" padding="l">No hay transacciones para estos filtros de demostración.</Box>}/>
+  </div>
+  <div className="mobile-cards">
+   <SpaceBetween size="s">{items.map(x=><Container key={x.id} header={<Header variant="h3">{x.id}</Header>}>
+    <SpaceBetween size="s">
+     <StatusIndicator type={x.decision==="Denegado"?"error":x.decision==="Pendiente"?"pending":"success"}>{x.decision}</StatusIndicator>
+     <KeyValuePairs columns={2} items={[
+      {label:"Principal",value:x.who},
+      {label:"Agente",value:x.agent},
+      {label:"Tool",value:x.tool},
+      {label:"Canal",value:x.channel}
+     ]}/>
+     <Button onClick={()=>show(x)}>Ver ruta forense</Button>
+    </SpaceBetween>
+   </Container>)}</SpaceBetween>
+   {!items.length&&<Box color="text-body-secondary">Sin resultados para estos filtros.</Box>}
+  </div>
  </SpaceBetween>;
 }
 function Forensic(){
