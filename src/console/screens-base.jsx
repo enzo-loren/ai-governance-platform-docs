@@ -117,7 +117,7 @@ function Live(){
   <ColumnLayout columns={3} variant="text-grid">
    <SmallKpi title="Solicitudes visibles" value={String(events.length)} context={"Datos sintéticos del corte "+slice}/>
    <SmallKpi title="Canales" value={rank>=4?"A + MCP":"A"} context={rank>=4?"Inferencia y ejecución":"Solo inferencia"}/>
-   <SmallKpi title={paused?"En espera":"Evidencia"} value={paused?String(queued.length):"DEMO"} context={paused?"Se incorporan al reanudar":"No es telemetría AWS"}/>
+   <SmallKpi title={paused?"En espera":"Denegadas"} value={paused?String(queued.length):String(events.filter(x=>x.state==="Denegado").length)} context={paused?"Se incorporan al reanudar":"Solicitudes de ejemplo"}/>
   </ColumnLayout>
   <Container header={<Header variant="h2" actions={<SpaceBetween direction="horizontal" size="xs">
    <Button onClick={addEvent}>Simular solicitud</Button>
@@ -210,7 +210,7 @@ function Coverage(){
     </ColumnLayout>
     <ColumnLayout columns={3} variant="text-grid">
      <SmallKpi title="Modo" value={agent.mode} context={modeText}/>
-     <SmallKpi title="Cobertura medida" value="Sin datos" context={"Máximo posible: "+max+" % (referencia)"}/>
+     <SmallKpi title="Cobertura medida" value="Sin datos" context="Sin telemetría real"/>
      <SmallKpi title="Herramientas protegidas" value={hasB?bCount+" de 4":"0 de 4"} context={hasB?"Solo las que pasan por MCP":"Ejecución fuera de la puerta"}/>
     </ColumnLayout>
     {evidence.value==="sin_trafico"&&<Alert type="warning">Sin tráfico: no hay un índice de cobertura medido para esta ventana.</Alert>}
@@ -220,7 +220,7 @@ function Coverage(){
       <Select selectedOption={evidence} onChange={({detail})=>setEvidence(detail.selectedOption)}
        options={[{value:"observado",label:"Con actividad"},{value:"sin_trafico",label:"Sin tráfico"},{value:"fallo",label:"Evaluación sin evidencia"}]}/>
      </FormField>
-     <Explanation>El porcentaje de referencia es el techo del catálogo con las conexiones del corte completas. No es una puntuación observada. Para un índice real deben existir tráfico, controles aplicables y evidencia válida.</Explanation>
+     <Explanation>Máximo teórico con estas conexiones: {max} %. Es una referencia de catálogo, no una puntuación observada. Calcular cobertura real requiere tráfico, controles aplicables y evidencia válida.</Explanation>
     </SpaceBetween>}
    </SpaceBetween>
   </Container>
@@ -329,7 +329,7 @@ function Inventory(){
     <FormField label="Clasificación revisada">
      <Select selectedOption={draftClass} options={classes} onChange={({detail})=>setDraftClass(detail.selectedOption)}/>
     </FormField>
-    <Box fontSize="body-s" color="text-body-secondary">Revisar la clasificación no habilita automáticamente la ejecución: la aprobación y el control MCP son pasos separados.</Box>
+    <Alert type="info">Clasificar una herramienta no autoriza su ejecución.</Alert>
    </SpaceBetween>
   </Modal>
  </SpaceBetween>;
@@ -402,9 +402,9 @@ function ActiveAgent(){
     <div className="gov-agent-picker"><AgentSelector/></div>
     <ColumnLayout columns={4}>
      <SmallKpi title="Estado" value={mode} context="Solo este agente"/>
-     <SmallKpi title="API keys vigentes" value={selected.tokens.filter(x=>x.status==="Activa").length.toString()} context="A y B comparten agent_token"/>
+     <SmallKpi title="API keys vigentes" value={selected.tokens.filter(x=>x.status==="Activa").length.toString()} context="Solo este agente"/>
      <SmallKpi title="Preset" value={preset} context="Configuración individual"/>
-     <SmallKpi title="Responsable" value={selected.owner||"Sin asignar"} context={selected.id}/>
+     <SmallKpi title="Responsable" value={selected.owner||"Sin asignar"} context=""/>
     </ColumnLayout>
     <SpaceBetween direction="horizontal" size="s">
      {mode==="Descubrimiento"&&<Button variant="primary" onClick={()=>setDialog("activate")}>Pasar a activo</Button>}
@@ -423,8 +423,8 @@ function ActiveAgent(){
      </FormField>
     </ColumnLayout>}
     {mode!=="Retirado"&&<SpaceBetween size="s">
-     {policyOption.value==="2"&&<Alert type="warning">Preset 2 exige identidad C para escrituras y conexión B para aprobar herramientas críticas. Lo que falte se deniega con motivo explícito.</Alert>}
-     {policyOption.value==="3"&&<Alert type="warning">Preset 3 deniega por defecto hasta contar con reglas nominales por rol y tool.</Alert>}
+     {policyOption.value==="2"&&<Alert type="warning">Las escrituras requieren usuario identificado. Las herramientas críticas necesitan conexión MCP para su aprobación.</Alert>}
+     {policyOption.value==="3"&&<Alert type="warning">Sin reglas específicas de acceso, las solicitudes se deniegan.</Alert>}
      {presetEdit&&presetEdit.value!==preset&&<Container header={<Header variant="h3">Vista previa del cambio · datos sintéticos</Header>}>
       <SpaceBetween size="s">
        <KeyValuePairs columns={3} items={[
@@ -473,7 +473,7 @@ function Limits({byUser=false}){
  const [rate,setRate]=useState(String(config.rate??50));
  const [tokens,setTokens]=useState(String(config.tokens??100000));
  const [period,setPeriod]=useState({value:config.period||"day",label:config.period==="month"?"Mensual":"Diario"});
- const actions=selectOptions([["alert","Solo alerta"],["throttle","Limitar (429)"],["block","Bloqueo (403)"]]);
+ const actions=selectOptions([["alert","Solo alerta"],["throttle","Reducir frecuencia"],["block","Bloquear"]]);
  const [policy,setPolicy]=useState(actions.find(x=>x.value===(config.action||"block"))||actions[2]);
  useEffect(()=>{
   const c=byUser&&!workload?(selected.userLimits?.[user.value]||{}):(selected.limits||{});
@@ -496,7 +496,7 @@ function Limits({byUser=false}){
    <SpaceBetween size="m">
     <AgentSelector/>
     <ColumnLayout columns={3}>
-     <SmallKpi title="Gasto de muestra" value={"US$ "+simulation.spent.toFixed(2)} context="No proviene de AWS"/>
+     <SmallKpi title="Gasto" value={"US$ "+simulation.spent.toFixed(2)} context="Datos de ejemplo"/>
      <SmallKpi title="Tokens" value="74.200" context={"de "+tokens+" configurados"}/>
      <SmallKpi title="Solicitudes/minuto" value="28" context={"de "+rate+" permitidas"}/>
     </ColumnLayout>
@@ -509,7 +509,7 @@ function Limits({byUser=false}){
    <SpaceBetween size="m">
     {byUser&&<SmallKpi title={"Principal: "+user.name} value={"US$ "+user.spent.toFixed(2)} context={user.requests+" solicitudes sintéticas · "+user.role}/>}
     {byUser&&<Alert type={workload?"info":"success"}>{workload?"Sin JWT válido: solo_workload consume los límites del agente.":"Los límites de "+user.name+" son independientes de los de las demás personas en "+selected.name+"."}</Alert>}
-    <ProgressBar value={Math.min(100,Math.round((byUser&&!workload?user.spent:simulation.spent)/parsed(budget)*100)||0)} additionalInfo={"Alertas 50 / 80 / 100 % · ejemplo"} description={"Presupuesto de "+(byUser&&!workload?user.name:selected.name)}/>
+    <ProgressBar value={Math.min(100,Math.round((byUser&&!workload?user.spent:simulation.spent)/parsed(budget)*100)||0)} description={"Presupuesto de "+(byUser&&!workload?user.name:selected.name)}/>
     <ColumnLayout columns={3}>
      <FormField label="Presupuesto (USD)" errorText={!Number.isFinite(parsed(budget))||parsed(budget)<=0?"Introduce un monto mayor que cero.":undefined}>
       <Input value={budget} onChange={({detail})=>setBudget(detail.value)} type="number"/>
@@ -528,7 +528,7 @@ function Limits({byUser=false}){
      </FormField>
     </ColumnLayout>
     <Button variant="primary" disabled={!valid} onClick={save}>Guardar límites (simulación)</Button>
-    {showExplanations&&<Alert type="info">En el producto, cada cambio se aplica sin redesplegar; throttle produce 429 con Retry-After, bloqueo 403 y solo_alerta no detiene solicitudes. Los contadores y alertas se miden por agente y, con C, por usuario.</Alert>}
+    {showExplanations&&<Alert type="info">Los umbrales de alerta son 50, 80 y 100 % del presupuesto. En el producto, los cambios se aplican sin redesplegar: limitar responde 429 con Retry-After; bloquear responde 403; una alerta no detiene solicitudes. Los contadores se separan por agente y, con C, por usuario.</Alert>}
    </SpaceBetween>
   </Panel>
  </SpaceBetween>;
@@ -554,7 +554,7 @@ function Identity(){
      <FormField label="Token del usuario · conexión C" description={showExplanations?"JWT de usuario, distinto del agent_token usado por A/B.":undefined}>
       <Select selectedOption={token} options={verification} onChange={({detail})=>setToken(detail.selectedOption)}/>
      </FormField>
-     <FormField label="Persona (datos ficticios)">
+     <FormField label="Persona">
       <Select selectedOption={{label:user.label,value:user.value}} options={users.map(x=>({label:x.label,value:x.value}))} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
      </FormField>
     </ColumnLayout>
