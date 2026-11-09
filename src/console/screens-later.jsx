@@ -1,4 +1,4 @@
-import React,{useState} from "react";
+import React,{useState,useEffect} from "react";
 import Box from "@cloudscape-design/components/box";
 import Button from "@cloudscape-design/components/button";
 import Badge from "@cloudscape-design/components/badge";
@@ -269,73 +269,116 @@ function Guide(){
  </SpaceBetween>;
 }
 function Approvals(){
- const {simulation,setSimulation,notify}=usePrototype();
+ const {simulation,setSimulation,notify,navigate}=usePrototype();
  const [selected,setSelected]=useState("APR42");
  const [confirm,setConfirm]=useState(null);
+ const [comment,setComment]=useState("");
+ const [now,setNow]=useState(Date.now());
+ const [deadlines]=useState(()=>({APR42:Date.now()+12*60*1000,APR43:Date.now()+4*60*1000,APR41:Date.now()-1000}));
+ useEffect(()=>{const interval=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(interval)},[]);
  const actors=[
-  {value:"elena",label:"Elena · aprobadora",role:"aprobador",name:"Elena"},
-  {value:"diego",label:"Diego · operador (originador)",role:"operador",name:"Diego"},
-  {value:"ana",label:"Ana · consulta",role:"consulta",name:"Ana"},
-  {value:"agent",label:"agent_token · no es una persona",role:"agente",name:"agente"}
+  {value:"elena",label:"Elena · aprobadora",role:"aprobador",name:"Elena",pii:false},
+  {value:"elena-pii",label:"Elena · aprobadora + pii_access",role:"aprobador",name:"Elena",pii:true},
+  {value:"diego",label:"Diego · operador (originador)",role:"operador",name:"Diego",pii:false},
+  {value:"ana",label:"Ana · consulta",role:"consulta",name:"Ana",pii:false},
+  {value:"agent",label:"agent_token · no es una persona",role:"agente",name:"agente",pii:false}
  ];
  const [actor,setActor]=useState(actors[0]);
- const status=id=>simulation.approvals[id]||"Pendiente";
+ const remaining=id=>Math.max(0,Math.ceil(((deadlines[id]||0)-now)/1000));
+ const countdown=id=>{
+  const secs=remaining(id);
+  return !secs?"Vencida":String(Math.floor(secs/60)).padStart(2,"0")+":"+String(secs%60).padStart(2,"0");
+ };
+ const status=id=>{
+  const saved=simulation.approvals[id]||"Pendiente";
+  return saved==="Pendiente"&&!remaining(id)?"Vencida":saved;
+ };
  const chosen=requests.find(x=>x.id===selected)||requests[0];
  const originator=chosen.from;
  const ownRequest=originator.toLowerCase().includes(actor.name.toLowerCase());
  const authorized=actor.role==="aprobador"&&!ownRequest;
  const pending=status(chosen.id)==="Pendiente";
+ const trace=chosen.id==="APR42"?"TRC-0104":null;
  const decide=()=>{
-  if(!confirm||!authorized||!pending){notify("La aprobación fue rechazada por separación de funciones o estado.","error");setConfirm(null);return}
+  if(!confirm||!authorized||!pending){notify("Acción rechazada por rol, plazo, originador o estado.","error");setConfirm(null);return}
   const result=confirm==="approve"?"Aprobada · ejecución simulada":"Rechazada · no ejecutada";
-  setSimulation(prev=>({...prev,approvals:{...prev.approvals,[chosen.id]:result}}));
-  notify(chosen.id+": "+result+". Ninguna tool fue ejecutada en AWS.");
-  setConfirm(null);
+  setSimulation(prev=>({...prev,approvals:{...prev.approvals,[chosen.id]:result},
+   approvalHistory:[...(prev.approvalHistory||[]),{id:chosen.id,actor:actor.name,decision:result,comment:comment.trim()||"Sin comentario",time:new Date().toLocaleTimeString("es-CL")}] }));
+  notify(chosen.id+": "+result+". No se ejecutó ninguna tool real.");
+  setConfirm(null);setComment("");
  };
  return <SpaceBetween size="l">
-  <Container header={<Header variant="h2">Sesión de aprobación</Header>}>
-   <SpaceBetween size="s">
-    <FormField label="Actor de la decisión · datos de demostración">
-     <Select selectedOption={actor} options={actors} onChange={({detail})=>setActor(detail.selectedOption)}/>
-    </FormField>
-    <StatusIndicator type={authorized?"success":"error"}>{authorized?"Rol aprobador habilitado":"Sin permiso para aprobar esta solicitud"}</StatusIndicator>
-    {!authorized&&<Alert type="error">La misma persona que originó la operación, un usuario sin rol aprobador y una credencial de agente no pueden autorizarla. Esta comprobación también debe existir en la API.</Alert>}
-   </SpaceBetween>
+  <Container header={<Header variant="h2">Bandeja de aprobaciones</Header>}>
+   <ColumnLayout columns={3}>
+    <div><Box color="text-body-secondary">Pendientes</Box><div className="kpi-value">{requests.filter(x=>status(x.id)==="Pendiente").length}</div></div>
+    <div><Box color="text-body-secondary">Vencidas</Box><div className="kpi-value">{requests.filter(x=>status(x.id)==="Vencida").length}</div></div>
+    <div><Box color="text-body-secondary">Resueltas (demo)</Box><div className="kpi-value">{(simulation.approvalHistory||[]).length}</div></div>
+   </ColumnLayout>
+   <FormField label="Actor de la decisión · demostración">
+    <Select selectedOption={actor} options={actors} onChange={({detail})=>setActor(detail.selectedOption)}/>
+   </FormField>
   </Container>
   <ColumnLayout columns={2}>
-   <div className="desktop-table"><Table items={requests} trackBy="id" header={<Header variant="h2">Solicitudes</Header>}
-    columnDefinitions={[
-     {id:"name",header:"Operación",cell:x=><Button variant="link" onClick={()=>setSelected(x.id)}>{x.id} · {x.name}</Button>},
+   <div className="desktop-table">
+    <Table items={requests} trackBy="id" header={<Header variant="h2">Solicitudes</Header>} columnDefinitions={[
+     {id:"tool",header:"Operación",cell:x=><Button variant="link" onClick={()=>setSelected(x.id)}>{x.id} · {x.name}</Button>},
      {id:"state",header:"Estado",cell:x=><StatusIndicator type={status(x.id)==="Pendiente"?"pending":status(x.id)==="Vencida"?"warning":"success"}>{status(x.id)}</StatusIndicator>},
-     {id:"time",header:"Plazo (demo)",cell:x=>x.time}
-    ]}/></div>
+     {id:"deadline",header:"Vence en",cell:x=>countdown(x.id)}
+    ]}/>
+   </div>
    <div className="mobile-cards">
     <Container header={<Header variant="h2">Solicitudes</Header>}>
-     <SpaceBetween size="s">
-      {requests.map(item=><div key={item.id} className="mobile-request">
-       <SpaceBetween size="xxs">
-        <Button variant="link" onClick={()=>setSelected(item.id)}>{item.id} · {item.name}</Button>
-        <StatusIndicator type={status(item.id)==="Pendiente"?"pending":status(item.id)==="Vencida"?"warning":"success"}>{status(item.id)}</StatusIndicator>
-        <Box fontSize="body-s" color="text-body-secondary">{item.time} · ejemplo de plazo</Box>
-       </SpaceBetween>
-      </div>)}
-     </SpaceBetween>
+     <SpaceBetween size="s">{requests.map(x=><div key={x.id} className="mobile-request">
+      <Button variant="link" onClick={()=>setSelected(x.id)}>{x.id} · {x.name}</Button>
+      <StatusIndicator type={status(x.id)==="Pendiente"?"pending":status(x.id)==="Vencida"?"warning":"success"}>{status(x.id)}</StatusIndicator>
+      <Box color="text-body-secondary" fontSize="body-s">Vence en: {countdown(x.id)}</Box>
+     </div>)}</SpaceBetween>
     </Container>
    </div>
-   <Panel title={"Solicitud "+chosen.id} help="HITL-02/03: aprobación separada de funciones, no ejecución sin aprobación, caducidad y consulta por gov_aprobacion_estado.">
+   <Panel title={"Solicitud "+chosen.id} help="El resultado MCP retenido no ejecuta la tool hasta que la API valide rol, originador, estado, plazo e idempotencia.">
     <SpaceBetween size="m">
-     <KeyValuePairs columns={2} items={[{label:"Tool",value:chosen.name},{label:"Originador",value:originator},{label:"Monto",value:chosen.amount},{label:"Estado",value:status(chosen.id)},{label:"Plazo restante",value:chosen.time},{label:"Actor conectado",value:actor.name+" · "+actor.role}]}/>
+     <StatusIndicator type={authorized?"success":"error"}>{authorized?"Actor habilitado para decidir":"Actor sin permiso o es originador"}</StatusIndicator>
+     <KeyValuePairs columns={2} items={[
+      {label:"Agente",value:"agente-demo"},{label:"Usuario / origen",value:originator},
+      {label:"Tool",value:chosen.name},{label:"Clase",value:chosen.id==="APR42"?"Crítica":"Escritura"},
+      {label:"Plazo restante",value:countdown(chosen.id)},
+      {label:"Estado",value:status(chosen.id)},
+      {label:"Argumentos",value:actor.pii?"cuenta=1234-5678 · "+chosen.amount:"cuenta=••••-•••• · monto enmascarado"},
+      {label:"Motivo de la solicitud",value:"Operación crítica sujeta a aprobación"}
+     ]}/>
+     {trace?<Button variant="link" onClick={()=>{
+      setSimulation(prev=>({...prev,selectedTraceId:trace}));
+      navigate("s6-forensic","S6");
+     }}>Ver transacción {trace}</Button>:<Box color="text-body-secondary" fontSize="body-s">Transacción no vinculada en este ejemplo.</Box>}
      {pending?<SpaceBetween direction="horizontal" size="s">
       <Button variant="primary" disabled={!authorized} onClick={()=>setConfirm("approve")}>Aprobar (demo)</Button>
       <Button disabled={!authorized} onClick={()=>setConfirm("reject")}>Rechazar (demo)</Button>
-     </SpaceBetween>:<Alert>Esta solicitud ya fue resuelta o venció y no puede ejecutarse de nuevo.</Alert>}
-     <Box fontSize="body-s" color="text-body-secondary">El resultado MCP debe ser PENDING_APPROVAL con id y vencimiento; el agente consulta gov_aprobacion_estado. En esta maqueta no hay ejecución ni estado real de AWS.</Box>
+     </SpaceBetween>:<Alert>La solicitud fue resuelta o venció; no admite una segunda ejecución.</Alert>}
+     {!authorized&&<Alert type="error">Se deniega la autoaprobación y el uso de agent_token para autorizar. La misma regla debe validarse nuevamente desde la API.</Alert>}
     </SpaceBetween>
    </Panel>
   </ColumnLayout>
+  <ExpandableSection headerText={"Historial · "+(simulation.approvalHistory||[]).length+" decisiones"} variant="footer">
+   {(simulation.approvalHistory||[]).length?
+    <Table variant="embedded" items={simulation.approvalHistory} columnDefinitions={[
+     {id:"id",header:"Solicitud",cell:x=>x.id},
+     {id:"actor",header:"Aprobador",cell:x=>x.actor},
+     {id:"decision",header:"Decisión",cell:x=>x.decision},
+     {id:"comment",header:"Comentario",cell:x=>x.comment},
+     {id:"time",header:"Hora",cell:x=>x.time}
+    ]}/>:<Box color="text-body-secondary">Aún no hay decisiones en esta sesión de demostración.</Box>}
+  </ExpandableSection>
   <Modal visible={!!confirm} header={confirm==="approve"?"Confirmar aprobación":"Confirmar rechazo"} onDismiss={()=>setConfirm(null)}
-   footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setConfirm(null)}>Cancelar</Button><Button variant="primary" disabled={!authorized} onClick={decide}>Confirmar (demo)</Button></SpaceBetween></Box>}>
-   <Alert type="warning">Decisión simulada: la plataforma real debe volver a validar rol, originador, plazo e idempotencia antes de ejecutar por la puerta.</Alert>
+   footer={<Box float="right"><SpaceBetween direction="horizontal" size="s">
+    <Button onClick={()=>setConfirm(null)}>Cancelar</Button>
+    <Button variant="primary" disabled={!authorized||!pending} onClick={decide}>Confirmar (demo)</Button>
+   </SpaceBetween></Box>}>
+   <SpaceBetween size="s">
+    <Alert type="warning">Decisión simulada: la plataforma real debe volver a validar rol, originador, plazo e idempotencia antes de ejecutar por la puerta.</Alert>
+    <FormField label="Comentario de la decisión · opcional">
+     <Textarea value={comment} rows={3} onChange={({detail})=>setComment(detail.value)} placeholder="Motivo de la aprobación o el rechazo"/>
+    </FormField>
+   </SpaceBetween>
   </Modal>
  </SpaceBetween>;
 }
