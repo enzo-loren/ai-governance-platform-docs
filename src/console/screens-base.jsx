@@ -301,27 +301,30 @@ function ActiveAgent(){
 function Limits({byUser=false}){
  const {simulation,setSimulation,notify,showExplanations}=usePrototype();
  const selected=selectedFrom(simulation);
- const config=selected.limits||{};
+ const [user,setUser]=useState(users[0]);
+ const workload=byUser&&user.value==="workload";
+ const config=byUser&&!workload?(selected.userLimits?.[user.value]||{}):(selected.limits||{});
  const [budget,setBudget]=useState(String(config.budget??50));
  const [rate,setRate]=useState(String(config.rate??50));
  const [tokens,setTokens]=useState(String(config.tokens??100000));
  const [period,setPeriod]=useState({value:config.period||"day",label:config.period==="month"?"Mensual":"Diario"});
  const actions=selectOptions([["alert","Solo alerta"],["throttle","Limitar (429)"],["block","Bloqueo (403)"]]);
  const [policy,setPolicy]=useState(actions.find(x=>x.value===(config.action||"block"))||actions[2]);
- const [user,setUser]=useState(users[0]);
  useEffect(()=>{
-  const c=selected.limits||{};
+  const c=byUser&&!workload?(selected.userLimits?.[user.value]||{}):(selected.limits||{});
   setBudget(String(c.budget??50));setRate(String(c.rate??50));setTokens(String(c.tokens??100000));
   setPeriod({value:c.period||"day",label:c.period==="month"?"Mensual":"Diario"});
   setPolicy(actions.find(x=>x.value===(c.action||"block"))||actions[2]);
- },[selected.id]);
+ },[selected.id,user.value,byUser,workload]);
  const parsed=x=>Number(String(x).replace(",","."));
  const valid=[budget,rate,tokens].every(x=>Number.isFinite(parsed(x))&&parsed(x)>0);
  const save=()=>{
   if(!valid)return;
   const saved={budget:parsed(budget),rate:parsed(rate),tokens:parsed(tokens),period:period.value,action:policy.value};
-  setSimulation(prev=>({...prev,agentRegistry:prev.agentRegistry.map(x=>x.id===selected.id?{...x,limits:saved}:x)}));
-  notify("Límites de "+selected.name+" modificados únicamente en la DEMO.");
+  setSimulation(prev=>({...prev,agentRegistry:prev.agentRegistry.map(x=>x.id===selected.id?
+    byUser&&!workload?{...x,userLimits:{...x.userLimits,[user.value]:saved}}:{...x,limits:saved}
+    :x)}));
+  notify("Límites de "+(byUser&&!workload?user.name+" en ":"")+selected.name+" modificados únicamente en la DEMO.");
  };
  return <SpaceBetween size="l">
   <Container header={<Header variant="h2">Consumo del agente · {selected.name}</Header>}>
@@ -337,10 +340,11 @@ function Limits({byUser=false}){
   {byUser&&<FormField label="Principal para analizar">
     <Select options={users.map(x=>({label:x.label,value:x.value}))} selectedOption={{label:user.label,value:user.value}} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
    </FormField>}
-  <Panel title={byUser?"Límites por agente y gasto por principal":"Límites por agente"} info="Los límites son individuales para cada agente, no una cuota global que suspende a todos.">
+  <Panel title={byUser?"Límites de "+(workload?"solo_workload (hereda agente)":user.name):"Límites por agente"} info="FIN-03: límites por usuario verificado configurables dentro de cada agente, sin consumir la cuota de otro usuario.">
    <SpaceBetween size="m">
     {byUser&&<SmallKpi title={"Principal: "+user.name} value={"US$ "+user.spent.toFixed(2)} context={user.requests+" solicitudes sintéticas · "+user.role}/>}
-    <ProgressBar value={Math.min(100,Math.round(simulation.spent/parsed(budget)*100)||0)} additionalInfo={"Alertas 50 / 80 / 100 % · ejemplo"} description={"Presupuesto de "+selected.name}/>
+    {byUser&&<Alert type={workload?"info":"success"}>{workload?"Sin JWT válido: solo_workload consume los límites del agente.":"Los límites de "+user.name+" son independientes de los de las demás personas en "+selected.name+"."}</Alert>}
+    <ProgressBar value={Math.min(100,Math.round((byUser&&!workload?user.spent:simulation.spent)/parsed(budget)*100)||0)} additionalInfo={"Alertas 50 / 80 / 100 % · ejemplo"} description={"Presupuesto de "+(byUser&&!workload?user.name:selected.name)}/>
     <ColumnLayout columns={3}>
      <FormField label="Presupuesto (USD)" errorText={!Number.isFinite(parsed(budget))||parsed(budget)<=0?"Introduce un monto mayor que cero.":undefined}>
       <Input value={budget} onChange={({detail})=>setBudget(detail.value)} type="number"/>
