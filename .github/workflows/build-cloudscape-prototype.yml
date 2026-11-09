@@ -1,0 +1,41 @@
+name: Build Cloudscape interactive prototype
+on:
+  push:
+    branches:
+      - feat/cloudscape-navegacion-slices
+    paths:
+      - package.json
+      - vite.config.mjs
+      - 'src/console/**'
+      - 'assets/console-data.json'
+      - '.github/workflows/build-cloudscape-prototype.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-and-commit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependencias y fijar versiones
+        run: npm install --no-audit --no-fund
+      - name: Crear bundle estático Cloudscape para GitHub Pages
+        run: npm run build
+      - name: Validar archivos estáticos de salida
+        run: |
+          test -s assets/console-build/app.js
+          test -s assets/console-build/app.css
+          ls -lh assets/console-build/
+      - name: Publicar bundle en esta rama sin tocar main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/console-build/ package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "build: compilar prototipo Cloudscape para hosting estático"
+            git push origin HEAD:feat/cloudscape-navegacion-slices
+          fi
