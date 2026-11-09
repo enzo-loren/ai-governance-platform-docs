@@ -1,4 +1,4 @@
-import React,{useState,useMemo} from "react";
+import React,{useState,useMemo,useEffect} from "react";
 import Box from "@cloudscape-design/components/box";
 import Button from "@cloudscape-design/components/button";
 import Badge from "@cloudscape-design/components/badge";
@@ -287,49 +287,117 @@ function ActiveAgent(){
  </SpaceBetween>;
 }
 function Limits({byUser=false}){
- const {simulation,setSimulation,notify}=usePrototype();
- const [budget,setBudget]=useState(String(simulation.budget));
- const [rate,setRate]=useState(String(simulation.rate));
- const [policy,setPolicy]=useState({label:"Bloqueo (403)",value:"block"});
+ const {simulation,setSimulation,notify,showExplanations}=usePrototype();
+ const selected=selectedFrom(simulation);
+ const config=selected.limits||{};
+ const [budget,setBudget]=useState(String(config.budget??50));
+ const [rate,setRate]=useState(String(config.rate??50));
+ const [tokens,setTokens]=useState(String(config.tokens??100000));
+ const [period,setPeriod]=useState({value:config.period||"day",label:config.period==="month"?"Mensual":"Diario"});
+ const actions=selectOptions([["alert","Solo alerta"],["throttle","Limitar (429)"],["block","Bloqueo (403)"]]);
+ const [policy,setPolicy]=useState(actions.find(x=>x.value===(config.action||"block"))||actions[2]);
  const [user,setUser]=useState(users[0]);
- const isValid=Number.isFinite(parseVal(budget))&&parseVal(budget)>0&&Number.isFinite(parseVal(rate))&&parseVal(rate)>0;
+ useEffect(()=>{
+  const c=selected.limits||{};
+  setBudget(String(c.budget??50));setRate(String(c.rate??50));setTokens(String(c.tokens??100000));
+  setPeriod({value:c.period||"day",label:c.period==="month"?"Mensual":"Diario"});
+  setPolicy(actions.find(x=>x.value===(c.action||"block"))||actions[2]);
+ },[selected.id]);
+ const parsed=x=>Number(String(x).replace(",","."));
+ const valid=[budget,rate,tokens].every(x=>Number.isFinite(parsed(x))&&parsed(x)>0);
+ const save=()=>{
+  if(!valid)return;
+  const saved={budget:parsed(budget),rate:parsed(rate),tokens:parsed(tokens),period:period.value,action:policy.value};
+  setSimulation(prev=>({...prev,agentRegistry:prev.agentRegistry.map(x=>x.id===selected.id?{...x,limits:saved}:x)}));
+  notify("Límites de "+selected.name+" modificados únicamente en la DEMO.");
+ };
  return <SpaceBetween size="l">
-  <ColumnLayout columns={3}><SmallKpi title={byUser?"Consumo del agente":"Costo del período"} value={"US$ "+simulation.spent.toFixed(2)} context="Cifras ilustrativas"/><SmallKpi title="Tokens" value="74.200" context="de 100.000"/><SmallKpi title="Solicitudes/min" value="28" context={"de "+simulation.rate}/></ColumnLayout>
+  <Container header={<Header variant="h2">Consumo del agente · {selected.name}</Header>}>
+   <SpaceBetween size="m">
+    <AgentSelector/>
+    <ColumnLayout columns={3}>
+     <SmallKpi title="Gasto de muestra" value={"US$ "+simulation.spent.toFixed(2)} context="No proviene de AWS"/>
+     <SmallKpi title="Tokens" value="74.200" context={"de "+tokens+" configurados"}/>
+     <SmallKpi title="Solicitudes/minuto" value="28" context={"de "+rate+" permitidas"}/>
+    </ColumnLayout>
+   </SpaceBetween>
+  </Container>
   {byUser&&<FormField label="Principal para analizar">
-   <Select options={users.map(x=>({label:x.label,value:x.value}))} selectedOption={{label:user.label,value:user.value}} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
-  </FormField>}
-  <Panel title={byUser?"Límites y gasto por principal":"Presupuesto por agente"}>
+    <Select options={users.map(x=>({label:x.label,value:x.value}))} selectedOption={{label:user.label,value:user.value}} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
+   </FormField>}
+  <Panel title={byUser?"Límites por agente y gasto por principal":"Límites por agente"} info="Los límites son individuales para cada agente, no una cuota global que suspende a todos.">
    <SpaceBetween size="m">
     {byUser&&<SmallKpi title={"Principal: "+user.name} value={"US$ "+user.spent.toFixed(2)} context={user.requests+" solicitudes sintéticas · "+user.role}/>}
-    <ProgressBar value={byUser?Math.round(user.spent/20*100):Math.min(100,Math.round(simulation.spent/simulation.budget*100))} additionalInfo={byUser?"Referente ilustrativo: US$ 20":"50/80/100 % · presupuesto de prueba"} description={byUser?"Costo del principal":"Presupuesto del agente"} />
+    <ProgressBar value={Math.min(100,Math.round(simulation.spent/parsed(budget)*100)||0)} additionalInfo={"Alertas 50 / 80 / 100 % · ejemplo"} description={"Presupuesto de "+selected.name}/>
     <ColumnLayout columns={3}>
-     <FormField label="Presupuesto (USD)" errorText={!Number.isFinite(parseVal(budget))||parseVal(budget)<=0?"Introduce un monto mayor que cero.":undefined}><Input value={budget} onChange={({detail})=>setBudget(detail.value)} type="number"/></FormField>
-     <FormField label="Solicitudes/minuto"><Input value={rate} onChange={({detail})=>setRate(detail.value)} type="number"/></FormField>
-     <FormField label="Al superar el límite"><Select selectedOption={policy} options={selectOptions([["alert","Solo alerta"],["throttle","Limitar (429)"],["block","Bloqueo (403)"]])} onChange={({detail})=>setPolicy(detail.selectedOption)} /></FormField>
+     <FormField label="Presupuesto (USD)" errorText={!Number.isFinite(parsed(budget))||parsed(budget)<=0?"Introduce un monto mayor que cero.":undefined}>
+      <Input value={budget} onChange={({detail})=>setBudget(detail.value)} type="number"/>
+     </FormField>
+     <FormField label="Período">
+      <Select selectedOption={period} options={[{value:"day",label:"Diario"},{value:"month",label:"Mensual"}]} onChange={({detail})=>setPeriod(detail.selectedOption)}/>
+     </FormField>
+     <FormField label="Solicitudes por minuto">
+      <Input value={rate} onChange={({detail})=>setRate(detail.value)} type="number"/>
+     </FormField>
+     <FormField label="Tokens por período" errorText={!Number.isFinite(parsed(tokens))||parsed(tokens)<=0?"Introduce un límite mayor que cero.":undefined}>
+      <Input value={tokens} onChange={({detail})=>setTokens(detail.value)} type="number"/>
+     </FormField>
+     <FormField label="Al superar el límite">
+      <Select selectedOption={policy} options={actions} onChange={({detail})=>setPolicy(detail.selectedOption)}/>
+     </FormField>
     </ColumnLayout>
-    <Button variant="primary" disabled={!isValid} onClick={()=>{setSimulation(x=>({...x,budget:parseVal(budget),rate:parseVal(rate)}));notify("Límites actualizados en el prototipo. "+SIM)}}>Guardar límites (simulación)</Button>
+    <Button variant="primary" disabled={!valid} onClick={save}>Guardar límites (simulación)</Button>
+    {showExplanations&&<Alert type="info">En el producto, cada cambio se aplica sin redesplegar; throttle produce 429 con Retry-After, bloqueo 403 y solo_alerta no detiene solicitudes. Los contadores y alertas se miden por agente y, con C, por usuario.</Alert>}
    </SpaceBetween>
   </Panel>
-  <Explanation>El sistema objetivo permite cambiar límites sin despliegue, con alertas y respuestas 429/403. Esta vista solo simula los valores.</Explanation>
  </SpaceBetween>;
 }
 function Identity(){
  const {showExplanations}=usePrototype();
  const [user,setUser]=useState(users[0]);
+ const verification=[
+  {value:"valid",label:"JWT válido"},
+  {value:"missing",label:"Sin token · solo_workload"},
+  {value:"reject",label:"Token inválido · rechazar"},
+  {value:"degrade",label:"Token inválido · degradar"}
+ ];
+ const [token,setToken]=useState(verification[0]);
+ const denied=token.value==="reject";
+ const effective=token.value==="valid"?user:users[2];
+ const authorized=!denied&&token.value==="valid"&&effective.pii;
+ const status=denied?"401 · gov_user_unauthorized":token.value==="degrade"?"Token degradado · solo_workload":token.value==="missing"?"Sin usuario · solo_workload":"Usuario verificado";
  return <SpaceBetween size="l">
-  <FormField label="Principal de la solicitud" description={showExplanations?"Conexión C valida el JWT: firma, emisor, vigencia y audiencia.":undefined}>
-   <Select selectedOption={{label:user.label,value:user.value}} options={users.map(x=>({label:x.label,value:x.value}))} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
-  </FormField>
+  <Container header={<Header variant="h2">Identidad por solicitud</Header>}>
+   <SpaceBetween size="m">
+    <ColumnLayout columns={2}>
+     <FormField label="Token del usuario · conexión C" description={showExplanations?"JWT de usuario, distinto del agent_token usado por A/B.":undefined}>
+      <Select selectedOption={token} options={verification} onChange={({detail})=>setToken(detail.selectedOption)}/>
+     </FormField>
+     <FormField label="Persona (datos ficticios)">
+      <Select selectedOption={{label:user.label,value:user.value}} options={users.map(x=>({label:x.label,value:x.value}))} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
+     </FormField>
+    </ColumnLayout>
+    <StatusIndicator type={denied?"error":token.value==="valid"?"success":"warning"}>{status}</StatusIndicator>
+    {token.value==="degrade"&&<Alert type="warning">El token inválido se trata como solo_workload y genera una alerta; no adquiere el rol elegido.</Alert>}
+    {denied&&<Alert type="error">Acceso rechazado: no se llama al modelo ni se atribuye esta solicitud al usuario seleccionado.</Alert>}
+   </SpaceBetween>
+  </Container>
   <ColumnLayout columns={2}>
-   <Panel title="Identidad verificada"><KeyValuePairs columns={1} items={[{label:"Usuario",value:user.name},{label:"Rol",value:user.role},{label:"Permiso de datos personales",value:user.pii?"pii_access":"No concedido"}]}/></Panel>
+   <Panel title="Principal efectivo">
+    <KeyValuePairs columns={1} items={[
+     {label:"Usuario",value:denied?"Sin acceso":effective.name},
+     {label:"Rol",value:denied?"Sin acceso":effective.role},
+     {label:"Permiso PII",value:denied?"No evaluado":authorized?"pii_access":"No concedido"}
+    ]}/>
+   </Panel>
    <Panel title="Respuesta del modelo">
-    <SpaceBetween size="s"><StatusIndicator type={user.pii?"success":"info"}>{user.pii?"Datos visibles con permiso":"Datos personales enmascarados"}</StatusIndicator>
-    <Box fontFamily="monospace">RUT: {user.pii?"12.345.678-5":"**.***.***-*"}<br/>Correo: {user.pii?"persona@ejemplo.cl":"***@***"}</Box>
+    <SpaceBetween size="s">
+     <StatusIndicator type={denied?"error":authorized?"success":"info"}>{denied?"Solicitud detenida":authorized?"Datos visibles por permiso":"Datos personales enmascarados"}</StatusIndicator>
+     {!denied&&<Box fontFamily="monospace">RUT: {authorized?"12.345.678-5":"**.***.***-*"}<br/>Correo: {authorized?"persona@ejemplo.cl":"***@***"}</Box>}
     </SpaceBetween>
    </Panel>
   </ColumnLayout>
-  <Explanation>Sin X-Gov-User-Token, se utiliza solo_workload. La puerta no autentica el tramo usuario → aplicación → agente.</Explanation>
+  <Box color="text-body-secondary" fontSize="body-s">La conexión C se mide como la proporción de solicitudes con JWT válido. Si falta, el agente conserva su autenticación A/B, pero las reglas no reciben identidad humana. La plataforma no autentica el salto usuario → agente.</Box>
  </SpaceBetween>;
 }
-
 export {BasicAgents,Live,Coverage,Inventory,Shadow,ActiveAgent,Limits,Identity};
