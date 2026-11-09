@@ -89,6 +89,7 @@ function Live(){
    <SmallKpi title="Canal" value="A" context="Inferencia observada"/>
    <SmallKpi title="Evidencia" value="3 de 3" context="Índice durable"/>
   </ColumnLayout>
+  <div className="desktop-table">
   <Table items={filtered} trackBy="id"
    header={<Header variant="h2" counter={"("+filtered.length+")"} actions={<Button onClick={()=>setPaused(v=>!v)} iconName={paused?"play":"pause"}>{paused?"Reanudar":"Pausar"}</Button>}>Flujo en vivo</Header>}
    filter={<div className="filter-layout">
@@ -106,6 +107,25 @@ function Live(){
     {id:"action",header:"Evidencia",cell:x=><Button variant="link" onClick={()=>setSelection(x)}>Ver registro</Button>}
    ]}
    empty={<Box textAlign="center" padding="l">No hay eventos con estos filtros.</Box>}/>
+  </div>
+  <div className="mobile-cards">
+   <Container header={<Header variant="h2" counter={"("+filtered.length+")"} actions={<Button onClick={()=>setPaused(v=>!v)} iconName={paused?"play":"pause"}>{paused?"Reanudar":"Pausar"}</Button>}>Flujo en vivo</Header>}>
+    <SpaceBetween size="s">
+     <TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Buscar agente o trace ID"/>
+     <FormField label="Estado">
+      <Select selectedOption={status} options={selectOptions([["all","Todos"],["Permitido","Permitido"],["Denegado","Denegado"]])} onChange={({detail})=>setStatus(detail.selectedOption)}/>
+     </FormField>
+     {filtered.length?filtered.map(call=><div className="mobile-request" key={call.id}>
+      <SpaceBetween size="s">
+       <div className="gov-mobile-card-heading"><Box fontFamily="monospace">{call.id}</Box><Box color="text-body-secondary" fontSize="body-s">{call.time}</Box></div>
+       <Decision state={call.state} reason={call.reason}/>
+       <KeyValuePairs columns={2} items={[{label:"Agente",value:call.agent},{label:"Costo",value:call.cost},{label:"Tokens",value:call.tokens},{label:"Latencia demo",value:call.latency}]}/>
+       <Button variant="link" onClick={()=>setSelection(call)}>Ver registro</Button>
+      </SpaceBetween>
+     </div>):<Box textAlign="center" padding="m">Sin eventos para estos filtros.</Box>}
+    </SpaceBetween>
+   </Container>
+  </div>
   {paused?<Alert type="warning">Vista pausada. El agente sigue funcionando.</Alert>:<Explanation>La evidencia se indexa antes de responder y se replica a S3 Object Lock GOVERNANCE.</Explanation>}
   <Modal visible={!!selection} onDismiss={()=>setSelection(null)} header={"Registro "+(selection?.id||"")} footer={<Box float="right"><Button variant="primary" onClick={()=>setSelection(null)}>Cerrar</Button></Box>}>
    <SpaceBetween size="s">
