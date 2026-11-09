@@ -5,7 +5,7 @@ Esta matriz documenta **qué pantalla se incorpora o cambia** en cada entrega. L
 ## Regla de composición
 
 1. La portada muestra **solo cambios del slice seleccionado** por defecto; no replica pantallas anteriores como si fueran nuevas.
-2. El selector **Producto acumulado** conserva cada superficie funcional una sola vez, con su **última versión** hasta ese slice. Una modificación sustituye la maqueta anterior; no crea artificialmente dos pantallas iguales.
+2. El selector **Producto acumulado** conserva cada superficie funcional una sola vez, con su **última versión** hasta ese slice. Una modificación solo sustituye una pantalla cuando conserva todas sus tareas previas. Listado y ficha, o catálogo y ejecución por MCP, son superficies independientes.
 3. Los botones dentro de la maqueta no ejecutan lógica de negocios ni llaman a AWS; los iconos de información explican qué debería hacer la función según requisitos.
 4. Los requisitos de backend, interoperabilidad y QA se documentan aquí y se reflejan en contextos pertinentes, **sin inventar menús ni páginas adicionales**.
 5. Los slices S0–S6 describen el **Módulo A**. B0–B3 son un agente de prueba externo y su suite; AGT-07 (chat web) es SHOULD, no interfaz obligatoria del producto.
@@ -20,11 +20,11 @@ Esta matriz documenta **qué pantalla se incorpora o cambia** en cada entrega. L
 | S1 | Nueva | Tarjeta de gobernanza · \`s1-coverage\` | — | CON-04, POL-01, POL-03 |
 | S1 | Nueva | Tools autodescubiertas · \`s1-inventory\` | — | INF-02 |
 | S1 | Nueva | Decisión en sombra · \`s1-shadow\` | — | INF-04, GRD-01, GRD-02, FIN-01, POL-01, POL-03 |
-| S2 | Modifica | Activación y Kill Switch · \`s2-activate\` | \`s0-connect\` | REG-01, REG-03, INF-03, INF-05, NFR-01, EVD-04, CON-08 |
+| S2 | Nueva | Control individual del agente · \`s2-activate\` | — | REG-01, REG-03, INF-03, INF-05, NFR-01, EVD-04, CON-08 |
 | S2 | Nueva | Consumo y límites · \`s2-limits\` | — | CON-06, FIN-02 |
 | S3 | Nueva | Identidad y acceso por rol · \`s3-identity\` | — | IDN-01, GRD-03 |
 | S3 | Modifica | Consumo por persona · \`s3-user-spend\` | \`s2-limits\` | FIN-03 |
-| S4 | Modifica | Tools por la puerta · \`s4-mcp\` | \`s1-inventory\` | MCP-01, PLT-02, GRD-04, CON-07 |
+| S4 | Nueva | Ejecución por MCP · \`s4-mcp\` | — | MCP-01, PLT-02, GRD-04, CON-07 |
 | S4 | Nueva | Constructor de reglas · \`s4-policy\` | — | POL-04 |
 | S4 | Nueva | Guía A/B/C · \`s4-guide\` | — | OPS-01; POL-02 es prueba backend, no pantalla |
 | S5 | Nueva | Bandeja de aprobaciones · \`s5-approvals\` | — | HITL-01, HITL-02, HITL-03, CON-05 |
@@ -37,13 +37,13 @@ Esta matriz documenta **qué pantalla se incorpora o cambia** en cada entrega. L
 |---|---:|---:|---:|---:|
 | S0 | 2 | 0 | 2 | 2 |
 | S1 | 3 | 0 | 3 | 5 |
-| S2 | 1 | 1 | 2 | 6 |
-| S3 | 1 | 1 | 2 | 7 |
-| S4 | 2 | 1 | 3 | 9 |
-| S5 | 1 | 0 | 1 | 10 |
-| S6 | 2 | 0 | 2 | 12 |
+| S2 | 2 | 0 | 2 | 7 |
+| S3 | 1 | 1 | 2 | 8 |
+| S4 | 3 | 0 | 3 | 11 |
+| S5 | 1 | 0 | 1 | 12 |
+| S6 | 2 | 0 | 2 | 14 |
 
-Las 15 versiones visuales representan **12 superficies de producto** a S6 (3 sustituciones).
+Las 15 versiones visuales representan **14 superficies de producto** a S6 (una sustitución). La actualización S3 de Consumo conserva los límites por agente y añade la edición por persona. La ficha individual S2 y la ejecución MCP S4 coexisten con el listado de agentes S0 y el catálogo de tools S1.
 
 ## Controles contra afirmaciones no sustentadas
 
