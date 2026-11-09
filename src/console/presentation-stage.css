@@ -1,0 +1,187 @@
+/* CON-08: panel de proyección, no ampliación de formularios.
+ * Visualización aislada de la consola Cloudscape, con lectura 1080p y foco.
+ */
+.gov-presentation{
+ --present-ink:#142b43;
+ --present-text:#203b55;
+ --present-muted:#50677d;
+ --present-border:#d0dfed;
+ --present-accent:#096fbd;
+ color:var(--present-ink);
+ min-height:100dvh;
+ background:linear-gradient(132deg,#eef5fc 0%,#f7f9fe 55%,#eaf3fb 100%);
+ font-family:"Open Sans","Amazon Ember",system-ui,sans-serif;
+}
+.gov-presentation *{box-sizing:border-box}
+.gov-presentation:fullscreen{width:100vw;height:100vh;overflow:auto;background:linear-gradient(132deg,#eef5fc,#f7f9fe 55%,#eaf3fb)}
+.gov-present-shell{
+ width:min(100%,1780px);
+ min-height:100dvh;
+ margin:0 auto;
+ display:flex;
+ flex-direction:column;
+ gap:clamp(12px,1.7vh,22px);
+ padding:clamp(18px,2.6vh,30px) clamp(22px,3.7vw,66px) 17px;
+}
+.gov-present-top{
+ display:flex;
+ gap:22px;
+ justify-content:space-between;
+ align-items:center;
+ border-bottom:1px solid #cbdaea;
+ padding-bottom:16px;
+ flex-wrap:wrap;
+}
+.gov-present-brand{
+ display:flex;
+ flex-wrap:wrap;
+ align-items:center;
+ gap:11px;
+ color:#385771;
+ font-weight:700;
+ font-size:14px;
+}
+.gov-present-wordmark{font-size:17px;letter-spacing:-.035em;font-weight:850;color:#173653}
+.gov-present-divider{width:1px;height:22px;background:#aebfd0}
+.gov-present-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.gov-present-content{flex:1;min-width:0;display:flex;flex-direction:column;gap:clamp(15px,2.4vh,26px)}
+.gov-present-intro{display:flex;align-items:end;justify-content:space-between;gap:24px;min-width:0}
+.gov-present-intro>div:first-child{min-width:0}
+.gov-present-eyebrow{font-size:12px;font-weight:850;letter-spacing:.1em;text-transform:uppercase;color:#2873a3;margin:0 0 9px}
+.gov-present-intro h1{color:#142b43;font-size:clamp(29px,3.1vw,52px);font-weight:850;letter-spacing:-.05em;line-height:1.12;margin:0}
+.gov-present-intro h1:focus{outline:0}
+.gov-present-intro h1:focus-visible{outline:3px solid #de990f;outline-offset:3px;border-radius:3px}
+.gov-present-lead{margin:11px 0 0;font-size:clamp(14px,1.15vw,18px);line-height:1.5;color:#42617b;max-width:850px}
+.gov-present-agent{
+ flex:0 0 auto;
+ display:flex;flex-direction:column;align-items:flex-end;gap:3px;
+ padding:13px 16px;background:rgba(255,255,255,.82);
+ border:1px solid #c8d8e7;border-radius:11px;
+ color:#4b657c;font-size:12px;
+ max-width:min(360px,36%);
+ text-align:right;
+}
+.gov-present-agent strong{font-size:18px;color:#173653;line-height:1.25;overflow-wrap:anywhere}
+.gov-present-agent b{color:#173653}
+.gov-present-main-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.85fr);gap:16px;min-width:0;align-items:stretch}
+.gov-present-feature{
+ background:#fff;border:1px solid var(--present-border);
+ border-left:6px solid #1675c0;border-radius:12px;
+ padding:clamp(20px,2.3vw,35px);
+ box-shadow:0 5px 22px rgba(37,66,94,.045);
+ min-width:0;min-height:315px;
+ display:flex;flex-direction:column;align-items:flex-start;
+}
+.gov-present-step-kicker{
+ margin:0 0 14px;color:#316b97;letter-spacing:.08em;
+ font-size:12px;line-height:1.5;font-weight:850;text-transform:uppercase
+}
+.gov-present-feature h2{
+ font-size:clamp(25px,2.45vw,43px);font-weight:850;color:#112f4c;
+ letter-spacing:-.04em;line-height:1.14;margin:0 0 18px;
+ max-width:930px;overflow-wrap:break-word;
+}
+.gov-present-state{
+ display:inline-flex;align-items:center;gap:10px;
+ border-radius:30px;padding:9px 17px;
+ font-size:clamp(14px,1.17vw,19px);font-weight:850;line-height:1.3;
+ border:1px solid transparent;
+}
+.gov-present-state-blue{background:#e4f1ff;color:#125a94;border-color:#a5c9e7}
+.gov-present-state-green{background:#e2f5eb;color:#0b6852;border-color:#92ceb4}
+.gov-present-state-orange{background:#fff1d9;color:#81500c;border-color:#e9c58a}
+.gov-present-pulse{width:10px;height:10px;border-radius:50%;background:currentColor;flex:0 0 auto}
+.gov-present-outcome{
+ color:#35536d;font-size:clamp(14px,1.25vw,19px);
+ line-height:1.6;max-width:880px;margin:clamp(14px,2vh,24px) 0 0;
+}
+.gov-present-consequence{
+ background:#142e49;
+ color:#fff;border-radius:12px;
+ padding:clamp(22px,2.2vw,34px);
+ display:flex;flex-direction:column;justify-content:space-between;
+ gap:20px;min-width:0;min-height:315px;
+}
+.gov-present-side-title{font-size:12px;letter-spacing:.075em;text-transform:uppercase;font-weight:850;color:#add1ef;margin:0}
+.gov-present-signal{font-size:clamp(20px,2vw,34px);font-weight:800;line-height:1.27;overflow-wrap:break-word;letter-spacing:-.03em}
+.gov-present-scope{padding-top:14px;border-top:1px solid #5e7790}
+.gov-present-contract{color:#e2f1ff;font-size:14px;font-weight:700;line-height:1.5;letter-spacing:.005em}
+.gov-present-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.gov-present-metric{
+ background:#fff;border:1px solid #d2e1ed;border-radius:11px;
+ padding:clamp(15px,1.65vw,26px);
+ display:flex;flex-direction:column;justify-content:center;gap:8px;min-height:125px;min-width:0;
+}
+.gov-present-metric strong{
+ color:#143a59;font-size:clamp(23px,2.7vw,41px);font-weight:850;
+ line-height:1.08;letter-spacing:-.04em;overflow-wrap:anywhere;
+ font-variant-numeric:tabular-nums;
+}
+.gov-present-metric span{
+ color:#42627c;font-weight:650;font-size:clamp(12px,1vw,16px);line-height:1.35;
+}
+.gov-present-bottom{
+ display:flex;align-items:center;justify-content:space-between;gap:16px;
+ background:#fff;border:1px solid #d3e1ed;border-radius:11px;
+ padding:12px;flex-wrap:wrap;
+}
+.gov-present-steps{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
+.gov-present-step{
+ color:#31526f;background:transparent;cursor:pointer;
+ font-size:13px;font-family:inherit;font-weight:750;
+ border:1px solid transparent;border-radius:8px;
+ min-height:44px;padding:9px 12px;display:inline-flex;align-items:center;gap:9px;
+}
+.gov-present-step:hover{background:#eef6fd}
+.gov-present-step.is-active{background:#e6f2fc;border-color:#72abd9;color:#11568e}
+.gov-present-step-num{
+ display:inline-grid;place-items:center;border-radius:5px;background:#dbeaf6;
+ color:#13578e;min-width:25px;height:25px;font-size:11px;letter-spacing:.02em
+}
+.gov-present-step.is-active .gov-present-step-num{background:#1265a4;color:#fff}
+.gov-present-navigation{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gov-present-footnote{color:#667c90;font-size:12px;line-height:1.4;text-align:center;margin-top:0}
+.gov-present-step:focus-visible{outline:3px solid #cc8d0b;outline-offset:2px}
+@media (max-width:1150px){
+ .gov-present-intro{align-items:flex-start}
+ .gov-present-main-grid{grid-template-columns:minmax(0,1.18fr) minmax(270px,.82fr)}
+ .gov-present-feature,.gov-present-consequence{min-height:290px}
+ .gov-present-bottom{align-items:stretch}
+}
+@media(max-width:800px){
+ .gov-present-shell{padding:18px;gap:18px}
+ .gov-present-top{align-items:flex-start}
+ .gov-present-intro{display:block}
+ .gov-present-agent{margin-top:14px;max-width:none;width:100%;align-items:flex-start;text-align:left}
+ .gov-present-main-grid{grid-template-columns:1fr}
+ .gov-present-feature,.gov-present-consequence{min-height:0}
+ .gov-present-consequence{gap:14px}
+ .gov-present-metrics{gap:8px}
+ .gov-present-metric{padding:14px}
+ .gov-present-bottom{display:grid}
+ .gov-present-navigation{justify-content:flex-end}
+}
+@media(max-width:540px){
+ .gov-present-shell{padding:12px;gap:14px}
+ .gov-present-top{padding-bottom:12px}
+ .gov-present-actions{width:100%}
+ .gov-present-actions [class*="awsui_button"]{flex:1}
+ .gov-present-intro h1{font-size:31px}
+ .gov-present-lead{font-size:14px}
+ .gov-present-feature{padding:19px;border-left-width:4px}
+ .gov-present-feature h2{font-size:27px}
+ .gov-present-outcome{font-size:15px}
+ .gov-present-consequence{padding:19px}
+ .gov-present-signal{font-size:23px}
+ .gov-present-metrics{grid-template-columns:1fr}
+ .gov-present-metric{min-height:72px;display:grid;align-items:center;grid-template-columns:minmax(0,.55fr) minmax(0,1fr);gap:12px}
+ .gov-present-metric strong{font-size:27px}
+ .gov-present-step{flex:1;justify-content:center;padding:8px 9px;font-size:12px}
+ .gov-present-step-num{width:22px;height:22px;min-width:22px}
+ .gov-present-navigation{justify-content:stretch}
+ .gov-present-navigation>*{flex:1}
+ .gov-present-footnote{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ .gov-presentation *, .gov-presentation *::before, .gov-presentation *::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}

@@ -315,7 +315,6 @@ function ActiveAgent(){
      {mode!=="Suspendido"&&mode!=="Retirado"&&<Button onClick={()=>setDialog("suspend")}>Suspender agente</Button>}
      {mode==="Suspendido"&&<Button onClick={()=>setDialog("resume")}>Reactivar agente</Button>}
      {mode!=="Retirado"&&<Button onClick={()=>setDialog("retire")}>Retirar agente</Button>}
-     <Button onClick={()=>setSimulation(x=>({...x,presentation:!x.presentation}))}>{simulation.presentation?"Salir de presentación":"Modo presentación"}</Button>
     </SpaceBetween>
     {mode==="Suspendido"&&<Alert type="warning">Este agente está suspendido. En producción, sus inferencias y ejecuciones MCP deben recibir 403 en un máximo de 60 segundos. Los demás agentes siguen operando.</Alert>}
     {mode==="Retirado"&&<Alert type="error">Agente retirado. Sus credenciales deben devolver 401 y su evidencia se conserva.</Alert>}

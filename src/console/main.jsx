@@ -17,6 +17,8 @@ import Badge from "@cloudscape-design/components/badge";
 import Toggle from "@cloudscape-design/components/toggle";
 import data from "../../assets/console-data.json";
 import {RenderScreen} from "./screens.jsx";
+import PresentationStage,{PRESENTATION_SCREEN_IDS} from "./presentation-stage.jsx";
+import "./presentation-stage.css";
 import "./app.css";
 
 const PrototypeContext=createContext(null);
@@ -55,10 +57,12 @@ function Application(){
  );
  const [route,setRoute]=useState(fromLocation);
  const [help,setHelp]=useState(null);
+ const [presenting,setPresenting]=useState(false);
  const [message,setMessage]=useState(null);
- const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"], approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},presentation:false,selectedAgentId:"agt-demo",agentRegistry:[{id:"agt-demo",name:"agente-demo",owner:"Operador plataforma",mode:"Descubrimiento",model:"bedrock-a",tokens:[{id:"cred-demo-1",suffix:"D3MO",status:"Activa",created:"Demo inicial"}]}]});
+ const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"], approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},selectedAgentId:"agt-demo",agentRegistry:[{id:"agt-demo",name:"agente-demo",owner:"Operador plataforma",mode:"Descubrimiento",model:"bedrock-a",tokens:[{id:"cred-demo-1",suffix:"D3MO",status:"Activa",created:"Demo inicial"}]}]});
  const slice=route.slice;
  const active=findScreen(route.screen)||data.screens[0];
+ const canPresent=!preview&&PRESENTATION_SCREEN_IDS.includes(active.id);
  const visible=useMemo(()=>latestScreens(slice),[slice]);
  const revisions=useMemo(()=>screenVersions(active.surface),[active.surface]);
  const navigate=useCallback((screenId,newSlice=slice,replace=false)=>{
@@ -74,7 +78,7 @@ function Application(){
   q.delete("preview");
   const url=location.pathname+"?"+q.toString();
   history[replace?"replaceState":"pushState"](null,"",url);
-  setRoute(next);setHelp(null);setMessage(null);
+  setRoute(next);setHelp(null);setMessage(null);setPresenting(false);
   const main=document.querySelector("#console-content");
   if(main)main.scrollTo({top:0});
   window.scrollTo({top:0});
@@ -82,6 +86,7 @@ function Application(){
  useEffect(()=>{
   const listener=()=>{
    setRoute(fromLocation());
+   setPresenting(false);
    window.scrollTo({top:0});
   };
   window.addEventListener("popstate",listener);
@@ -102,9 +107,22 @@ function Application(){
   else url.searchParams.delete("explain");
   history.replaceState(null,"",url.pathname+url.search+url.hash);
  },[]);
- const roadmapHref="../index.html"+(showExplanations?"?explain=1":"")+"#"+slice.toLowerCase();
+ useEffect(()=>{
+  if(!presenting)return;
+  const onKey=event=>{
+   if(event.key==="Escape"){event.preventDefault();setPresenting(false)}
+  };
+  document.addEventListener("keydown",onKey);
+  return()=>document.removeEventListener("keydown",onKey);
+ },[presenting]);
+ const returnFromPresentation=()=>{
+  setPresenting(false);
+  requestAnimationFrame(()=>document.getElementById("presentation-launch")?.focus());
+ };
+  const roadmapHref="../index.html"+(showExplanations?"?explain=1":"")+"#"+slice.toLowerCase();
  const ctx={slice,screen:active,visible,simulation,setSimulation,notify,helpOn,navigate,preview,showExplanations};
  return <PrototypeContext.Provider value={ctx}>
+  {presenting?<PresentationStage screen={active} simulation={simulation} onExit={returnFromPresentation}/>:<>
   {!preview&&<div id="console-top">
    <TopNavigation
      identity={{href:roadmapHref,title:"AI Governance"}}
@@ -118,7 +136,7 @@ function Application(){
    navigation={null}
    toolsHide
    maxContentWidth={1220}
-   content={<div id="console-content" className={simulation.presentation?"presentation-mode":""}>
+   content={<div id="console-content">
       <SpaceBetween size="l">
        {!preview&&<div className="prototype-controls">
         <div className="prototype-status" aria-label="Entorno de demostración">
@@ -141,6 +159,7 @@ function Application(){
           :<div className="screen-version-single" data-testid="screen-version-static">
             <Badge color="grey">{slice} · {data.stages[sliceIndex(slice)].name}</Badge>
            </div>}
+         {canPresent&&<Button id="presentation-launch" iconName="view-full" onClick={()=>{setHelp(null);setPresenting(true)}}>Modo presentación</Button>}
          <div className="explanations-switch">
           <Toggle checked={showExplanations} onChange={({detail})=>toggleExplanations(detail.checked)}>
            Mostrar explicaciones
@@ -165,7 +184,8 @@ function Application(){
       </SpaceBetween>
     </div>}
   />
-  <Modal visible={!!help} header={help?.title||"Ayuda"} onDismiss={()=>setHelp(null)}
+  </>}
+  <Modal visible={!!help&&!presenting} header={help?.title||"Ayuda"} onDismiss={()=>setHelp(null)}
    footer={<Box float="right"><Button variant="primary" onClick={()=>setHelp(null)}>Entendido</Button></Box>}>
     <SpaceBetween size="s"><Box>{help?.content}</Box><Alert type="info">Esta explicación describe el diseño previsto; la funcionalidad del prototipo sigue siendo simulada.</Alert></SpaceBetween>
   </Modal>
