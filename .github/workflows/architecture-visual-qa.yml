@@ -1,0 +1,36 @@
+name: Architecture visual QA
+on:
+  push:
+    branches:
+      - fix/arquitectura-aws-legibilidad-qa
+  pull_request:
+    paths:
+      - 'assets/arquitectura.html'
+      - 'assets/arquitectura-explorable.js'
+      - 'assets/arquitectura-explorable.css'
+      - 'tests/architecture-visual-qa.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar Playwright
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Capturar y verificar 12 vistas
+        run: node tests/architecture-visual-qa.mjs
+      - name: Adjuntar capturas y reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arquitectura-qa-visual
+          path: artifacts/architecture-visual/
+          retention-days: 14
