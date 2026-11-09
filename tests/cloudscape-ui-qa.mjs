@@ -56,9 +56,10 @@ try{
    check(await page.getByRole("button",{name:"¿Qué muestra?"}).count()===0,
      vp.id+"/"+view+" muestra ayuda en modo limpio");
    if(vp.id==="desktop"){
-    const explanations=page.getByRole("checkbox",{name:"Mostrar explicaciones"});
+    const explanations=page.locator(".explanations-switch input[type=checkbox]");
     check(!await explanations.isChecked(),vp.id+"/"+view+" inicia con explicaciones activadas");
-    await explanations.check();
+    await page.getByText("Mostrar explicaciones",{exact:true}).click();
+    check(await explanations.isChecked(),vp.id+"/"+view+" el switch no se activó");
     await page.getByRole("button",{name:"¿Qué muestra?"}).click();
     check(await page.getByText("Esta explicación describe el diseño previsto",{exact:false}).count()>0,
       vp.id+"/"+view+" la ayuda no abre");
