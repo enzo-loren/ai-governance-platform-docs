@@ -50,7 +50,18 @@ function MCP(){
  const {simulation,setSimulation,notify,helpOn,showExplanations}=usePrototype();
  const [filter,setFilter]=useState("");
  const [row,setRow]=useState(null);
- const [approved,setApproved]=useState(["consultar_ficha","actualizar_precio"]);
+ const [toolSettings,setToolSettings]=useState({});
+ const [draft,setDraft]=useState(null);
+ const classes=["Lectura","Escritura","Destructiva","Sin clasificar"];
+ const supervision=["Autónoma","Notificar","Requiere aprobación"];
+ const meta=x=>toolSettings[x.id]||{kind:x.kind,approval:x.approved?"Aprobada":"Pendiente",supervision:x.kind==="Lectura"?"Autónoma":x.kind==="Escritura"?"Notificar":"Requiere aprobación"};
+ const open=x=>{setRow(x);setDraft({...meta(x)})};
+ const saveTool=()=>{
+  if(!row||!draft)return;
+  setToolSettings(prev=>({...prev,[row.id]:draft}));
+  notify("Clasificación y supervisión de "+row.id+" cambiadas solo en DEMO.");
+  setRow(null);
+ };
  const [targetName,setTargetName]=useState("");
  const [targetType,setTargetType]=useState({value:"lambda",label:"AWS Lambda"});
  const [targetModal,setTargetModal]=useState(false);
@@ -64,7 +75,8 @@ function MCP(){
   setSimulation(prev=>({...prev,toolsMcp:checked?[...new Set([...prev.toolsMcp,id])]:prev.toolsMcp.filter(name=>name!==id)}));
   notify("Cobertura MCP de la demostración actualizada.");
  };
- const decision=x=>!mcp.includes(x.id)?"Fuera de la puerta":approved.includes(x.id)?"Permitido":"Denegado";
+ const isActive=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)?.mode==="Activo";
+ const decision=x=>!mcp.includes(x.id)?"Fuera de la puerta":meta(x).approval==="Aprobada"?"Permitido":isActive?"Denegado":"En sombra";
  const register=()=>{
   if(!targetName.trim())return;
   if(targets.some(x=>x.id.toLowerCase()===targetName.trim().toLowerCase())){notify("Ya existe un target con ese nombre.","error");return}
@@ -94,10 +106,12 @@ function MCP(){
     header={<Header variant="h2" info={showExplanations?<Button variant="link" onClick={()=>helpOn("Cobertura B","La ejecución solo se controla si la tool pasa por un target MCP registrado. El catálogo de inferencia por sí solo no controla una ejecución local.")}>¿Qué cubre B?</Button>:undefined}>Herramientas y destinos</Header>}
     filter={<TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Filtrar tools"/>}
     columnDefinitions={[
-     {id:"name",header:"Tool",cell:x=><Button variant="link" onClick={()=>setRow(x)}>{x.id}</Button>},
-     {id:"class",header:"Clase",cell:x=>x.kind},
+     {id:"name",header:"Tool",cell:x=><Button variant="link" onClick={()=>open(x)}>{x.id}</Button>},
+     {id:"class",header:"Clase",cell:x=>meta(x).kind},
+     {id:"supervision",header:"Supervisión",cell:x=>meta(x).supervision},
+     {id:"uses",header:"Uso reciente · demo",cell:x=>({consultar_ficha:27,actualizar_precio:8,eliminar_registro:0,procesar_lote:1})[x.id]},
      {id:"target",header:"Destino",cell:x=>mcp.includes(x.id)?x.target:"Local"},
-     {id:"approved",header:"Aprobación",cell:x=><StatusIndicator type={approved.includes(x.id)?"success":"warning"}>{approved.includes(x.id)?"Aprobada":"Pendiente / no aprobada"}</StatusIndicator>},
+     {id:"approved",header:"Aprobación",cell:x=><StatusIndicator type={meta(x).approval==="Aprobada"?"success":"warning"}>{meta(x).approval}</StatusIndicator>},
      {id:"state",header:"Decisión",cell:x=><State value={decision(x)}/>},
      {id:"toggle",header:"Usar MCP (demo)",cell:x=><Toggle checked={mcp.includes(x.id)} onChange={({detail})=>toggle(x.id,detail.checked)}>MCP</Toggle>}
     ]}/>
@@ -108,25 +122,42 @@ function MCP(){
     {filtered.map(x=><Container key={x.id} header={<Header variant="h3" actions={<Toggle checked={mcp.includes(x.id)} onChange={({detail})=>toggle(x.id,detail.checked)}>MCP</Toggle>}>{x.id}</Header>}>
      <SpaceBetween size="s">
       <State value={decision(x)}/>
-      <StatusIndicator type={approved.includes(x.id)?"success":"warning"}>{approved.includes(x.id)?"Aprobada":"Pendiente"}</StatusIndicator>
-      <KeyValuePairs columns={2} items={[{label:"Clase",value:x.kind},{label:"Destino",value:mcp.includes(x.id)?x.target:"Local"}]}/>
-      <Button variant="link" onClick={()=>setRow(x)}>Ver detalle de tool</Button>
+      <StatusIndicator type={meta(x).approval==="Aprobada"?"success":"warning"}>{meta(x).approval}</StatusIndicator>
+      <KeyValuePairs columns={2} items={[{label:"Clase",value:meta(x).kind},{label:"Supervisión",value:meta(x).supervision},{label:"Destino",value:mcp.includes(x.id)?x.target:"Local"}]}/>
+      <Button variant="link" onClick={()=>open(x)}>Configurar tool</Button>
      </SpaceBetween>
     </Container>)}
    </SpaceBetween>
   </div>
   <Modal visible={!!row} header={row?.id||"Tool"} onDismiss={()=>setRow(null)}
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s">
-    <Button onClick={()=>setRow(null)}>Cerrar</Button>
-    {row&&<Button variant="primary" onClick={()=>{
-     setApproved(old=>old.includes(row.id)?old.filter(id=>id!==row.id):[...old,row.id]);
-     notify("Aprobación de "+row.id+" modificada únicamente en DEMO.");
-     setRow(null);
-    }}>{approved.includes(row?.id)?"Quitar aprobación (demo)":"Aprobar tool (demo)"}</Button>}
+    <Button onClick={()=>setRow(null)}>Cancelar</Button>
+    <Button variant="primary" onClick={saveTool}>Guardar tool (demo)</Button>
    </SpaceBetween></Box>}>
    <SpaceBetween size="m">
-    <KeyValuePairs columns={2} items={[{label:"Clase",value:row?.kind||""},{label:"Destino",value:row?.target||""},{label:"Cobertura B",value:row&&mcp.includes(row.id)?"MCP":"Local"},{label:"Aprobación",value:row&&approved.includes(row.id)?"Aprobada":"Pendiente"}]}/>
-    <Alert type="info">En activo, una tool pendiente o no aprobada se deniega; en descubrimiento la evaluación de esa regla puede operar en sombra. Esta acción solo modifica una muestra.</Alert>
+    <KeyValuePairs columns={2} items={[
+     {label:"Destino",value:row?.target||""},
+     {label:"Pasa por la puerta",value:row&&mcp.includes(row.id)?"Sí · MCP":"No · ejecución local"},
+     {label:"Esquema",value:row?.id==="procesar_lote"?"v2 (demo)":"v1 (demo)"}
+    ]}/>
+    <ColumnLayout columns={2}>
+     <FormField label="Clase de la tool">
+      <Select selectedOption={{value:draft?.kind||"Lectura",label:draft?.kind||"Lectura"}}
+       options={classes.map(value=>({value,label:value}))}
+       onChange={({detail})=>setDraft(prev=>({...prev,kind:detail.selectedOption.value}))}/>
+     </FormField>
+     <FormField label="Nivel de supervisión">
+      <Select selectedOption={{value:draft?.supervision||"Autónoma",label:draft?.supervision||"Autónoma"}}
+       options={supervision.map(value=>({value,label:value}))}
+       onChange={({detail})=>setDraft(prev=>({...prev,supervision:detail.selectedOption.value}))}/>
+     </FormField>
+     <FormField label="Aprobación operativa">
+      <Select selectedOption={{value:draft?.approval||"Pendiente",label:draft?.approval||"Pendiente"}}
+       options={["Aprobada","Pendiente","No aprobada"].map(value=>({value,label:value}))}
+       onChange={({detail})=>setDraft(prev=>({...prev,approval:detail.selectedOption.value}))}/>
+     </FormField>
+    </ColumnLayout>
+    <Alert type="info">«Notificar» permite ejecutar y enviar alerta; «Requiere aprobación» retiene hasta decisión humana cuando B está conectado. La ejecución de tools locales no puede ser controlada por este formulario.</Alert>
    </SpaceBetween>
   </Modal>
   <Modal visible={targetModal} header="Registrar target MCP · DEMO" onDismiss={()=>setTargetModal(false)}
