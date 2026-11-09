@@ -261,6 +261,16 @@ function ActiveAgent(){
     {mode!=="Retirado"&&<SpaceBetween size="s">
      {policyOption.value==="2"&&<Alert type="warning">Preset 2 exige identidad C para escrituras y conexión B para aprobar herramientas críticas. Lo que falte se deniega con motivo explícito.</Alert>}
      {policyOption.value==="3"&&<Alert type="warning">Preset 3 deniega por defecto hasta contar con reglas nominales por rol y tool.</Alert>}
+     {presetEdit&&presetEdit.value!==preset&&<Container header={<Header variant="h3">Vista previa del cambio · datos sintéticos</Header>}>
+      <SpaceBetween size="s">
+       <KeyValuePairs columns={3} items={[
+        {label:"Preset actual",value:presets.find(x=>x.value===preset)?.label||preset},
+        {label:"Candidato",value:presetEdit.label},
+        {label:"Solicitudes cuya decisión cambiaría",value:presetEdit.value==="3"?"3 de 12":presetEdit.value==="2"?"2 de 12":"1 de 12"}
+       ]}/>
+       <Box color="text-body-secondary" fontSize="body-s">Muestra de la ventana: eliminar_registro · actualizar_precio. Cantidades ilustrativas, no obtenidas de evidencia. En el producto deben recalcularse sobre trazas reales (POL-05).</Box>
+      </SpaceBetween>
+     </Container>}
      <Button disabled={!modelEdit&&!presetEdit} onClick={saveSettings}>Guardar configuración (demo)</Button>
     </SpaceBetween>}
    </SpaceBetween>
