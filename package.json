@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "check": "node --check assets/slices.js"
+    "build": "vite build && node scripts/stamp-console-assets.mjs",
+    "check": "node --check assets/slices.js",
+    "check:assets": "node tests/console-build-integrity.mjs"
   },
   "dependencies": {
     "react": "18.3.1",
