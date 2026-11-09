@@ -117,53 +117,104 @@ function Live(){
 function Coverage(){
  const {simulation,showExplanations}=usePrototype();
  const agent=selectedFrom(simulation);
+ const discovery=agent.mode==="Descubrimiento";
  return <SpaceBetween size="l">
-  <Container header={<Header variant="h2">Cobertura del catálogo · agente {agent.name}</Header>}>
+  <Container header={<Header variant="h2" description={showExplanations?"CON-04: cobertura del catálogo, no puntuación general de seguridad.":undefined}>Tarjeta de gobernanza · {agent.name}</Header>}>
    <SpaceBetween size="m">
     <ColumnLayout columns={3}>
-     <div><Box color="text-body-secondary">A · Inferencia</Box><StatusIndicator type="success">Conectada (demo)</StatusIndicator></div>
+     <div><Box color="text-body-secondary">A · Inferencia</Box><StatusIndicator type="success">Conectada · DEMO</StatusIndicator></div>
      <div><Box color="text-body-secondary">B · Tools MCP</Box><StatusIndicator type="stopped">No conectada</StatusIndicator></div>
-     <div><Box color="text-body-secondary">C · Usuario</Box><StatusIndicator type="stopped">No conectada · solo_workload</StatusIndicator></div>
+     <div><Box color="text-body-secondary">C · Usuario</Box><StatusIndicator type="stopped">No conectada</StatusIndicator></div>
     </ColumnLayout>
-    <ProgressBar value={41} label="Máximo alcanzable con A en modo activo" additionalInfo="41 % del catálogo actual · referencia, no medición" description="Conexión A sin B ni C, catálogo completo aplicable" />
-    <Box color="text-body-secondary" fontSize="body-s">En descubrimiento los controles preventivos configurados «en sombra» no suman. Los porcentajes dependen de las conexiones, el modo, los controles aplicables y la evidencia de la ventana.</Box>
+    <ColumnLayout columns={3}>
+     <SmallKpi title="Cobertura medida" value="Sin datos" context="Sin tráfico verificado"/>
+     <SmallKpi title="Máximo con A activo" value="41 %" context="Catálogo de controles · referencia"/>
+     <SmallKpi title="Modo actual" value={agent.mode} context="Días en modo: sin histórico"/>
+    </ColumnLayout>
+    <Box color="text-body-secondary" fontSize="body-s">En descubrimiento, las políticas en sombra no suman al índice. Se requiere evidencia efectiva de cada control y una ventana de medición antes de informar cobertura real.</Box>
    </SpaceBetween>
   </Container>
-  <Panel title="Estado de los controles" info="La cobertura no es un porcentaje de seguridad absoluta: solo cuenta controles del catálogo del producto con evidencia válida.">
+  <Container header={<Header variant="h2">Consumo y latencia · datos sintéticos</Header>}>
+   <ColumnLayout columns={4}>
+    <SmallKpi title="Tokens" value="74.200" context="Entrada + salida · ejemplo"/>
+    <SmallKpi title="Costo" value="US$ 41,20" context="Tarifa de muestra v1"/>
+    <SmallKpi title="Gobierno p50" value="23 ms" context="Ejemplo · no medido"/>
+    <SmallKpi title="Gobierno p95" value="47 ms" context="Ejemplo · no medido"/>
+   </ColumnLayout>
+  </Container>
+  <Panel title="Controles del catálogo" info="Solo suma una comprobación con evidencia válida; los fallos se muestran como «sin evidencia».">
    <Table variant="embedded" items={[
-     {c:"Autenticación de "+agent.name,state:"Activo",reason:"agent_token propio por agente; no compartido"},
-     {c:"Evidencia y flujo",state:"Activo",reason:"Índice durable"},
-     {c:"Políticas de tools",state:"En sombra",reason:"Solo observadas, sin denegación por política"},
-     {c:"Ejecución fuera de MCP",state:"No disponible",reason:"El agente ejecuta tools locales"}
-    ]} columnDefinitions={[
-     {id:"c",header:"Control",cell:x=>x.c},{id:"state",header:"Estado",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":"stopped"}>{x.state}</StatusIndicator>},
-     {id:"reason",header:"Por qué",cell:x=>x.reason}
-    ]}/>
+    {id:"auth",c:"Autenticación de "+agent.name,state:"Disponible",reason:"Diseño: agent_token individual por agente"},
+    {id:"trace",c:"Evidencia de solicitud",state:"Sin evidencia",reason:"La DEMO no recibe tráfico real"},
+    {id:"shadow",c:"Políticas de tools",state:discovery?"En sombra":"Disponible",reason:discovery?"3 posibles denegaciones · ejemplo":"Verificar decisiones ejecutadas"},
+    {id:"mcp",c:"Ejecución fuera de MCP",state:"No disponible",reason:"La ejecución local no atraviesa la puerta"}
+   ]} trackBy="id" columnDefinitions={[
+    {id:"control",header:"Control",cell:x=>x.c},
+    {id:"state",header:"Estado",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Disponible"?"success":x.state==="Sin evidencia"?"error":"stopped"}>{x.state}</StatusIndicator>},
+    {id:"reason",header:"Detalle",cell:x=>x.reason}
+   ]}/>
   </Panel>
-  {showExplanations&&<Alert type="warning">Máximos referenciales para controles aplicables con cobertura completa en activo: A 41 %, A+C 56 %, A+B 67 %, A+B+C 89 %. El 11 % restante está fuera del perímetro. No son resultados de pruebas ni puntuaciones de seguridad.</Alert>}
+  <Alert type="info" header="Próximo paso">Conectar tools mediante MCP (B) y, cuando corresponda, propagar identidad de usuario (C). La cobertura se medirá después sobre tráfico real.</Alert>
+  {showExplanations&&<Alert>Máximos teóricos del catálogo actual con cobertura completa y en activo: A 41 %, A+C 56 %, A+B 67 %, A+B+C 89 %. No son métricas del agente ni representan garantías de seguridad.</Alert>}
  </SpaceBetween>;
 }
 function Inventory(){
- const {helpOn}=usePrototype();
+ const {notify,showExplanations}=usePrototype();
  const [filter,setFilter]=useState("");
  const [selected,setSelected]=useState(null);
- const items=dummyTools.filter(x=>x.id.includes(filter.toLowerCase()));
+ const [draft,setDraft]=useState({kind:"Lectura",approval:"Pendiente de revisión"});
+ const [reviews,setReviews]=useState({});
+ const classes=selectOptions([["Lectura","Lectura"],["Escritura","Escritura"],["Destructiva","Destructiva o crítica"],["Sin clasificar","Sin clasificar"]]);
+ const approvals=selectOptions([["Pendiente de revisión","Pendiente de revisión"],["Aprobada","Aprobada"],["No aprobada","No aprobada"]]);
+ const info=x=>reviews[x.id]||{kind:x.kind,approval:"Pendiente de revisión",confirmed:false};
+ const items=dummyTools.filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
+ const open=x=>{
+  const current=info(x);
+  setDraft(current);setSelected(x);
+ };
+ const save=()=>{
+  if(!selected)return;
+  setReviews(prev=>({...prev,[selected.id], [selected.id]:{...draft,confirmed:true}}));
+  notify("Clasificación de "+selected.id+" revisada solo en la DEMO.");
+  setSelected(null);
+ };
  return <SpaceBetween size="l">
-  <Panel title="Clasificación automática" info="Las herramientas se descubren desde el campo tools de la inferencia. Su clase es una sugerencia y requiere revisión.">
-   <ColumnLayout columns={3}><SmallKpi title="Declaradas" value="4" context="Payload de inferencia"/><SmallKpi title="Sin clasificar" value="1" context="Revisión necesaria"/><SmallKpi title="MCP" value="0" context="B se incorpora en S4"/></ColumnLayout>
-  </Panel>
-  <Table items={items} trackBy="id" header={<Header variant="h2">Inventario de tools</Header>}
-   filter={<TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Filtrar por nombre"/>}
-   columnDefinitions={[
-    {id:"name",header:"Tool",cell:x=><Button variant="link" onClick={()=>setSelected(x)}>{x.id}</Button>},
-    {id:"kind",header:"Clase sugerida",cell:x=>x.kind},
-    {id:"schema",header:"Esquema",cell:x=>x.schema},
-    {id:"state",header:"Revisión",cell:x=>x.status==="Aprobada"?<StatusIndicator type="success">Sugerida</StatusIndicator>:<StatusIndicator type="warning">Pendiente</StatusIndicator>},
-    {id:"coverage",header:"Ejecución",cell:()=><StatusIndicator type="stopped">Fuera de la puerta</StatusIndicator>}
-   ]}/>
-  <Explanation>En S1 se observa la intención del modelo. El control de ejecución real por MCP llega en S4.</Explanation>
-  <Modal visible={!!selected} header={selected?.id||"Tool"} onDismiss={()=>setSelected(null)} footer={<Box float="right"><Button onClick={()=>setSelected(null)}>Cerrar</Button></Box>}>
-   <KeyValuePairs columns={2} items={[{label:"Clase sugerida",value:selected?.kind||""},{label:"Versión del esquema",value:selected?.schema||""},{label:"Estado",value:selected?.status||""},{label:"Canal",value:"A · inferencia"}]}/>
+  <ColumnLayout columns={3}>
+   <SmallKpi title="Declaradas por inferencia A" value="4" context="Datos de demostración"/>
+   <SmallKpi title="Sin clasificar" value={dummyTools.filter(x=>info(x).kind==="Sin clasificar").length.toString()} context="Requieren revisión"/>
+   <SmallKpi title="Ejecutadas por MCP" value="0" context="La conexión B llega en S4"/>
+  </ColumnLayout>
+  <Container header={<Header variant="h2" description={showExplanations?"Clases inferidas de anotaciones y patrones; un operador confirma o corrige.":undefined}>Catálogo de tools declaradas</Header>}>
+   <Table items={items} trackBy="id" variant="embedded"
+    filter={<TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Buscar tool"/>}
+    columnDefinitions={[
+     {id:"tool",header:"Tool",cell:x=><Button variant="link" onClick={()=>open(x)}>{x.id}</Button>},
+     {id:"kind",header:"Clase",cell:x=>info(x).kind},
+     {id:"schema",header:"Esquema",cell:x=><SpaceBetween direction="horizontal" size="xs"><Box>{x.schema}</Box>{x.schema==="v2"&&<Badge color="blue">Cambio demo</Badge>}</SpaceBetween>},
+     {id:"state",header:"Clasificación",cell:x=><StatusIndicator type={info(x).confirmed?"success":"warning"}>{info(x).confirmed?"Confirmada":"Sugerida"}</StatusIndicator>},
+     {id:"approval",header:"Aprobación",cell:x=><StatusIndicator type={info(x).approval==="Aprobada"?"success":"warning"}>{info(x).approval}</StatusIndicator>},
+     {id:"coverage",header:"Ejecución",cell:()=><StatusIndicator type="stopped">Fuera de MCP</StatusIndicator>}
+    ]}/>
+  </Container>
+  <Modal visible={!!selected} header={"Revisar tool · "+(selected?.id||"")} onDismiss={()=>setSelected(null)}
+   footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setSelected(null)}>Cancelar</Button><Button variant="primary" onClick={save}>Guardar revisión (demo)</Button></SpaceBetween></Box>}>
+   <SpaceBetween size="m">
+    <KeyValuePairs columns={2} items={[
+     {label:"Tool declarada",value:selected?.id||""},
+     {label:"Esquema",value:selected?.schema||""},
+     {label:"Clasificación inicial",value:selected?.kind||""},
+     {label:"Control de ejecución",value:"Fuera de MCP en S1"}
+    ]}/>
+    <FormField label="Clase confirmada">
+     <Select selectedOption={classes.find(x=>x.value===draft.kind)||classes[0]} options={classes}
+      onChange={({detail})=>setDraft(prev=>({...prev,kind:detail.selectedOption.value}))}/>
+    </FormField>
+    <FormField label="Estado de aprobación">
+     <Select selectedOption={approvals.find(x=>x.value===draft.approval)||approvals[0]} options={approvals}
+      onChange={({detail})=>setDraft(prev=>({...prev,approval:detail.selectedOption.value}))}/>
+    </FormField>
+    <Alert type="info">Una tool nueva detectada en activo comienza pendiente de revisión. Confirmar la clase no significa que su ejecución local esté gobernada. Una nueva versión del esquema debe revisarse otra vez.</Alert>
+   </SpaceBetween>
   </Modal>
  </SpaceBetween>;
 }
