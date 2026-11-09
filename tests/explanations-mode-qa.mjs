@@ -79,7 +79,7 @@ try{
   check(await page.getByText("DEMO · Sin conexión AWS",{exact:true}).count()===1,viewport.name+" consola: advertencia demo ausente");
   await page.screenshot({path:output+"/"+viewport.name+"-consola-limpia.png",fullPage:true});
 
-  await page.getByText("Volver a slices",{exact:true}).click();
+  await page.getByRole("link",{name:"Volver a slices"}).click();
   await page.locator('[data-stage="S4"]').waitFor();
   check(await page.getByRole("button",{name:"Mostrar explicaciones"}).getAttribute("aria-pressed")==="false",viewport.name+" regreso a portada no preserva modo limpio");
   await page.getByRole("button",{name:"Mostrar explicaciones"}).click();
