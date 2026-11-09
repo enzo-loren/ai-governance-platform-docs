@@ -21,7 +21,7 @@ import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
 import Textarea from "@cloudscape-design/components/textarea";
 import ExpandableSection from "@cloudscape-design/components/expandable-section";
 import {usePrototype,Explanation} from "./main.jsx";
-import {AgentSelector} from "./agent-credentials.jsx";
+import {AgentSelector,selectedFrom} from "./agent-credentials.jsx";
 
 const tools=[
  {id:"consultar_ficha",kind:"Lectura",target:"Lambda MCP",approved:true,when:"Permitido"},
@@ -51,49 +51,49 @@ function MCP(){
  const {simulation,setSimulation,notify,helpOn,showExplanations}=usePrototype();
  const [filter,setFilter]=useState("");
  const [row,setRow]=useState(null);
- const [toolSettings,setToolSettings]=useState({});
+ const agent=selectedFrom(simulation);
+ const toolSettings=agent.toolSettings||{};
  const [draft,setDraft]=useState(null);
  const classes=["Lectura","Escritura","Destructiva","Sin clasificar"];
  const supervision=["Autónoma","Notificar","Requiere aprobación"];
- const meta=x=>toolSettings[x.id]||{kind:x.kind,approval:x.approved?"Aprobada":"Pendiente",supervision:x.kind==="Lectura"?"Autónoma":x.kind==="Escritura"?"Notificar":"Requiere aprobación"};
+ const meta=x=>toolSettings[x.id]||{kind:agent.toolReviews?.[x.id]?.kind||x.kind,approval:agent.toolReviews?.[x.id]?.approval||(x.approved?"Aprobada":"Pendiente"),supervision:x.kind==="Lectura"?"Autónoma":x.kind==="Escritura"?"Notificar":"Requiere aprobación"};
  const open=x=>{setRow(x);setDraft({...meta(x)})};
  const saveTool=()=>{
   if(!row||!draft)return;
-  setToolSettings(prev=>({...prev,[row.id]:draft}));
+  setSimulation(prev=>({...prev,agentRegistry:prev.agentRegistry.map(x=>x.id===agent.id?{...x,toolSettings:{...(x.toolSettings||{}),[row.id]:draft}}:x)}));
   notify("Clasificación y supervisión de "+row.id+" cambiadas solo en DEMO.");
   setRow(null);
  };
  const [targetName,setTargetName]=useState("");
  const [targetType,setTargetType]=useState({value:"lambda",label:"AWS Lambda"});
  const [targetModal,setTargetModal]=useState(false);
- const [targets,setTargets]=useState([
-  {id:"lambda-demo",type:"AWS Lambda",secret:"IAM / AgentCore Identity",status:"Registrado (demo)"},
-  {id:"openapi-demo",type:"OpenAPI HTTPS",secret:"API key / Secrets Manager",status:"Registrado (demo)"}
- ]);
- const mcp=simulation.toolsMcp;
- const filtered=tools.filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
+ const targets=agent.mcpTargets||[];
+ const mcp=agent.toolsMcp||[];
+ const observed=tools.filter(x=>(agent.discoveredTools||[]).includes(x.id));
+ const filtered=observed.filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
  const toggle=(id,checked)=>{
-  setSimulation(prev=>({...prev,toolsMcp:checked?[...new Set([...prev.toolsMcp,id])]:prev.toolsMcp.filter(name=>name!==id)}));
+  setSimulation(prev=>({...prev,agentRegistry:prev.agentRegistry.map(x=>x.id===agent.id?{...x,toolsMcp:checked?[...new Set([...(x.toolsMcp||[]),id])]:(x.toolsMcp||[]).filter(name=>name!==id)}:x)}));
   notify("Cobertura MCP de la demostración actualizada.");
  };
- const isActive=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)?.mode==="Activo";
+ const isActive=agent.mode==="Activo";
  const decision=x=>!mcp.includes(x.id)?"Fuera de la puerta":meta(x).approval==="Aprobada"?"Permitido":isActive?"Denegado":"En sombra";
  const register=()=>{
   if(!targetName.trim())return;
   if(targets.some(x=>x.id.toLowerCase()===targetName.trim().toLowerCase())){notify("Ya existe un target con ese nombre.","error");return}
-  setTargets(old=>[...old,{id:targetName.trim(),type:targetType.label,secret:targetType.value==="lambda"?"IAM / AgentCore Identity":"Secrets Manager",status:"Registrado (demo)"}]);
+  setSimulation(prev=>({...prev,agentRegistry:prev.agentRegistry.map(x=>x.id===agent.id?{...x,mcpTargets:[...(x.mcpTargets||[]),{id:targetName.trim(),type:targetType.label,secret:targetType.value==="lambda"?"IAM / AgentCore Identity":"Secrets Manager",status:"Registrado (demo)"}]}:x)}));
   setTargetName("");setTargetModal(false);
   notify("Target registrado en la demostración. No se creó ningún recurso AWS.");
  };
  return <SpaceBetween size="l">
+  <AgentSelector/>
   <ColumnLayout columns={3}>
-   <Panel title="Tools declaradas"><div className="kpi-value">4</div><Box color="text-body-secondary">En inferencia A</Box></Panel>
-   <Panel title="Tools por MCP"><div className="kpi-value">{mcp.length} de 4</div><Box color="text-body-secondary">Cobertura B parcial</Box></Panel>
-   <Panel title="Fuera de la puerta"><div className="kpi-value">{4-mcp.length}</div><Box color="text-body-secondary">Ejecución no gobernada</Box></Panel>
+   <Panel title="Tools declaradas"><div className="kpi-value">{observed.length}</div><Box color="text-body-secondary">Agente {agent.name} · inferencia A</Box></Panel>
+   <Panel title="Tools por MCP"><div className="kpi-value">{mcp.length} de {observed.length}</div><Box color="text-body-secondary">Cobertura B observada</Box></Panel>
+   <Panel title="Fuera de la puerta"><div className="kpi-value">{Math.max(0,observed.length-mcp.length)}</div><Box color="text-body-secondary">Ejecución no gobernada</Box></Panel>
   </ColumnLayout>
   <Container header={<Header variant="h2" actions={<Button onClick={()=>setTargetModal(true)}>Registrar target (demo)</Button>}>Targets MCP y credenciales de destino</Header>}>
    <SpaceBetween size="m">
-    <Table variant="embedded" items={targets} trackBy="id" columnDefinitions={[
+    <Table variant="embedded" items={targets} trackBy="id" empty={<Box color="text-body-secondary">Este agente aún no tiene targets MCP registrados.</Box>} columnDefinitions={[
      {id:"target",header:"Target",cell:x=>x.id},
      {id:"type",header:"Tipo",cell:x=>x.type},
      {id:"secret",header:"Autenticación hacia el target",cell:x=>x.secret},
@@ -103,7 +103,7 @@ function MCP(){
    </SpaceBetween>
   </Container>
   <div className="desktop-table">
-   <Table items={filtered} trackBy="id"
+   <Table items={filtered} trackBy="id" empty={<Box color="text-body-secondary">Sin tools observadas para este agente.</Box>}
     header={<Header variant="h2" info={showExplanations?<Button variant="link" onClick={()=>helpOn("Cobertura B","La ejecución solo se controla si la tool pasa por un target MCP registrado. El catálogo de inferencia por sí solo no controla una ejecución local.")}>¿Qué cubre B?</Button>:undefined}>Herramientas y destinos</Header>}
     filter={<TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Filtrar tools"/>}
     columnDefinitions={[
@@ -120,6 +120,7 @@ function MCP(){
   <div className="mobile-cards">
    <SpaceBetween size="s">
     <TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Buscar herramienta"/>
+    {!filtered.length&&<Box color="text-body-secondary">Este agente aún no declaró tools.</Box>}
     {filtered.map(x=><Container key={x.id} header={<Header variant="h3" actions={<Toggle checked={mcp.includes(x.id)} onChange={({detail})=>toggle(x.id,detail.checked)}>MCP</Toggle>}>{x.id}</Header>}>
      <SpaceBetween size="s">
       <State value={decision(x)}/>
