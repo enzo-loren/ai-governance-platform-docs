@@ -132,15 +132,64 @@ function lineText(g,x,y,arr,cls,dy){
 function makeDefs(){
  const d=elem('defs');
  [['a','#276fca'],['b','#008d77'],['c','#7c56bd'],['neutral','#8b9aab'],['storage','#9b6d2b'],['alt','#b8752e']].forEach(([name,color])=>{
-  const m=elem('marker',{id:'arrow-'+name,markerWidth:9,markerHeight:9,refX:8,refY:4.5,orient:'auto',viewBox:'0 0 9 9'},d);
-  elem('path',{d:'M0,1 L9,4.5 L0,8 Z',fill:color},m);
+  const m=elem('marker',{id:'arrow-'+name,markerWidth:14,markerHeight:14,refX:13,refY:7,markerUnits:'userSpaceOnUse',orient:'auto',viewBox:'0 0 14 14'},d);
+  elem('path',{d:'M0,1 L13,7 L0,13 Z',fill:color},m);
+ });
+}
+function fitSvgText(el,maxWidth,minSize){
+ if(typeof el.getComputedTextLength!=='function')return;
+ let measured=el.getComputedTextLength();
+ if(!Number.isFinite(measured)||measured<=maxWidth)return;
+ const base=parseFloat(getComputedStyle(el).fontSize)||14;
+ el.style.fontSize=Math.max(minSize,Math.floor(base*maxWidth/measured*10)/10)+'px';
+ measured=el.getComputedTextLength();
+ if(measured>maxWidth){el.setAttribute('textLength',maxWidth);el.setAttribute('lengthAdjust','spacingAndGlyphs');}
+}
+// Solo los rótulos esenciales son persistentes. El resto conserva tooltip SVG;
+// al destacar una capa, se revelan los rótulos que caben sin colisiones.
+function layoutLinkLabels(){
+ const essential=new Set([
+  'user:app:out','app:agent:out','agent:outside:out','agent:entry:a',
+  'agent:entry:b','app:agent:c','agent:request:c','entry:request:a',
+  'request:infer:a','request:mcp:b','oidc:request:c','mcp:targetLambda:b'
+ ]);
+ const intersects=(a,b,p=7)=>a.x<b.x+b.width+p&&a.x+a.width+p>b.x&&a.y<b.y+b.height+p&&a.y+a.height+p>b.y;
+ const protectedBoxes=[];
+ svg.querySelectorAll('#nodes .node').forEach(g=>{
+  if(g.style.display!=='none'){const box=g.querySelector('.node-card');if(box)protectedBoxes.push(box.getBBox());}
+ });
+ svg.querySelectorAll('#zones g').forEach(g=>{
+  if(g.style.display!=='none')g.querySelectorAll('.zone-title,.zone-sub').forEach(t=>protectedBoxes.push(t.getBBox()));
+ });
+ const accepted=[];
+ svg.querySelectorAll('#edges g[data-layer]').forEach(g=>{
+  const label=g.querySelector('.edge-label');
+  if(!label)return;
+  const type=g.getAttribute('data-layer');
+  const key=g.getAttribute('data-from')+':'+g.getAttribute('data-to')+':'+type;
+  const focusMatch=state.focus!=='all'&&(
+    type===state.focus ||
+    (state.focus==='control'&&type==='control') ||
+    (state.focus==='admin'&&type==='admin') ||
+    (state.focus==='evidence'&&['storage','evidence'].includes(type))
+  );
+  const allowed=g.style.display!=='none'&&(essential.has(key)||focusMatch)
+    &&!(state.c&&key==='app:agent:out');
+  label.style.display=allowed?'':'none';
+  if(!allowed) return;
+  const rect=label.getBBox();
+  if(protectedBoxes.some(b=>intersects(rect,b))||accepted.some(b=>intersects(rect,b))){
+    label.style.display='none';
+  }else accepted.push(rect);
  });
 }
 function addZone(z,root){
  let g=elem('g',{'data-tag':z.tag||'all'},root);
  elem('rect',{x:z.x,y:z.y,width:z.w,height:z.h,rx:20,class:z.style},g);
- elem('text',{x:z.x+26,y:z.y+38,class:'zone-title'},g,z.name);
- elem('text',{x:z.x+26,y:z.y+64,class:'zone-sub'},g,z.sub);
+ const title=elem('text',{x:z.x+26,y:z.y+26,class:'zone-title'},g,z.name);
+ const subtitle=elem('text',{x:z.x+26,y:z.y+48,class:'zone-sub'},g,z.sub);
+ fitSvgText(title,z.w-52,16);
+ fitSvgText(subtitle,z.w-52,12);
  return g;
 }
 function addLink(l,root){
@@ -148,7 +197,10 @@ function addLink(l,root){
  const type=l.type==='control'||l.type==='admin'||l.type==='evidence'||l.type==='test'?'neutral':l.type;
  const marker=(type==='out'?'neutral':type);
  elem('path',{d:l.p,class:'edge '+(l.type==='control'||l.type==='admin'||l.type==='evidence'||l.type==='test'?'':l.type), 'marker-end':'url(#arrow-'+marker+')'},g);
- if(l.label)elem('text',{x:l.tx,y:l.ty,class:'edge-label '+(l.type==='a'||l.type==='b'||l.type==='c'||l.type==='alt'?l.type:'')},g,l.label);
+ if(l.label){
+   elem('title',null,g,l.label+' · '+l.from+' → '+l.to);
+   elem('text',{x:l.tx,y:l.ty,class:'edge-label '+(l.type==='a'||l.type==='b'||l.type==='c'||l.type==='alt'?l.type:''),'data-link-label':'true'},g,l.label);
+ }
  return g;
 }
 function addNode(n,root){
@@ -163,9 +215,12 @@ function addNode(n,root){
    if(n.extraIcon)elem('image',{href:iconBase+icons[n.extraIcon],x:n.x+56,y:n.y+22,width:39,height:39,'aria-hidden':'true'},g);
  }
  let tx=n.x+inset;
- elem('text',{x:tx,y:n.y+31,class:'node-title'},g,n.title);
- lineText(g,tx,n.y+56,n.lines,'node-line',21);
- elem('text',{x:n.x+n.w-13,y:n.y+n.h-10,'text-anchor':'end',class:'node-id'},g,n.tag==='b'?'CONEXIÓN B':n.tag==='c'?'CONEXIÓN C':n.tag==='out'?'FUERA':n.tag==='alt'?'SP-01':n.tag==='test'?'PRUEBAS':'');
+ const title=elem('text',{x:tx,y:n.y+31,class:'node-title'},g,n.title);
+ fitSvgText(title,n.w-inset-14,14);
+ n.lines.forEach((line,i)=>{
+   const txt=elem('text',{x:tx,y:n.y+56+i*21,class:'node-line','data-line-index':i},g,line);
+   fitSvgText(txt,n.w-inset-14,11.5);
+ });
  g.addEventListener('click',e=>{e.stopPropagation();showDetail(n)});
  g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();showDetail(n)}});
  const title=elem('title',null,g,n.title+'. '+n.lines.join('; '));
@@ -235,6 +290,7 @@ function refresh(){
   if(k==='b'||k==='c')b.querySelector('b').textContent=state[k]?'✓':'+';
  });
  $('focus-select').value=state.focus;
+ layoutLinkLabels();
  if(state.selected){
   const n=nodes.find(x=>x.id===state.selected);
   if(!n||!visible(n.tag))hideDetail();
