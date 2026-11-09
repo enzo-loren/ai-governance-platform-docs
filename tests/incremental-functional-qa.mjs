@@ -35,6 +35,7 @@ try{
 
   await open("S0","s0-connect");
   assert((await text()).includes("API keys"),vp.name+" S0 sin gestión de credenciales");
+  if(vp.name==="mobile")assert((await page.locator(".mobile-cards").first().innerText()).includes("Responsable"),"S0 móvil no presenta ficha de agente");
   await screenshot("s0-agentes");
   await overflow();
 
@@ -42,6 +43,7 @@ try{
   let content=await text();
   assert(content.includes("No conectada")&&content.includes("41 %"),vp.name+" S1 no diferencia A de B/C");
   assert(content.includes("Sin medición"),vp.name+" S1 presenta cobertura simulada como medida");
+  if(vp.name==="mobile")assert((await page.locator(".mobile-cards").first().innerText()).includes("Requiere conexión B"),"S1 móvil oculta la razón del control");
   await screenshot("s1-gobernanza");
 
   await open("S3","s1-coverage");
@@ -87,6 +89,7 @@ try{
    const box=await firstColumn.boundingBox();
    assert(Boolean(box)&&box.width>=125,vp.name+" S4 comprime verticalmente los nombres de tools (ancho "+box?.width+")");
   }
+  if(vp.name==="mobile")assert((await page.locator(".mobile-cards").first().innerText()).includes("Secrets Manager"),"S4 móvil recorta información de credenciales de targets");
   await screenshot("s4-mcp");
   await overflow();
 
