@@ -1,6 +1,7 @@
 import React,{useState} from "react";
 import Box from "@cloudscape-design/components/box";
 import Button from "@cloudscape-design/components/button";
+import Badge from "@cloudscape-design/components/badge";
 import Alert from "@cloudscape-design/components/alert";
 import Container from "@cloudscape-design/components/container";
 import Header from "@cloudscape-design/components/header";
