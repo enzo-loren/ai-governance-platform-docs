@@ -69,7 +69,8 @@ try{
   assert((await text()).includes("TRC-DEMO-001"),vp.name+" reanudación no incorpora cola");
 
   await open("S1","s1-inventory");
-  await page.getByRole("button",{name:"consultar_ficha"}).first().click();
+  if(vp.name==="mobile")await page.getByRole("button",{name:"Revisar"}).first().click();
+  else await page.getByRole("button",{name:"consultar_ficha"}).first().click();
   await page.getByRole("button",{name:"Simular cambio de esquema"}).click();
   assert((await text()).includes("v2"),vp.name+" inventario no detecta versión de esquema");
   await screenshot("s1-esquema");
