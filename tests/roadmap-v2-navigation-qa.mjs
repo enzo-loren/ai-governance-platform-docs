@@ -7,7 +7,7 @@ const folder='artifacts/roadmap-v2';
 const server=spawn('python3',['-m','http.server','8877','--bind','127.0.0.1'],{stdio:'ignore'});
 await mkdir(folder,{recursive:true});
 const scenarios=[{name:'desktop',width:1440,height:900},{name:'laptop',width:1280,height:800},{name:'mobile',width:390,height:844}];
-const counts={S0:[2,2],S1:[3,5],S2:[2,6],S3:[2,7],S4:[3,9],S5:[1,10],S6:[2,12]};
+const counts={S0:[2,2],S1:[3,5],S2:[2,7],S3:[2,8],S4:[3,11],S5:[1,12],S6:[2,14]};
 const report=[],failures=[];
 const check=(ok,msg)=>{if(!ok)failures.push(msg)};
 async function httpReady(){
