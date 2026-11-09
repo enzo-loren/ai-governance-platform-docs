@@ -103,7 +103,7 @@ export function AgentEnrollment(){
      <Button variant="primary" disabled={!valid} onClick={register}>Registrar y emitir API key</Button>
      <Badge color="grey">Cada agente tiene su propia credencial</Badge>
     </SpaceBetween>
-    <Box color="text-body-secondary" fontSize="body-s">Modo inicial: descubrimiento. Cada agente usa su propia clave para A y B.</Box>
+    <Box color="text-body-secondary" fontSize="body-s">Modo inicial: descubrimiento.</Box>
    </SpaceBetween>
   </Container>
   <Container header={<Header variant="h2" description={showExplanations?"Credenciales existentes ocultas: solo puede verse una nueva al emitirla.":undefined}>Agentes registrados</Header>}>
@@ -122,7 +122,7 @@ export function AgentEnrollment(){
      </Container>)}
      {!filtered.length&&<Box color="text-body-secondary">No hay agentes con ese nombre.</Box>}
     </SpaceBetween></div>
-    <Explanation>Las claves existentes no pueden recuperarse. Puedes rotarlas o revocarlas abajo desde S0; la suspensión individual se incorpora en S2.</Explanation>
+    <Explanation>Cada agente utiliza su propia clave para A y B. Las claves existentes no pueden recuperarse: solo pueden rotarse o revocarse. La suspensión individual se incorpora en S2.</Explanation>
     {agent&&<KeyValuePairs columns={2} items={[{label:"Agente seleccionado",value:agent.name},{label:"Credencial vigente",value:agent.tokens.filter(x=>x.status==="Activa").map(x=>"•••• "+x.suffix).join(" / ")||"Ninguna"}]}/>}
    </SpaceBetween>
   </Container>
@@ -184,7 +184,8 @@ export function AgentCredentialControls(){
   <Modal visible={!!revoke} header="Confirmar revocación de API key" onDismiss={()=>setRevoke(null)}
    footer={<Box float="right"><SpaceBetween size="s" direction="horizontal"><Button onClick={()=>setRevoke(null)}>Cancelar</Button><Button variant="primary" onClick={revokeKey}>Revocar clave (demo)</Button></SpaceBetween></Box>}>
    <SpaceBetween size="s">
-    <Alert type="warning">Se revocará exclusivamente la credencial •••• {revoke?.suffix} del agente {agent.name}. Todas las llamadas que utilicen esta clave deberán recibir 401 en inferencia A y MCP B en menos de 60 segundos. Las credenciales de otros agentes no cambian.</Alert>
+    <Alert type="warning">La clave •••• {revoke?.suffix} de {agent.name} dejará de funcionar en inferencia y MCP. Los demás agentes no se verán afectados.</Alert>
+     <Explanation>El producto real debe rechazar la clave revocada con HTTP 401 en ambos canales en menos de 60 segundos.</Explanation>
     <Explanation>El SDK usa como API key el agent_token del agente, no la clave de Bedrock. Ninguna acción de esta pantalla modifica AWS.</Explanation>
    </SpaceBetween>
   </Modal>
