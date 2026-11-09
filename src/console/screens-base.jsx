@@ -364,7 +364,7 @@ function Shadow(){
  </SpaceBetween>;
 }
 function ActiveAgent(){
- const {simulation,setSimulation,notify,showExplanations,navigate}=usePrototype();
+ const {simulation,setSimulation,notify,showExplanations,navigate,slice}=usePrototype();
  const [dialog,setDialog]=useState(null);
  const selected=selectedFrom(simulation);
  const mode=selected.mode;
@@ -410,6 +410,10 @@ function ActiveAgent(){
    <SpaceBetween size="m">
     <div className="gov-agent-picker"><AgentSelector/></div>
     <Button variant="link" onClick={()=>navigate("s0-connect")}>Volver al listado de agentes</Button>
+    {Number(slice.slice(1))>=4&&<SpaceBetween direction="horizontal" size="s">
+     <Button onClick={()=>navigate("s1-inventory")}>Ver catálogo de herramientas</Button>
+     <Button onClick={()=>navigate("s4-mcp")}>Administrar ejecución MCP</Button>
+    </SpaceBetween>}
     <ColumnLayout columns={4}>
      <SmallKpi title="Estado" value={mode} context="Solo este agente"/>
      <SmallKpi title="API keys vigentes" value={selected.tokens.filter(x=>x.status==="Activa").length.toString()} context="Solo este agente"/>
