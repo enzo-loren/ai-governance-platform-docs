@@ -21,6 +21,7 @@ import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
 import Textarea from "@cloudscape-design/components/textarea";
 import ExpandableSection from "@cloudscape-design/components/expandable-section";
 import {usePrototype,Explanation} from "./main.jsx";
+import {AgentSelector} from "./agent-credentials.jsx";
 
 const tools=[
  {id:"consultar_ficha",kind:"Lectura",target:"Lambda MCP",approved:true,when:"Permitido"},
@@ -237,11 +238,27 @@ function Guide(){
    </SpaceBetween>},
   {id:"c",label:"C · Usuario",content:<SpaceBetween size="m">
     <KeyValuePairs columns={2} items={[{label:"Identidad agente",value:agent.name+" · agent_token"},{label:"Identidad usuario",value:"JWT OIDC por solicitud"}]}/>
-    <CopyToClipboard textToCopy="X-Gov-User-Token: <JWT OIDC del usuario>" copyButtonText="Copiar cabecera C" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
+    <CopyToClipboard textToCopy={"X-Gov-User-Token: <JWT OIDC del usuario>\nX-Gov-Trace-Id: <ID de correlación>"} copyButtonText="Copiar cabeceras C y trazabilidad" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
+    <Box color="text-body-secondary" fontSize="body-s">Validación de JWT: firma/JWKS, issuer, audiencia y vencimiento; el trace ID permite correlacionar la misma operación entre inferencia y tools.</Box>
     <Box color="text-body-secondary" fontSize="body-s">El JWT de C no reemplaza la API key del agente. Sin JWT se usa solo_workload. Un token inválido se rechaza o degrada según configuración.</Box>
    </SpaceBetween>}
  ];
  return <SpaceBetween size="l">
+  <Container header={<Header variant="h2">Conexiones de {agent.name}</Header>}>
+   <SpaceBetween size="m">
+    <AgentSelector/>
+    <ColumnLayout columns={3}>
+     <div><Box color="text-body-secondary">A · Inferencia</Box><StatusIndicator type="success">Base obligatoria</StatusIndicator></div>
+     <div><Box color="text-body-secondary">B · MCP</Box><StatusIndicator type="warning">Parcial en demo</StatusIndicator></div>
+     <div><Box color="text-body-secondary">C · JWT usuario</Box><StatusIndicator type="stopped">Sin verificar</StatusIndicator></div>
+    </ColumnLayout>
+    <KeyValuePairs columns={2} items={[
+     {label:"Incorporar B",value:"Hasta +26 puntos del catálogo (A → A+B)"},
+     {label:"Incorporar C",value:"Hasta +15 puntos (A → A+C)"}
+    ]}/>
+    <Box color="text-body-secondary" fontSize="body-s">Incrementos máximos de referencia bajo cobertura completa y modo activo; una conexión parcial no aporta automáticamente esos puntos.</Box>
+   </SpaceBetween>
+  </Container>
   <Panel title="Conectar por partes" help="A usa una clave propia. B reutiliza esa clave para MCP. C agrega un JWT diferente, del usuario final.">
    <Tabs tabs={tabs} activeTabId={tab} onChange={({detail})=>setTab(detail.activeTabId)}/>
   </Panel>
