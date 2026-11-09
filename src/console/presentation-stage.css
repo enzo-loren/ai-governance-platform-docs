@@ -105,7 +105,7 @@
 .gov-present-side-title{font-size:12px;letter-spacing:.075em;text-transform:uppercase;font-weight:850;color:#add1ef;margin:0}
 .gov-present-signal{font-size:clamp(20px,2vw,34px);font-weight:800;line-height:1.27;overflow-wrap:break-word;letter-spacing:-.03em}
 .gov-present-scope{padding-top:14px;border-top:1px solid #5e7790}
-.gov-present-scope [class*="awsui_status-indicator"]{color:#deefff!important;font-size:13px;line-height:1.5}
+.gov-present-contract{color:#e2f1ff;font-size:14px;font-weight:700;line-height:1.5;letter-spacing:.005em}
 .gov-present-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .gov-present-metric{
  background:#fff;border:1px solid #d2e1ed;border-radius:11px;
