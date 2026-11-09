@@ -75,10 +75,15 @@ function Application(){
   const url=location.pathname+"?"+q.toString();
   history[replace?"replaceState":"pushState"](null,"",url);
   setRoute(next);setHelp(null);setMessage(null);
-  const main=document.querySelector("#console-content");if(main)main.scrollTo({top:0});
+  const main=document.querySelector("#console-content");
+  if(main)main.scrollTo({top:0});
+  window.scrollTo({top:0});
  },[slice]);
  useEffect(()=>{
-  const listener=()=>setRoute(fromLocation());
+  const listener=()=>{
+   setRoute(fromLocation());
+   window.scrollTo({top:0});
+  };
   window.addEventListener("popstate",listener);
   return()=>window.removeEventListener("popstate",listener);
  },[]);
