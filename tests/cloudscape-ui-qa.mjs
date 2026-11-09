@@ -79,6 +79,47 @@ try{
  await page.keyboard.press("Escape");
  check(errors.length===0,"Errores JS desde roadmap "+JSON.stringify(errors));
  await page.close();
+
+ // Pruebas de interacción sobre HTML React, no sobre capturas.
+ const interactive=await browser.newPage({viewport:{width:1280,height:900}});
+ const interactiveErrors=[];
+ interactive.on("pageerror",err=>interactiveErrors.push(err.message));
+ async function enter(slice,screen){
+   await interactive.goto(route(slice,screen),{waitUntil:"domcontentloaded"});
+   await interactive.locator("#governance-root h1").first().waitFor({timeout:12000});
+ }
+ await enter("S0","s0-connect");
+ check(await interactive.locator('input[value="gov_demo_sin_validez"]').count()===0,
+   "S0: token de ejemplo no debe aparecer antes del alta");
+ await interactive.getByRole("button",{name:"Dar de alta",exact:true}).click();
+ check(await interactive.locator('input[value="gov_demo_sin_validez"]').count()===1,
+   "S0: alta debe mostrar ejemplo de credencial solo después de crear");
+ await enter("S2","s2-activate");
+ await interactive.getByRole("button",{name:"Modo presentación"}).click();
+ check(await interactive.locator(".presentation-mode").count()===1,
+   "S2: modo presentación debe modificar el layout");
+ await interactive.getByRole("button",{name:"Salir de presentación"}).click();
+ check(await interactive.locator(".presentation-mode").count()===0,
+   "S2: presentación debe poder cerrarse");
+ await enter("S3","s3-identity");
+ const beforeIdentity=await interactive.locator("#console-content").innerText();
+ const selectIdentity=interactive.getByRole("combobox",{name:"Principal de la solicitud"});
+ await selectIdentity.click();
+ await interactive.getByRole("option",{name:"Elena · aprobadora"}).click();
+ const afterIdentity=await interactive.locator("#console-content").innerText();
+ check(beforeIdentity!==afterIdentity&&afterIdentity.includes("12.345.678-5"),
+   "S3: identidad debe cambiar realmente los campos visibles por pii_access");
+ await enter("S4","s4-guide");
+ await interactive.getByRole("tab",{name:"B · MCP"}).click();
+ check((await interactive.locator("#console-content").innerText()).includes("MCP"),
+   "S4: pestaña B de la guía debe ser navegable");
+ await enter("S6","s6-search");
+ await interactive.getByRole("button",{name:"Ver ruta forense"}).first().click();
+ check(interactive.url().includes("screen=s6-forensic"),
+   "S6: búsqueda debe navegar por HTML a la ruta forense");
+ check(interactiveErrors.length===0,"Errores JavaScript en interacciones "+JSON.stringify(interactiveErrors));
+ await interactive.screenshot({path:out+"/interactions-forensic.png",fullPage:true});
+ await interactive.close();
 }finally{if(browser)await browser.close();server.kill("SIGTERM")}
 await writeFile(out+"/report.json",JSON.stringify({failures,records},null,2));
 console.log("Visual QA:",records.length,"vistas en Chromium, fallas:",failures.length);
