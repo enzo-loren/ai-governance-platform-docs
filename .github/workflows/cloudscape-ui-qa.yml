@@ -10,6 +10,7 @@ on:
       - fix/agent-credentials-ui-completeness
       - feat/auditoria-integral-vistas-ux
       - fix/presentation-mode-s2-functional
+      - feat/auditoria-progresion-vistas-s0-s6
     paths:
       - 'assets/slices.js'
       - 'assets/slices.css'
