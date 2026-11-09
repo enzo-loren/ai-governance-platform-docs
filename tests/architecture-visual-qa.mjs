@@ -78,7 +78,16 @@ try{
    check(!result.overflows.length,size.name+' '+code+' desborde: '+JSON.stringify(result.overflows));
    check(!result.labelCollisions.length,size.name+' '+code+' rótulos: '+JSON.stringify(result.labelCollisions));
    check(!result.edgeCrossings.length,size.name+' '+code+' rutas: '+JSON.stringify(result.edgeCrossings));
-   await page.screenshot({path:dir+'/'+size.name+'-'+code+'.png'});
+   if(size.width>=1000){
+    const aspect=await page.evaluate(()=>{
+     const svg=document.querySelector('#map');
+     const box=svg.getBoundingClientRect(),view=svg.viewBox.baseVal;
+     return {physical:box.width/box.height,logical:view.width/view.height};
+    });
+    check(Math.abs(aspect.physical-aspect.logical)<.04,
+      size.name+' '+code+' SVG desaprovecha ancho: '+JSON.stringify(aspect));
+   }
+   await page.screenshot({path:dir+'/'+size.name+'-'+code+'.png',fullPage:size.width>=1000});
    summary.push({viewport:size.name,code,...result});
   }
   await page.locator('#nodes [data-id="entry"]').evaluate(n=>n.dispatchEvent(new MouseEvent('click',{bubbles:true})));
