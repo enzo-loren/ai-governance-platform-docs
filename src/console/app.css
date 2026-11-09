@@ -71,3 +71,13 @@ body{background:#f8f9fc;scroll-behavior:smooth}
 @media(max-width:700px){
  .prototype-actions:has([data-testid="screen-version-selector"])>div:first-child{min-width:0}
 }
+
+/* Per-agent credentials: Cloudscape inputs and responsive grid; no side navigation. */
+.gov-reveal-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:start}
+.gov-reveal-row>div:first-child{min-width:0}
+.gov-agent-picker{max-width:440px}
+#governance-root .gov-reveal-row input{min-width:0;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+@media(max-width:700px){
+ .gov-reveal-row{grid-template-columns:minmax(0,1fr)}
+ .gov-agent-picker{max-width:none}
+}
