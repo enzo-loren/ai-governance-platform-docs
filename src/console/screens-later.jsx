@@ -82,7 +82,7 @@ function MCP(){
    <Panel title="Tools por MCP"><div className="kpi-value">{mcp.length} de 4</div><Box color="text-body-secondary">Cobertura B parcial</Box></Panel>
    <Panel title="Fuera de la puerta"><div className="kpi-value">{4-mcp.length}</div><Box color="text-body-secondary">Ejecución no gobernada</Box></Panel>
   </ColumnLayout>
-  <Container header={<Header variant="h2" actions={<Button onClick={()=>setTargetModal(true)}>Registrar target (demo)</Button>}>Targets MCP y credenciales de destino</Header>}>
+  <Container header={<Header variant="h2" actions={<Button onClick={()=>setTargetModal(true)}>Registrar target (demo)</Button>}>Destinos conectados</Header>}>
    <SpaceBetween size="m">
     <div className="desktop-table"><Table variant="embedded" items={targets} trackBy="id" columnDefinitions={[
      {id:"target",header:"Target",cell:x=>x.id},
@@ -192,7 +192,7 @@ function Policy(){
    <FormField label="Usuario o rol"><Select selectedOption={principal} options={roles} onChange={({detail})=>setPrincipal(detail.selectedOption)}/></FormField>
    <FormField label="Tool o clase"><Select selectedOption={target} options={choices} onChange={({detail})=>setTarget(detail.selectedOption)}/></FormField>
    <FormField label="Efecto"><Select selectedOption={effect} options={[{label:"Denegar",value:"DENY"},{label:"Permitir",value:"ALLOW"}]} onChange={({detail})=>setEffect(detail.selectedOption)}/></FormField>
-   <FormField label={"Parámetro del esquema · "+(numeric?"number":"string")}><Input readOnly value={parameter}/></FormField>
+   <FormField label="Dato evaluado"><Input readOnly value={parameter}/></FormField>
    <FormField label={numeric?"Condición · mayor que":"Condición · identificador"} errorText={!numeric?undefined:!valid?"Introduce un umbral numérico no negativo.":undefined}>
     <Input type={numeric?"number":"text"} value={threshold} onChange={({detail})=>setThreshold(detail.value)}/>
    </FormField>
@@ -353,7 +353,7 @@ function Approvals(){
      <Select selectedOption={actor} options={actors} onChange={({detail})=>setActor(detail.selectedOption)}/>
     </FormField>
     <StatusIndicator type={authorized?"success":"error"}>{authorized?"Rol aprobador habilitado":"Sin permiso para aprobar esta solicitud"}</StatusIndicator>
-    {!authorized&&<Alert type="error">La misma persona que originó la operación, un usuario sin rol aprobador y una credencial de agente no pueden autorizarla. Esta comprobación también debe existir en la API.</Alert>}
+    {!authorized&&<Alert type="error">El originador, los usuarios sin permiso y el agente no pueden aprobar esta operación.</Alert>}
    </SpaceBetween>
   </Container>
   <ColumnLayout columns={2}>
@@ -391,7 +391,8 @@ function Approvals(){
   </ColumnLayout>
   <Modal visible={!!confirm} header={confirm==="approve"?"Confirmar aprobación":"Confirmar rechazo"} onDismiss={()=>setConfirm(null)}
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setConfirm(null)}>Cancelar</Button><Button variant="primary" disabled={!authorized} onClick={decide}>Confirmar (demo)</Button></SpaceBetween></Box>}>
-   <Alert type="warning">Decisión simulada: la plataforma real debe volver a validar rol, originador, plazo e idempotencia antes de ejecutar por la puerta.</Alert>
+   <Alert type="warning">Esta decisión es simulada. La operación no se ejecutará en AWS.</Alert>
+   <Explanation>Antes de ejecutar una operación real, el sistema debe volver a verificar rol, originador, plazo y que la aprobación no se haya usado antes.</Explanation>
   </Modal>
  </SpaceBetween>;
 }
@@ -508,20 +509,20 @@ function Forensic(){
     </div>)}</SpaceBetween>
    </Panel>
    <SpaceBetween size="l">
-    <Panel title="Regla y configuración determinantes" help="El sistema debe conservar el texto y la versión exactos, aun si la política se cambia después.">
+    <Panel title="Motivo de la decisión" help="La auditoría debe conservar la regla y versión que se usaron cuando ocurrió la transacción, aunque después se modifiquen.">
      <KeyValuePairs columns={1} items={[
       {label:"Conjunto de reglas",value:record.policy},
-      {label:"Texto evaluado (resumen demo)",value:record.reason},
+      {label:"Motivo",value:record.reason},
       {label:"Versión de configuración",value:record.config},
       {label:"Autor del último cambio",value:record.author},
-      {label:"Detalle seleccionado",value:events.find(x=>x.id===step)?.reason||""}
+      {label:"Paso seleccionado",value:events.find(x=>x.id===step)?.reason||""}
      ]}/>
      <ExpandableSection headerText="Ver texto de la regla aplicada" variant="footer">
       <Box fontFamily="monospace" fontSize="body-s">{originalPolicies[record.policy]||"Texto histórico no disponible"}</Box>
      </ExpandableSection>
      <Explanation>Al editar una política, el producto debe conservar el texto original asociado con cada decisión, no sustituirlo por la versión actual.</Explanation>
     </Panel>
-    <Panel title="Sello de evidencia">
+    <Panel title="Integridad de la evidencia">
      <SpaceBetween size="m">
       <StatusIndicator type="warning">Integridad sin verificar</StatusIndicator>
       <Button onClick={()=>setSeal(true)}>Probar inmutabilidad (demo)</Button>
