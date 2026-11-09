@@ -154,10 +154,10 @@ function Live(){
       ]} empty={<Box textAlign="center" padding="l">No hay eventos para estos filtros.</Box>}/>
     </div>
     <div className="mobile-cards">
-     <SpaceBetween size="s">{filtered.map(x=><Container key={x.id} header={<Header variant="h3" actions={<Button onClick={()=>choose(x)}>Detalle</Button>}>{x.id}</Header>}>
+     <SpaceBetween size="s">{filtered.map(x=><div className="mobile-request" key={x.id}><Container header={<Header variant="h3" actions={<Button onClick={()=>choose(x)}>Detalle</Button>}>{x.id}</Header>}>
       <SpaceBetween size="s"><Decision state={x.state} reason={x.reason}/><KeyValuePairs columns={2} items={[
        {label:"Usuario",value:x.principal},{label:"Canal",value:x.medium},{label:"Conexiones",value:x.connections},{label:"Costo",value:x.cost}]}/></SpaceBetween>
-     </Container>)}</SpaceBetween>
+     </Container></div>)}</SpaceBetween>
     </div>
    </SpaceBetween>
   </Container>
