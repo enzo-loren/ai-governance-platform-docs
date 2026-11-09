@@ -76,10 +76,11 @@ function mkFrame(screen,content){
  screen.surface==='aprobaciones'?'Aprobaciones':screen.surface==='forense'||screen.surface==='busqueda'?'Auditoría':
  screen.surface==='reglas'||screen.surface==='guia'?'Reglas y MCP':'Agentes';
  const profile=screen.slice==='S5'?'Elena · aprobadora':screen.slice==='S6'?'Gabriela · auditora':'Operador plataforma';
+ const initials=screen.slice==='S5'?'EA':screen.slice==='S6'?'GA':'OP';
  return '<div class="m-app"><aside class="m-rail"><div class="m-logo"><span class="m-logo-icon">G·</span> Gobernanza</div>'+
   nav.map(x=>'<div class="m-nav '+(x.name===active?'active':'')+'">'+iconNav(x.name)+'</div>').join('')+
   '<div class="m-rail-foot">MÓDULO A<br>Vista propuesta · '+screen.slice+'</div></aside>'+
-  '<div class="m-work"><div class="m-top"><span class="m-top-path">Plataforma / '+escape(screen.title)+'</span><span class="m-profile"><span class="m-avatar">OP</span> '+profile+'</span></div>'+
+  '<div class="m-work"><div class="m-top"><span class="m-top-path">Plataforma / '+escape(screen.title)+'</span><span class="m-profile"><span class="m-avatar">'+initials+'</span> '+profile+'</span></div>'+
   '<div class="m-content">'+content+'</div><div class="m-bottom"><span>Datos sintéticos · no conectado a AWS</span><b>'+screen.slice+' · '+screen.requirements[0]+'</b></div></div></div>';
 }
 function renderScene(id){
