@@ -69,12 +69,19 @@ try{
   check(await switcher.isChecked(),viewport.name+" consola: el modo no se hereda");
   check(await page.getByRole("button",{name:"¿Qué muestra?"}).count()===1,viewport.name+" consola: no muestra ayuda contextual");
   check(await page.locator(".prototype-footer").isVisible(),viewport.name+" consola: no muestra fuentes al activar explicaciones");
+  const editorial=page.getByTestId("editorial-board");
+  check(await editorial.count()===1,viewport.name+" falta la pizarra en modo explicaciones");
+  await editorial.getByText("Pizarra editorial y trazabilidad",{exact:true}).click();
+  check(await editorial.getByText("Decisión editorial:",{exact:false}).isVisible(),viewport.name+" la pizarra no muestra su decisión editorial");
+  check(await editorial.getByText("Fuente normativa",{exact:true}).isVisible(),viewport.name+" la pizarra no enlaza fuentes");
+  await page.screenshot({path:output+"/"+viewport.name+"-pizarra-editorial.png",fullPage:true});
   await page.screenshot({path:output+"/"+viewport.name+"-consola-explicaciones.png",fullPage:true});
 
   await page.getByText("Mostrar explicaciones",{exact:true}).click();
   check(!await switcher.isChecked(),viewport.name+" consola: ayuda no desactivada");
   check(await page.getByRole("button",{name:"¿Qué muestra?"}).count()===0,viewport.name+" consola: explicación quedó visible");
   check(await page.locator(".prototype-footer").count()===0,viewport.name+" consola: pie verboso visible");
+  check(await page.getByTestId("editorial-board").count()===0,viewport.name+" la pizarra persiste en vista principal");
   check(new URL(page.url()).searchParams.get("explain")===null,viewport.name+" consola: URL conserva ayuda desactivada");
   check(await page.getByText("DEMO · Sin conexión AWS",{exact:true}).count()===1,viewport.name+" consola: advertencia demo ausente");
   await page.screenshot({path:output+"/"+viewport.name+"-consola-limpia.png",fullPage:true});
