@@ -102,10 +102,10 @@
     {
       "id": "s2-activate",
       "slice": "S2",
-      "surface": "agentes",
-      "title": "Modo activo y suspensión",
-      "question": "¿Cómo activo los controles?",
-      "type": "update",
+      "surface": "control-agente",
+      "title": "Control del agente",
+      "question": "¿Cómo activo, suspendo o configuro este agente?",
+      "type": "new",
       "requirements": [
         "REG-01",
         "REG-03",
@@ -150,10 +150,10 @@
     {
       "id": "s4-mcp",
       "slice": "S4",
-      "surface": "tools",
-      "title": "Tools por MCP",
-      "question": "¿Qué tools pasan realmente por la puerta?",
-      "type": "update",
+      "surface": "mcp",
+      "title": "Ejecución por MCP",
+      "question": "¿Qué herramientas se ejecutan por la puerta?",
+      "type": "new",
       "requirements": [
         "MCP-01",
         "PLT-02",
