@@ -337,7 +337,85 @@ function ActiveAgent(){
   </Modal>
  </SpaceBetween>;
 }
-function Limits({byUser=false}){
+function UserLimits(){
+ const {simulation,setSimulation,notify,showExplanations}=usePrototype();
+ const agent=selectedFrom(simulation);
+ const [user,setUser]=useState(users[0]);
+ const [rate,setRate]=useState("5");
+ const [tokens,setTokens]=useState("20000");
+ const [budget,setBudget]=useState("20");
+ const [period,setPeriod]=useState({value:"day",label:"Diario"});
+ const actions=selectOptions([["alert","Solo alerta"],["throttle","Throttle (429)"],["block","Bloqueo (403)"]]);
+ const [action,setAction]=useState(actions[1]);
+ const [traffic,setTraffic]=useState({ana:4,elena:2,workload:4});
+ const [result,setResult]=useState("");
+ const workload=user.value==="workload";
+ const saved=agent.userLimits?.[user.value];
+ useEffect(()=>{
+  const item=agent.userLimits?.[user.value]||{};
+  setRate(String(item.rate??5));setTokens(String(item.tokens??20000));setBudget(String(item.budget??20));
+  setPeriod({value:item.period||"day",label:item.period==="month"?"Mensual":"Diario"});
+  setAction(actions.find(x=>x.value===(item.action||"throttle"))||actions[1]);
+  setResult("");
+ },[agent.id,user.value]);
+ const valid=[rate,tokens,budget].every(x=>Number.isFinite(parseVal(x))&&parseVal(x)>0);
+ const save=()=>{
+  if(workload||!valid)return;
+  const next={rate:parseVal(rate),tokens:parseVal(tokens),budget:parseVal(budget),period:period.value,action:action.value};
+  setSimulation(prev=>({...prev,agentRegistry:prev.agentRegistry.map(a=>a.id===agent.id?
+   {...a,userLimits:{...(a.userLimits||{}),[user.value]:next}}:a)}));
+  notify("Límites de "+user.name+" en "+agent.name+" guardados solo en DEMO.");
+ };
+ const simulate=()=>{
+  if(workload)return;
+  const exceed=Math.max(parseVal(rate)+1,(traffic[user.value]||0)+1);
+  setTraffic(prev=>({...prev,[user.value]:exceed}));
+  setResult(user.name+": "+(action.value==="throttle"?"429 · Retry-After":action.value==="block"?"403 · cuota excedida":"Solo alerta")+". "+users.filter(x=>x.value!=="workload"&&x.value!==user.value).map(x=>x.name+" conserva su tráfico ("+(traffic[x.value]||0)+" solicitudes)").join("; "));
+ };
+ return <SpaceBetween size="l">
+  <Container header={<Header variant="h2" description={showExplanations?"FIN-03: las cuotas por usuario autenticado son independientes entre sí y del agente.":undefined}>Consumo por persona · {agent.name}</Header>}>
+   <SpaceBetween size="m">
+    <AgentSelector/>
+    <FormField label="Principal">
+     <Select selectedOption={{value:user.value,label:user.label}} options={users.map(x=>({value:x.value,label:x.label}))}
+      onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
+    </FormField>
+    <ColumnLayout columns={3}>
+     <SmallKpi title="Costo estimado" value={"US$ "+user.spent.toFixed(2)} context="Usuario seleccionado · demo"/>
+     <SmallKpi title="Solicitudes observadas" value={String(traffic[user.value]||0)} context="Ventana de demostración"/>
+     <SmallKpi title="Estado de cuota" value={workload?"Del agente":saved?"Configurada":"Predeterminada"} context="Aislamiento por principal"/>
+    </ColumnLayout>
+   </SpaceBetween>
+  </Container>
+  {workload?<Alert type="info" header="Solo workload, sin identidad de usuario">Este tráfico se imputa a la cuota del agente. No tiene una cuota independiente de usuario; las cuotas de personas requieren C y JWT válido.</Alert>:
+   <Container header={<Header variant="h2">Límite individual · {user.name}</Header>}>
+    <SpaceBetween size="m">
+     <ColumnLayout columns={3}>
+      <FormField label="Solicitudes por minuto">
+       <Input type="number" value={rate} onChange={({detail})=>setRate(detail.value)}/>
+      </FormField>
+      <FormField label="Tokens por período">
+       <Input type="number" value={tokens} onChange={({detail})=>setTokens(detail.value)}/>
+      </FormField>
+      <FormField label="Presupuesto (USD)">
+       <Input type="number" value={budget} onChange={({detail})=>setBudget(detail.value)}/>
+      </FormField>
+      <FormField label="Período"><Select selectedOption={period} options={[{value:"day",label:"Diario"},{value:"month",label:"Mensual"}]} onChange={({detail})=>setPeriod(detail.selectedOption)}/></FormField>
+      <FormField label="Acción al superar"><Select selectedOption={action} options={actions} onChange={({detail})=>setAction(detail.selectedOption)}/></FormField>
+     </ColumnLayout>
+     <SpaceBetween direction="horizontal" size="s">
+      <Button variant="primary" disabled={!valid} onClick={save}>Guardar límite (demo)</Button>
+      <Button disabled={!valid} onClick={simulate}>Probar aislamiento (demo)</Button>
+     </SpaceBetween>
+     {result&&<Alert type={action.value==="alert"?"info":"warning"} header="Resultado simulado">{result}</Alert>}
+     {showExplanations&&<Box color="text-body-secondary" fontSize="body-s">El límite de este usuario se aplica únicamente dentro de {agent.name}. Rebasarlo no debe detener a otros usuarios ni agentes; el backend real debe aplicar 429 con Retry-After, 403 o solo alerta según la configuración.</Box>}
+    </SpaceBetween>
+   </Container>}
+ </SpaceBetween>;
+}
+function Limits({byUser=false}){return byUser?<UserLimits/>:<AgentLimits/>;}
+function AgentLimits(){
+ const byUser=false;
  const {simulation,setSimulation,notify,showExplanations}=usePrototype();
  const selected=selectedFrom(simulation);
  const config=selected.limits||{};
