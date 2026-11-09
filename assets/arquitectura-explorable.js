@@ -18,7 +18,9 @@ const icons={
  cognito:'SecurityIdentityCompliance/Cognito.png',
  waf:'SecurityIdentityCompliance/WAF.png',
  cdk:'DeveloperTools/CloudDevelopmentKit.png',
- cloudformation:'ManagementGovernance/CloudFormation.png'
+ cloudformation:'ManagementGovernance/CloudFormation.png',
+ cloudwatch:'ManagementGovernance/CloudWatch.png',
+ secrets:'SecurityIdentityCompliance/SecretsManager.png'
 };
 const nodes=[
 {id:'user',x:68,y:177,w:325,h:104,title:'Usuario final',lines:['Aplicación del cliente','Origen fuera del perímetro'],tag:'out',details:['El usuario se comunica con la aplicación del cliente.','La puerta no autentica el salto usuario → agente (CTRL-26).','El aviso de IA y reclamos de la interfaz quedan fuera (CTRL-27).']},
@@ -40,7 +42,7 @@ const nodes=[
 {id:'mcp',x:1738,y:516,w:267,h:126,title:'MCP targets',lines:['AgentCore Gateway','tools/list + tools/call','Solo tools aprobadas'],icon:'core',tag:'b',details:['B registra targets MCP de tipo Lambda u OpenAPI.','tools/list filtra según estado, Preset y principal.','tools/call controla autorización, parámetros y respuesta.','Nombres normalizados target___tool.','Solo tools integradas cuentan en la cobertura B.']},
 {id:'targetLambda',x:2107,y:496,w:270,h:119,title:'Target AWS Lambda',lines:['Ejecución gobernada','Tool Lambda registrada','Resultado enmascarado'],icon:'lambda',tag:'b',details:['Target MCP de tipo Lambda.','El interceptor aplica las reglas sobre ejecución real.','No confundir con una tool local del agente.','Tool de lectura/escritura/destructiva según catálogo.']},
 {id:'targetOpen',x:2423,y:496,w:258,h:119,title:'Target OpenAPI',lines:['Servicio HTTP registrado','API key externa en bóveda','Credenciales no van al agente'],icon:'core',tag:'b',details:['Target MCP OpenAPI del Gateway.','La API key es administrada por AgentCore Identity.','Reglas Cedar por parámetros del esquema JSON.','El agente jamás recibe la clave del target.']},
-{id:'identity',x:2107,y:665,w:270,h:113,title:'AgentCore Identity',lines:['Credenciales targets MCP','API key del proveedor simulado','Autorización de salida'],icon:'core',tag:'b',details:['Bóveda de credenciales asociada a targets.','Inyección al destino: la credencial no vive en el agente.','También almacena la key del proveedor simulado si se habilita.']},
+{id:'identity',x:2107,y:665,w:270,h:113,title:'Bóveda de credenciales',lines:['AgentCore Identity','o AWS Secrets Manager','API key de targets MCP'],icon:'core',extraIcon:'secrets',tag:'b',details:['Credenciales en AgentCore Identity o AWS Secrets Manager (PLT-02).','La key se inyecta en la llamada al target; el agente no la ve.','D-08 prevé la key del proveedor simulado en AgentCore Identity.','Nunca incluir secretos en la respuesta, evidencia ni telemetría.']},
 {id:'oidc',x:2423,y:665,w:258,h:113,title:'Emisor OIDC configurable',lines:['C · JWT de usuario','JWKS / iss / exp / aud','Cognito o emisor externo'],tag:'c',details:['El origen de usuarios es configurable (D-14).','El agente reenvía X-Gov-User-Token.','Se validan firma, emisor, vigencia y cliente.','Token inválido: rechazar o degradar a solo_workload según modo.','Cognito es un ejemplo de emisor, no requisito para cada cliente.']},
 {id:'approval',x:1740,y:930,w:290,h:131,title:'Supervisión humana',lines:['Pendiente / aprobar / rechazar','Vence · 15 min por defecto','gov_aprobacion_estado'],icon:'lambda',tag:'b',details:['tools/call crítico permitido devuelve PENDING_APPROVAL.','La ejecución queda retenida, no se ejecuta antes de aprobar.','El agente consulta gov_aprobacion_estado.','El resultado usa el mismo protocolo MCP y PII por rol si hay C.']},
 {id:'approver',x:2120,y:930,w:292,h:131,title:'Bandeja de aprobación',lines:['Operador / aprobador','Rechazo y caducidad','Origen ≠ aprobador con C'],icon:'cognito',tag:'b',details:['Decisiones humanas desde consola administrativa.','Sin C: originador de la solicitud = agente.','Con B+C: separación de funciones por usuario.','Ejecución de la acción autorizada por la puerta (D-13 / SP-05).']},
@@ -56,7 +58,8 @@ const nodes=[
 {id:'s3',x:1040,y:1431,w:340,h:140,title:'Amazon S3 · Object Lock',lines:['GOVERNANCE · retención','Copia de evidencia asíncrona','Borrado sin bypass denegado'],icon:'s3',tag:'evidence',details:['Duplicación asíncrona desde el índice (D-07).','Object Lock en modo GOVERNANCE, no COMPLIANCE.','Retención en días configurables; 1 día en desarrollo.','Enmascaramiento de PII en contenido de evidencia.','SP-08 valida retención y limpieza tras el plazo.']},
 {id:'cdk',x:1530,y:1431,w:337,h:140,title:'AWS CDK v2',lines:['TypeScript · IaC validada','Un stack del Módulo A','Cuenta / región configurable'],icon:'cdk',tag:'admin',details:['Despliegue parametrizable para una cuenta y región.','us-east-1 por defecto; prefijo stage configurable.','Pruebas cfn-guard, Checkov, gitleaks y scripts de retiro.','Módulo B en paquete/stack separado.']},
 {id:'cfn',x:1970,y:1431,w:330,h:140,title:'AWS CloudFormation',lines:['Recursos desde CDK','Despliegue + retiro','Sin topología multi-cuenta'],icon:'cloudformation',tag:'admin',details:['CDK sintetiza IaC para desplegar recursos AWS.','Despliegue autocontenido en una cuenta y región.','No agregar VPC, OpenSearch, ECS ni multi-cuenta sin requisito.','Retiro conserva evidencia durante su retención.']},
-{id:'waf',x:532,y:532,w:430,h:104,title:'AWS WAF · SP-01',lines:['Protección de entrada','Vinculación por validar','No garantizado en diseño'],icon:'waf',tag:'alt',details:['Pregunta específica del spike SP-01 sobre tasa y perímetro.','No implica una única topología final.','Se presenta como hipótesis/alternativa, no como servicio obligatorio.']}
+{id:'waf',x:532,y:532,w:430,h:104,title:'AWS WAF · SP-01',lines:['Protección de entrada','Vinculación por validar','No garantizado en diseño'],icon:'waf',tag:'alt',details:['Pregunta específica del spike SP-01 sobre tasa y perímetro.','No implica una única topología final.','Se presenta como hipótesis/alternativa, no como servicio obligatorio.']},
+{id:'otel',x:2370,y:1431,w:308,h:140,title:'OTLP · observabilidad',lines:['OpenTelemetry / gen_ai','Trazas · métricas · logs','Backend configurable'],icon:'cloudwatch',tag:'evidence',details:['NFR-05 MUST: OTLP con semántica gen_ai para llamadas a modelo y tools.','Correlación con X-Gov-Trace-Id, sin agent_token, secretos ni PII clara.','Telemetría a partir de la evidencia ya enmascarada.','Destino dentro de la cuenta: CloudWatch, AgentCore Observability u OTLP compatible.','Falla/lentitud del colector no debe bloquear ni alterar el resultado.']}
 ];
 const zones=[
 {x:25,y:116,w:405,h:1555,name:'FUERA DE AWS · CLIENTE',sub:'La plataforma controla solo lo que cruza la puerta',style:'zone'},
@@ -108,6 +111,7 @@ const links=[
 {from:'config',to:'db',type:'storage',label:'versiones',p:'M1040 1257 V1396 H800 V1431',tx:1060,ty:1385},
 {from:'approval',to:'db',type:'b',label:'estado APR',p:'M1840 1061 V1302 H805 V1431',tx:1734,ty:1291},
 {from:'test',to:'agent',type:'test',label:'prueba por API pública',p:'M232 1030 V870 H404 V604 H393',tx:79,ty:881},
+{from:'index',to:'otel',type:'evidence',label:'OTLP · no bloqueante',p:'M1679 1200 H2525 V1431',tx:2135,ty:1186},
 {from:'facade',to:'entry',type:'alt',label:'JWT M2M · plan B SP-01',p:'M740 650 V508',tx:752,ty:593},
 {from:'agent',to:'waf',type:'alt',label:'entrada alternativa',p:'M393 619 H485 V580 H532',tx:420,ty:605},
 {from:'waf',to:'facade',type:'alt',label:'si procede',p:'M743 636 V650',tx:752,ty:643}
@@ -152,10 +156,11 @@ function addNode(n,root){
  elem('rect',{x:n.x,y:n.y,width:n.w,height:n.h,rx:14,class:'node-card'},g);
  let tagColor={a:'#276fca',b:'#008d77',c:'#7c56bd',out:'#8b9aab',alt:'#b8752e',test:'#597e9c',evidence:'#ab7634',admin:'#587b9e',control:'#445e7f'}[n.tag]||'#5b86a9';
  elem('rect',{x:n.x,y:n.y,width:7,height:n.h,rx:3,fill:tagColor},g);
- const inset=n.icon?72:22;
+ const inset=n.extraIcon?100:(n.icon?72:22);
  if(n.icon) {
    elem('rect',{x:n.x+14,y:n.y+18,width:47,height:47,rx:9,fill:'#eef4f9'},g);
    elem('image',{href:iconBase+icons[n.icon],x:n.x+18,y:n.y+22,width:39,height:39,'aria-hidden':'true'},g);
+   if(n.extraIcon)elem('image',{href:iconBase+icons[n.extraIcon],x:n.x+56,y:n.y+22,width:39,height:39,'aria-hidden':'true'},g);
  }
  let tx=n.x+inset;
  elem('text',{x:tx,y:n.y+31,class:'node-title'},g,n.title);
