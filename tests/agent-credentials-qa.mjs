@@ -62,7 +62,7 @@ try{
   check(await page.getByRole("button",{name:"Rotar API key"}).isDisabled(),vp.name+" permite más de dos claves vigentes");
 
   // Se revoca UNA clave en este agente; no todas ni otro agente.
-  const revokeButtons=page.getByRole("button",{name:"Revocar",exact:true});
+  const revokeButtons=page.getByRole("button",{name:/^Revocar(?: API key)?$/});
   await revokeButtons.first().click();
   await page.getByText("Confirmar revocación de API key",{exact:true}).waitFor();
   await page.getByRole("button",{name:"Revocar clave (demo)"}).click();
