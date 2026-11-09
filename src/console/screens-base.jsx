@@ -114,7 +114,7 @@ function Live(){
  const choose=x=>setSelection(x);
  return <SpaceBetween size="l">
   <ColumnLayout columns={3} variant="text-grid">
-   <SmallKpi title="Solicitudes visibles" value={String(events.length)} context={"Datos sintéticos del corte "+slice}}/>
+   <SmallKpi title="Solicitudes visibles" value={String(events.length)} context={"Datos sintéticos del corte "+slice}/>
    <SmallKpi title="Canales" value={rank>=4?"A + MCP":"A"} context={rank>=4?"Inferencia y ejecución":"Solo inferencia"}/>
    <SmallKpi title={paused?"En espera":"Evidencia"} value={paused?String(queued.length):"DEMO"} context={paused?"Se incorporan al reanudar":"No es telemetría AWS"}/>
   </ColumnLayout>
