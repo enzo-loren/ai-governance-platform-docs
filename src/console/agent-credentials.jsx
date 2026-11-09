@@ -131,7 +131,7 @@ export function AgentCredentialControls(){
  const current=agent?.tokens||[];
  const active=activeCount(agent);
  const issue=()=>{
-  if(active>=2)return;
+  if(active>=2||agent.mode==="Retirado")return;
   const key=createDemoKey();
   setSimulation(prev=>({...prev,agentRegistry:prev.agentRegistry.map(x=>
    x.id===agent.id?{...x,tokens:[...x.tokens,descriptor(key)]}:x)}));
@@ -147,7 +147,7 @@ export function AgentCredentialControls(){
   setRevoke(null);
  };
  return <SpaceBetween size="m">
-  <Container header={<Header variant="h2" actions={<Button onClick={issue} disabled={active>=2}>{active===0?"Emitir API key":"Rotar API key"}</Button>}>Credenciales del agente</Header>}>
+  <Container header={<Header variant="h2" actions={<Button onClick={issue} disabled={active>=2||agent.mode==="Retirado"}>{active===0?"Emitir API key":"Rotar API key"}</Button>}>Credenciales del agente</Header>}>
    <SpaceBetween size="m">
     <KeyValuePairs columns={3} items={[
      {label:"Agente",value:agent.name},
@@ -170,7 +170,7 @@ export function AgentCredentialControls(){
      </SpaceBetween>
     </Container>)}</SpaceBetween></div>
     {active===2&&<Alert type="warning">Hay dos claves vigentes durante la rotación. Revoca la antigua antes de emitir otra.</Alert>}
-    {active===0&&<Alert type="error">El agente no tiene API key vigente; sus llamadas deben fallar con 401 hasta emitir una nueva.</Alert>}
+    {active===0&&<Alert type="error">{agent.mode==="Retirado"?"Agente retirado: ninguna credencial puede volver a activarse.":"El agente no tiene API key vigente; sus llamadas deben fallar con 401 hasta emitir una nueva."}</Alert>}
     <Box color="text-body-secondary" fontSize="body-s">Rotación sin corte: la nueva y la antigua funcionan hasta revocar la anterior. Solo se muestra la nueva clave una vez. Suspender este agente no suspende a los demás.</Box>
    </SpaceBetween>
   </Container>
