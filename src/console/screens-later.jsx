@@ -299,7 +299,8 @@ function Approvals(){
  const {simulation,setSimulation,notify}=usePrototype();
  const [selected,setSelected]=useState("APR42");
  const [confirm,setConfirm]=useState(null);
- const [supervision,setSupervision]=useState({consultar_ficha:"autonoma",actualizar_precio:"notificar",cambiar_fondo:"requiere_aprobacion"});
+ const supervision=simulation.supervision||{};
+ const setSupervision=update=>setSimulation(prev=>({...prev,supervision:typeof update==="function"?update(prev.supervision||{}):update}));
  const [supervisionTool,setSupervisionTool]=useState({label:"cambiar_fondo",value:"cambiar_fondo"});
  const actors=[
   {value:"elena",label:"Elena · aprobadora",role:"aprobador",name:"Elena"},
@@ -342,7 +343,7 @@ function Approvals(){
      {supervision[supervisionTool.value]==="requiere_aprobacion"?"La ejecución espera autorización":
       supervision[supervisionTool.value]==="notificar"?"La ejecución emite una alerta posterior":"Ejecución autónoma conforme a reglas"}
     </StatusIndicator>
-    <Box color="text-body-secondary" fontSize="body-s">Configuración local de demostración. «Notificar» no bloquea; «Requiere aprobación» retiene la tool MCP hasta una decisión humana. Ningún cambio se aplica a AWS.</Box>
+    <Explanation>Configuración sintética: «Notificar» deja ejecutar y alerta después; «Requiere aprobación» retiene la ejecución MCP. Ningún cambio se aplica en AWS.</Explanation>
    </SpaceBetween>
   </Container>
   <Container header={<Header variant="h2">Sesión de aprobación</Header>}>
@@ -378,12 +379,12 @@ function Approvals(){
    </div>
    <Panel title={"Solicitud "+chosen.id} help="HITL-02/03: aprobación separada de funciones, no ejecución sin aprobación, caducidad y consulta por gov_aprobacion_estado.">
     <SpaceBetween size="m">
-     <KeyValuePairs columns={2} items={[{label:"Tool",value:chosen.name},{label:"Originador",value:originator},{label:"Monto",value:chosen.amount},{label:"Estado",value:status(chosen.id)},{label:"Plazo restante",value:chosen.time},{label:"Actor conectado",value:actor.name+" · "+actor.role}]}/>
+     <KeyValuePairs columns={2} items={[{label:"Tool",value:chosen.name},{label:"Originador",value:originator},{label:"Monto",value:chosen.amount},{label:"Estado",value:status(chosen.id)},{label:"Plazo restante",value:chosen.time},{label:"Actor conectado",value:actor.name+" · "+actor.role},{label:"Trace ID",value:"TRC-APR-"+chosen.id},{label:"Argumentos",value:chosen.amount!=="—"?"monto: **** · cuenta: ****":"Parámetros sensibles ocultos"}]}/>
      {pending?<SpaceBetween direction="horizontal" size="s">
       <Button variant="primary" disabled={!authorized} onClick={()=>setConfirm("approve")}>Aprobar (demo)</Button>
       <Button disabled={!authorized} onClick={()=>setConfirm("reject")}>Rechazar (demo)</Button>
      </SpaceBetween>:<Alert>Esta solicitud ya fue resuelta o venció y no puede ejecutarse de nuevo.</Alert>}
-     <Box fontSize="body-s" color="text-body-secondary">El resultado MCP debe ser PENDING_APPROVAL con id y vencimiento; el agente consulta gov_aprobacion_estado. En esta maqueta no hay ejecución ni estado real de AWS.</Box>
+     <Explanation>La respuesta MCP prevista es PENDING_APPROVAL con ID y plazo; el agente consulta gov_aprobacion_estado. El resultado no acredita ejecución real ni idempotencia.</Explanation>
     </SpaceBetween>
    </Panel>
   </ColumnLayout>
