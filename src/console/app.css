@@ -34,3 +34,15 @@ body{background:#f8f9fc;scroll-behavior:smooth}
 
 .governance-shadow{display:inline-flex;align-items:center;gap:7px;color:#6840a5;font-size:14px;font-weight:700;line-height:1.45;white-space:nowrap}
 .governance-shadow svg{flex-shrink:0}
+
+.desktop-table{display:block}
+.mobile-cards{display:none}
+@media(max-width:700px){
+ .desktop-table{display:none}
+ .mobile-cards{display:block}
+ .mobile-cards [class*="awsui_header"]{overflow-wrap:anywhere}
+ /* Resto de tablas densas: desplazamiento interior, sin deformar nombres por letra. */
+ #governance-root [class*="awsui_table-container"]{max-width:100%;overflow-x:auto}
+ #governance-root table{min-width:610px;table-layout:auto}
+ #governance-root table th,#governance-root table td{white-space:normal;overflow-wrap:normal;word-break:normal;min-width:90px}
+}
