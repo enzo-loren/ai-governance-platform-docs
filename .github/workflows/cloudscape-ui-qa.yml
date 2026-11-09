@@ -57,6 +57,8 @@ jobs:
           npm ci --no-audit --no-fund
           npm install --no-save playwright@1.56.1
           npx playwright install --with-deps chromium
+      - name: Recompilar Cloudscape desde el commit evaluado
+        run: npm run build
       - name: Verify real Cloudscape UI and navigation
         run: node tests/cloudscape-ui-qa.mjs
       - name: Verify cache isolation, navigation and accessibility of roadmap
