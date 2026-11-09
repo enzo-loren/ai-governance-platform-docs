@@ -176,6 +176,105 @@ function init(){
  window.addEventListener('hashchange',()=>{const h=location.hash.slice(1).toUpperCase();if(STAGES.some(s=>s.id===h))choose(h,false)});
 }
 const SCENE={
+
+ 's0-connect':()=>mHeader('Agentes','Registrar un agente y conectarlo a la puerta.',btn('+ Dar de alta','primary')+tip('Alta del agente','REG-02: el operador emite un agent_token opaco. Se muestra una sola vez y se almacena solo su hash.'))+
+  '<div class="m-grid" style="grid-template-columns:1.05fr .95fr">'+
+   panel('Nuevo agente · modo inicial',field('Nombre','agente-demo')+'<div style="height:8px"></div>'+field('Responsable','Operador plataforma')+
+    '<div class="m-grid" style="margin-top:10px">'+field('Modo','Descubrimiento')+field('Modelo','Modelo del catálogo')+'</div>'+
+    '<div style="margin-top:12px">'+btn('Guardar agente','primary')+'</div>')+
+   panel('Conexión A · inferencia '+tip('Dos datos de conexión',explanations.tokens),
+    '<div class="m-code">BASE_URL=<em>{gateway}/inference/v1</em><br>API_KEY=<em>gov_••••••••</em></div>'+
+    '<p class="m-section-note">Token mostrado una sola vez. Copiar ahora y guardar de forma segura.</p>'+
+    '<div class="m-rule">'+badge('A · conectable','blue')+'<span>SDK OpenAI compatible</span></div>')+
+  '</div><div class="m-tiles" style="margin-top:11px">'+mFact('Acceso de consola','Usuario autenticado con rol. La API administrativa es independiente del canal del agente.')+
+  mFact('Estado inicial','Descubrimiento. Sin catálogo de herramientas todavía ni porcentajes de cobertura.')+'</div>',
+
+ 's0-live':()=>mHeader('Flujo en vivo','Cada inferencia deja decisión, costo y evidencia.',badge('● Actualizando','green')+tip('Primera evidencia',explanations.live))+
+  '<div class="m-filter"><span>Agente: todos</span><span>Canal: inferencia</span><span>Estado: todos</span>'+btn('Pausar','muted')+'</div>'+
+  '<div class="m-grid three" style="margin-bottom:12px">'+kpi('Solicitudes visibles','3','Ejemplo · último minuto')+kpi('Canal','A','Inferencia Chat Completions')+kpi('Evidencia','3 de 3','Índice durable')+'</div>'+
+  panel('Solicitudes recientes '+tip('Registro durable y S3',explanations.immutable),
+   table(['Hora','Agente','Modelo','Estado','Costo','Evidencia'],[
+    ['10:43:08','agente-demo','bedrock-modelo-1',pill('Permitido','green'),'US$ 0,003',pill('Registrada','blue')],
+    ['10:42:57','agente-demo','simulado',pill('Permitido','green'),'US$ 0,000',pill('Registrada','blue')],
+    ['10:42:11','agente-demo','—',pill('Sin credencial','red'),'—',pill('Registrada','blue')]
+   ],[13,18,26,20,12,16]))+
+  '<div class="m-tiles" style="margin-top:11px">'+mFact('Copia protegida','S3 Object Lock GOVERNANCE. La confirmación de la copia puede ser asíncrona.')+
+  mFact('Telemetría técnica','OTLP con gen_ai, trazas, métricas y logs. Sin secretos ni PII en claro.')+'</div>',
+
+ 's1-coverage':()=>mHeader('Tarjeta de gobernanza','agente-demo · Descubrimiento · Preset 1',badge('En descubrimiento','purple')+tip('Qué significa cobertura',explanations.coverage))+
+  '<div class="m-grid three" style="margin-bottom:12px">'+
+    '<div class="m-kpi"><label>Conexión A</label><strong style="font-size:18px;color:#186fae">Conectada</strong><small>Inferencia observada</small></div>'+
+    '<div class="m-kpi"><label>Conexión B</label><strong style="font-size:18px;color:#8997a6">Ausente</strong><small>Ejecución MCP no cubierta</small></div>'+
+    '<div class="m-kpi"><label>Conexión C</label><strong style="font-size:18px;color:#8997a6">Ausente</strong><small>Principal solo_workload</small></div>'+
+  '</div><div class="m-grid">'+
+    panel('Controles por estado '+tip('Modo descubrimiento',explanations.shadow),
+      '<div class="m-list">'+
+      '<div class="m-rule"><span>'+badge('Activo','green')+' Autenticación y evidencia</span><span>REG-02 · EVD-01</span></div>'+
+      '<div class="m-rule"><span>'+badge('En sombra','purple')+' Política Cedar</span><span>POL-03</span></div>'+
+      '<div class="m-rule"><span>'+badge('No disponible')+' Tools MCP / identidad</span><span>B / C</span></div></div>')+
+    panel('Límites explícitos','<p class="m-section-note">Fuera del perímetro: red/IAM del agente, autenticación del usuario antes del agente y aviso de IA en el cliente.</p>'+
+      '<div class="m-divider"></div><div class="m-bubble">'+badge('A','blue')+' Intención de tools visible, ejecución local no gobernada.</div>'+
+      '<div style="height:9px"></div>'+btn('Ver catálogo de controles'))+
+  '</div>',
+
+ 's1-inventory':()=>mHeader('Tools descubiertas','El agente declara tools en la inferencia; la clase es sugerida.',badge('A · solo intención','blue')+tip('Clasificación sugerida','INF-02: primero anotaciones MCP si existen, después método HTTP y reglas de nombre. Una clasificación automática no confirma que la herramienta sea segura.'))+
+  '<div class="m-grid three" style="margin-bottom:13px">'+kpi('Declaradas','4','Del payload tools')+kpi('Sin clasificar','1','Revisión necesaria')+kpi('Por MCP','0','B aún no integrada')+'</div>'+
+  panel('Inventario · esquema y revisión',table(['Tool','Clase sugerida','Estado','Esquema','Origen'],[
+   ['consultar_ficha',pill('Lectura','green'),'Aprobada · sugerida','v1','Inferencia A'],
+   ['actualizar_precio',pill('Escritura','blue'),'Aprobada · sugerida','v1','Inferencia A'],
+   ['cambiar_fondo',pill('Crítica','amber'),'Pendiente de revisión','v1','Inferencia A'],
+   ['procesar_lote',pill('Sin clasificar','red'),'Pendiente de revisión','v2','Inferencia A']
+  ],[25,18,27,12,18]))+
+  '<div class="m-warning" style="margin-top:13px">S1 <b>no ejecuta</b> estas herramientas por la puerta. Solo registra intención y catálogo; el control real por MCP se incorpora en S4.</div>',
+
+ 's1-shadow':()=>mHeader('Detalle de decisión','TRACE-DEMO-0007 · inferencia · usuario no identificado',badge('En sombra','purple')+tip('Qué significa en sombra',explanations.shadow))+
+  '<div class="m-grid three" style="margin-bottom:11px">'+kpi('Resultado del modelo','Conservado','ALLOW_SHADOW')+kpi('Costo','US$ 0,003','Ejemplo sintético')+kpi('Correlación','Trace ID','tool_call_id')+'</div>'+
+  '<div class="m-grid">'+
+   panel('Historia del turno', '<div class="m-event"><div><strong>1. Solicitud recibida</strong><small>agent_token válido · modelo permitido</small></div>'+badge('OK','green')+'</div>'+
+    '<div class="m-event amber"><div><strong>2. Cedar evalúa tool_call</strong><small>eliminar_registro · Preset 1</small></div>'+badge('Sombra','purple')+'</div>'+
+    '<div class="m-event green"><div><strong>3. Respuesta devuelta</strong><small>La intención se conserva en descubrimiento</small></div>'+badge('Paso','green')+'</div>')+
+   panel('Controles separados','<div class="m-rule"><div><strong>Cedar</strong><div class="m-section-note">En activo se habría denegado.</div></div>'+badge('En sombra','purple')+'</div>'+
+    '<div class="m-rule" style="margin-top:8px"><div><strong>Guardrail</strong><div class="m-section-note">Último turno del usuario y salida.</div></div>'+badge('Sin intervención','green')+'</div>'+
+    '<div class="m-rule" style="margin-top:8px"><div><strong>PII '+tip('Datos personales en la salida',explanations.pii)+'</strong><div class="m-section-note">RUT detectado y enmascarado.</div></div>'+badge('Enmascarada','blue')+'</div>')+
+  '</div>',
+
+ 's2-activate':()=>mHeader('Control del agente','agente-demo · responsable asignado',badge('Activo','green')+btn('Suspender','danger')+tip('Suspensión','REG-03: el Kill Switch corta el tráfico de inferencia y MCP del agente en 60 segundos o menos. Reactivar restaura su modo anterior.'))+
+  '<div class="m-grid three" style="margin-bottom:12px">'+kpi('Modo actual','Activo','REG-01 · cambio registrado')+kpi('Modelos','1','Permitido en catálogo')+kpi('Preset','1','Caja Negra Segura')+'</div>'+
+  '<div class="m-columns">'+
+    panel('Impacto previo a la activación '+tip('Activación informada','REG-01: antes de pasar a activo el operador ve denegaciones hipotéticas y tools sin clasificar. No se activa a ciegas.'),
+     '<div class="m-grid">'+kpi('Denegaciones en sombra','3','Ventana de ejemplo')+kpi('Tools sin revisar','2','Impiden pasos del catálogo')+'</div>'+
+     '<div class="m-warning" style="margin-top:12px">Confirmación previa: 3 solicitudes habrían sido denegadas; 2 tools siguen pendientes.</div>')+
+    panel('Controles activos','<div class="m-rule"><span>Bloquear tool destructiva</span>'+badge('DENY','red')+'</div>'+
+      '<div class="m-rule" style="margin-top:8px"><span>Modelo distinto al permitido</span>'+badge('403','red')+'</div>'+
+      '<div class="m-rule" style="margin-top:8px"><span>Falla de política</span>'+badge('Cerrada','red')+'</div>'+
+      '<p class="m-section-note">El agente recibe el motivo dentro del protocolo cuando corresponde.</p>')+
+  '</div>',
+
+ 's2-limits':()=>mHeader('Consumo y límites','Presupuesto y tasa por agente · ajustes sin despliegue.',btn('Editar límites','primary')+tip('Tres acciones al alcanzar el límite','FIN-02: solo alerta, throttle con HTTP 429/Retry-After o bloqueo con 403. Avisos en 50, 80 y 100 %.'))+
+  '<div class="m-grid three" style="margin-bottom:14px">'+kpi('Costo del período','US$ 41','Presupuesto US$ 50')+kpi('Tokens','74.200','Máximo 100.000')+kpi('Solicitudes/min','28','Máximo 50')+'</div>'+
+  panel('Presupuesto diario', '<div class="m-statline"><strong>US$ 41 de US$ 50</strong><span>82 % · alerta 80 %</span></div><div style="height:9px"></div>'+bar(82,'amber')+
+   '<div style="display:flex;gap:8px;margin-top:13px">'+badge('50 %','green')+badge('80 %','amber')+badge('100 % · bloquear','red')+'</div>')+
+  '<div class="m-grid" style="margin-top:12px">'+panel('Acción por límite','<div class="m-rule"><span>Presupuesto USD</span>'+badge('Bloquear · 403','red')+'</div><div class="m-rule" style="margin-top:7px"><span>Solicitudes/minuto</span>'+badge('Throttling · 429','amber')+'</div>')+
+  panel('Seguimiento','<div class="m-rule"><span>Latencia gobierno p50/p95</span><strong>Medida</strong></div><div class="m-rule" style="margin-top:7px"><span>Tarifas por modelo</span><strong>Versionadas</strong></div>')+'</div>',
+
+ 's3-identity':()=>mHeader('Identidad y resultados por rol','Conexión C · el usuario viaja en X-Gov-User-Token.',badge('C · opcional','purple')+tip('Autenticación del usuario','IDN-01: la puerta verifica la firma y claims del JWT enviado por el agente; no administra la autenticación entre usuario y aplicación cliente.'))+
+  '<div class="m-grid" style="margin-bottom:11px">'+
+    panel('Ana · rol consulta','<div class="m-identity"><span class="m-person">A</span><div><b>ana.consulta</b><br><small>Token válido · sin pii_access</small></div></div>'+
+    '<div class="m-divider"></div><span class="m-mini-tag">RESPUESTA DEL MODELO</span><div class="m-rule" style="margin-top:8px"><span>RUT: <b>**.***.***-*</b><br>Correo: <b>***@***</b></span>'+badge('PII oculto','blue')+'</div>')+
+    panel('Elena · rol aprobador + pii_access','<div class="m-identity"><span class="m-person">E</span><div><b>elena.aprobadora</b><br><small>Token válido · permiso pii_access</small></div></div>'+
+    '<div class="m-divider"></div><span class="m-mini-tag">RESPUESTA DEL MODELO</span><div class="m-rule" style="margin-top:8px"><span>RUT: <b>12.345.678-5</b><br>Correo: <b>elena@ejemplo.cl</b></span>'+badge('Autorizado','green')+'</div>')+
+  '</div><div class="m-warning">Sin JWT, la solicitud no falla: se registra como <b>solo_workload</b>, y las reglas aplican al agente, no a un usuario inventado.</div>',
+
+ 's3-user-spend':()=>mHeader('Consumo por usuario','La misma consola S2, ahora con atribución por persona.',badge('A + C','purple')+tip('Cuotas por usuario','FIN-03 agrega costo, presupuesto, tokens y tasa por usuario cuando C está presente; mantiene métricas agregadas por agente.'))+
+  '<div class="m-grid three" style="margin-bottom:11px">'+kpi('Agente demo','US$ 41','Total de todas sus solicitudes')+kpi('Con C válido','6 / 10','Solicitudes ilustrativas')+kpi('Sin usuario','4 / 10','solo_workload')+'</div>'+
+  panel('Consumo y límites por principal',table(['Principal','Rol','Solicitudes','Costo','Límite USD','Estado'],[
+   ['ana.consulta','consulta','4','US$ 10','US$ 15',pill('Alerta 80 %','amber')],
+   ['elena.aprobadora','aprobador','2','US$ 17','US$ 20',pill('Alerta 80 %','amber')],
+   ['solo_workload','agente','4','US$ 14','—',pill('Sin C','blue')]
+  ],[24,17,16,15,13,15]))+
+  '<div class="m-grid" style="margin-top:12px">'+panel('Política de usuario','<div class="m-rule"><span>ana.consulta · presupuesto diario</span>'+badge('Solo alerta','blue')+'</div>')+
+   panel('Condición de medición','<div class="m-section-note">Usuario registrado solo con JWT válido. Los ejemplos no corresponden a usuarios reales.</div>')+'</div>',
+
  // __SCENES__
 };
 init();
