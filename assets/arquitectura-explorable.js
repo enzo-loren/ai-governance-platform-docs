@@ -215,8 +215,8 @@ function addNode(n,root){
    if(n.extraIcon)elem('image',{href:iconBase+icons[n.extraIcon],x:n.x+56,y:n.y+22,width:39,height:39,'aria-hidden':'true'},g);
  }
  let tx=n.x+inset;
- const title=elem('text',{x:tx,y:n.y+31,class:'node-title'},g,n.title);
- fitSvgText(title,n.w-inset-14,14);
+ const heading=elem('text',{x:tx,y:n.y+31,class:'node-title'},g,n.title);
+ fitSvgText(heading,n.w-inset-14,14);
  n.lines.forEach((line,i)=>{
    const txt=elem('text',{x:tx,y:n.y+56+i*21,class:'node-line','data-line-index':i},g,line);
    fitSvgText(txt,n.w-inset-14,11.5);
