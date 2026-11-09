@@ -56,7 +56,7 @@ const nodes=[
 {id:'s3',x:1040,y:1431,w:340,h:140,title:'Amazon S3 · Object Lock',lines:['GOVERNANCE · retención','Copia de evidencia asíncrona','Borrado sin bypass denegado'],icon:'s3',tag:'evidence',details:['Duplicación asíncrona desde el índice (D-07).','Object Lock en modo GOVERNANCE, no COMPLIANCE.','Retención en días configurables; 1 día en desarrollo.','Enmascaramiento de PII en contenido de evidencia.','SP-08 valida retención y limpieza tras el plazo.']},
 {id:'cdk',x:1530,y:1431,w:337,h:140,title:'AWS CDK v2',lines:['TypeScript · IaC validada','Un stack del Módulo A','Cuenta / región configurable'],icon:'cdk',tag:'admin',details:['Despliegue parametrizable para una cuenta y región.','us-east-1 por defecto; prefijo stage configurable.','Pruebas cfn-guard, Checkov, gitleaks y scripts de retiro.','Módulo B en paquete/stack separado.']},
 {id:'cfn',x:1970,y:1431,w:330,h:140,title:'AWS CloudFormation',lines:['Recursos desde CDK','Despliegue + retiro','Sin topología multi-cuenta'],icon:'cloudformation',tag:'admin',details:['CDK sintetiza IaC para desplegar recursos AWS.','Despliegue autocontenido en una cuenta y región.','No agregar VPC, OpenSearch, ECS ni multi-cuenta sin requisito.','Retiro conserva evidencia durante su retención.']},
-{id:'waf',x:2390,y:1431,w:284,h:140,title:'AWS WAF · SP-01',lines:['Protección de entrada','Vinculación por validar','No garantizado en diseño'],icon:'waf',tag:'alt',details:['Pregunta específica del spike SP-01 sobre tasa y perímetro.','No implica una única topología final.','Se presenta como hipótesis/alternativa, no como servicio obligatorio.']}
+{id:'waf',x:532,y:532,w:430,h:104,title:'AWS WAF · SP-01',lines:['Protección de entrada','Vinculación por validar','No garantizado en diseño'],icon:'waf',tag:'alt',details:['Pregunta específica del spike SP-01 sobre tasa y perímetro.','No implica una única topología final.','Se presenta como hipótesis/alternativa, no como servicio obligatorio.']}
 ];
 const zones=[
 {x:25,y:116,w:405,h:1555,name:'FUERA DE AWS · CLIENTE',sub:'La plataforma controla solo lo que cruza la puerta',style:'zone'},
@@ -108,7 +108,9 @@ const links=[
 {from:'config',to:'db',type:'storage',label:'versiones',p:'M1040 1257 V1396 H800 V1431',tx:1060,ty:1385},
 {from:'approval',to:'db',type:'b',label:'estado APR',p:'M1840 1061 V1302 H805 V1431',tx:1734,ty:1291},
 {from:'test',to:'agent',type:'test',label:'prueba por API pública',p:'M232 1030 V870 H404 V604 H393',tx:79,ty:881},
-{from:'facade',to:'entry',type:'alt',label:'JWT M2M · plan B SP-01',p:'M740 650 V508',tx:752,ty:593}
+{from:'facade',to:'entry',type:'alt',label:'JWT M2M · plan B SP-01',p:'M740 650 V508',tx:752,ty:593},
+{from:'agent',to:'waf',type:'alt',label:'entrada alternativa',p:'M393 619 H485 V580 H532',tx:420,ty:605},
+{from:'waf',to:'facade',type:'alt',label:'si procede',p:'M743 636 V650',tx:752,ty:643}
 ];
 const detailsKey={a:['A · inferencia','Modelo / prompts / tool_calls','Políticas sobre intención','Costo, límites y evidencia'],b:['B · herramientas MCP','tools/list / tools/call','Ejecución + aprobaciones','Cobertura parcial por tool'],c:['C · identidad','JWT verificado por solicitud','Rol / PII / límites personales','No autentica usuario → agente']};
 let state={b:false,c:false,alt:false,test:false,focus:'all',selected:null};
@@ -183,7 +185,8 @@ function addCanvas(){
   'LÍMITES    ·   herramientas fuera de MCP, red/IAM del agente, entrada usuario→agente y UI final: fuera del perímetro'
  ],'note-text',26);
  elem('text',{x:60,y:1782,class:'board-footer'},svg,'FUENTES: insumo/requisitos.yaml · contexto/01 modelo de conexión · 02 contrato · 03 políticas · 05 decisiones · 06 spikes');
- elem('text',{x:60,y:1809,class:'board-footer'},svg,'Iconos AWS Architecture Icons · AWS Labs v23.1 · representaciones lógicas, no recursos obligatorios uno a uno.');
+ elem('text',{x:60,y:1809,class:'board-footer'},svg,'ICONOS: AWS Architecture Icons · AWS Labs v23.1 · No equivalen a recursos obligatorios uno a uno.');
+ elem('text',{x:60,y:1836,class:'board-footer'},svg,'Índice de catálogo: modo activo + agente con tools/usuarios + conexiones completas y evidencia; no mide seguridad absoluta.');
  elem('g',{id:'inspection'},svg);
  refresh();
 }
