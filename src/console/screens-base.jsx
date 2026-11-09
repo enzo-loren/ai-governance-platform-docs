@@ -185,6 +185,7 @@ function Inventory(){
    <SmallKpi title="Ejecutadas por MCP" value="0" context="La conexión B llega en S4"/>
   </ColumnLayout>
   <Container header={<Header variant="h2" description={showExplanations?"Clases inferidas de anotaciones y patrones; un operador confirma o corrige.":undefined}>Catálogo de tools declaradas</Header>}>
+   <div className="desktop-table">
    <Table items={items} trackBy="id" variant="embedded"
     filter={<TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Buscar tool"/>}
     columnDefinitions={[
@@ -195,6 +196,25 @@ function Inventory(){
      {id:"approval",header:"Aprobación",cell:x=><StatusIndicator type={info(x).approval==="Aprobada"?"success":"warning"}>{info(x).approval}</StatusIndicator>},
      {id:"coverage",header:"Ejecución",cell:()=><StatusIndicator type="stopped">Fuera de MCP</StatusIndicator>}
     ]}/>
+   </div>
+   <div className="mobile-cards">
+    <SpaceBetween size="s">
+     <TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Buscar tool"/>
+     {items.map(x=><Container key={x.id} header={<Header variant="h3">{x.id}</Header>}>
+      <SpaceBetween size="s">
+       <StatusIndicator type={info(x).confirmed?"success":"warning"}>{info(x).confirmed?"Confirmada":"Clasificación sugerida"}</StatusIndicator>
+       <KeyValuePairs columns={2} items={[
+        {label:"Clase",value:info(x).kind},
+        {label:"Esquema",value:x.schema},
+        {label:"Aprobación",value:info(x).approval},
+        {label:"Ejecución",value:"Fuera de MCP"}
+       ]}/>
+       <Button variant="link" onClick={()=>open(x)}>Revisar clasificación</Button>
+      </SpaceBetween>
+     </Container>)}
+     {!items.length&&<Box color="text-body-secondary">Sin tools para este filtro.</Box>}
+    </SpaceBetween>
+   </div>
   </Container>
   <Modal visible={!!selected} header={"Revisar tool · "+(selected?.id||"")} onDismiss={()=>setSelected(null)}
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setSelected(null)}>Cancelar</Button><Button variant="primary" onClick={save}>Guardar revisión (demo)</Button></SpaceBetween></Box>}>
