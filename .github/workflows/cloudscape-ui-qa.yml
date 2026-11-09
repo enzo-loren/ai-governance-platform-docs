@@ -31,6 +31,7 @@ on:
       - 'src/console/**'
       - 'tests/cloudscape-ui-qa.mjs'
       - 'tests/presentation-mode-qa.mjs'
+      - 'tests/incremental-functional-qa.mjs'
       - '.github/workflows/cloudscape-ui-qa.yml'
   pull_request:
     paths:
@@ -53,6 +54,7 @@ on:
       - 'src/console/**'
       - 'tests/cloudscape-ui-qa.mjs'
       - 'tests/presentation-mode-qa.mjs'
+      - 'tests/incremental-functional-qa.mjs'
   workflow_dispatch:
 concurrency:
   group: cloudscape-qa-${{ github.ref }}
@@ -89,6 +91,8 @@ jobs:
         run: node tests/agent-credentials-qa.mjs
       - name: Presentación real CON-08 · 1080p, desktop y móvil
         run: node tests/presentation-mode-qa.mjs
+      - name: Evolución funcional acumulada S0-S6 y capturas de pantalla
+        run: node tests/incremental-functional-qa.mjs
       - name: Attach screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
@@ -101,4 +105,5 @@ jobs:
             artifacts/screen-versions-qa/
             artifacts/agent-security-qa/
             artifacts/presentation-qa/
+            artifacts/incremental-functional-qa/
           retention-days: 14
