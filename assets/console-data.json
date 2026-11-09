@@ -1,0 +1,222 @@
+{
+  "stages": [
+    {
+      "id": "S0",
+      "name": "Fundación",
+      "headline": "Conectar y observar la primera inferencia."
+    },
+    {
+      "id": "S1",
+      "name": "Visibilidad",
+      "headline": "Descubrir riesgos y evaluar reglas en sombra."
+    },
+    {
+      "id": "S2",
+      "name": "Control activo",
+      "headline": "Aplicar reglas, límites y suspensión."
+    },
+    {
+      "id": "S3",
+      "name": "Identidad",
+      "headline": "Atribuir acciones y consumo a personas."
+    },
+    {
+      "id": "S4",
+      "name": "Tools MCP",
+      "headline": "Gobernar la ejecución real de herramientas."
+    },
+    {
+      "id": "S5",
+      "name": "Supervisión",
+      "headline": "Retener operaciones críticas hasta una decisión humana."
+    },
+    {
+      "id": "S6",
+      "name": "Auditoría",
+      "headline": "Reconstruir la causa y comprobar la evidencia."
+    }
+  ],
+  "screens": [
+    {
+      "id": "s0-connect",
+      "slice": "S0",
+      "surface": "agentes",
+      "title": "Alta del agente",
+      "question": "¿Cómo conecto un agente?",
+      "type": "new",
+      "requirements": [
+        "REG-02",
+        "CON-01",
+        "INF-01"
+      ]
+    },
+    {
+      "id": "s0-live",
+      "slice": "S0",
+      "surface": "flujo",
+      "title": "Flujo en vivo",
+      "question": "¿Qué está pasando ahora?",
+      "type": "new",
+      "requirements": [
+        "CON-02",
+        "CON-03",
+        "EVD-01"
+      ]
+    },
+    {
+      "id": "s1-coverage",
+      "slice": "S1",
+      "surface": "gobernanza",
+      "title": "Tarjeta de gobernanza",
+      "question": "¿Qué controla la plataforma?",
+      "type": "new",
+      "requirements": [
+        "CON-04",
+        "POL-03"
+      ]
+    },
+    {
+      "id": "s1-inventory",
+      "slice": "S1",
+      "surface": "tools",
+      "title": "Tools detectadas",
+      "question": "¿Qué tools declaró el agente?",
+      "type": "new",
+      "requirements": [
+        "INF-02"
+      ]
+    },
+    {
+      "id": "s1-shadow",
+      "slice": "S1",
+      "surface": "decision",
+      "title": "Decisión en sombra",
+      "question": "¿Qué habría bloqueado una regla?",
+      "type": "new",
+      "requirements": [
+        "POL-01",
+        "POL-03",
+        "GRD-01"
+      ]
+    },
+    {
+      "id": "s2-activate",
+      "slice": "S2",
+      "surface": "agentes",
+      "title": "Modo activo y suspensión",
+      "question": "¿Cómo activo los controles?",
+      "type": "update",
+      "requirements": [
+        "REG-01",
+        "REG-03",
+        "INF-05"
+      ]
+    },
+    {
+      "id": "s2-limits",
+      "slice": "S2",
+      "surface": "consumo",
+      "title": "Consumo y límites",
+      "question": "¿Cuánto gastamos y dónde está el límite?",
+      "type": "new",
+      "requirements": [
+        "FIN-02",
+        "CON-06"
+      ]
+    },
+    {
+      "id": "s3-identity",
+      "slice": "S3",
+      "surface": "identidad",
+      "title": "Identidad y acceso",
+      "question": "¿Quién puede ver estos datos?",
+      "type": "new",
+      "requirements": [
+        "IDN-01",
+        "GRD-03"
+      ]
+    },
+    {
+      "id": "s3-user-spend",
+      "slice": "S3",
+      "surface": "consumo",
+      "title": "Consumo por persona",
+      "question": "¿Cuánto consume cada persona?",
+      "type": "update",
+      "requirements": [
+        "FIN-03"
+      ]
+    },
+    {
+      "id": "s4-mcp",
+      "slice": "S4",
+      "surface": "tools",
+      "title": "Tools por MCP",
+      "question": "¿Qué tools pasan realmente por la puerta?",
+      "type": "update",
+      "requirements": [
+        "MCP-01",
+        "PLT-02",
+        "GRD-04"
+      ]
+    },
+    {
+      "id": "s4-policy",
+      "slice": "S4",
+      "surface": "reglas",
+      "title": "Constructor de reglas",
+      "question": "¿Cómo cambio una regla sin desplegar?",
+      "type": "new",
+      "requirements": [
+        "POL-04"
+      ]
+    },
+    {
+      "id": "s4-guide",
+      "slice": "S4",
+      "surface": "guia",
+      "title": "Guía de conexión",
+      "question": "¿Qué hago para cubrir más?",
+      "type": "new",
+      "requirements": [
+        "OPS-01"
+      ]
+    },
+    {
+      "id": "s5-approvals",
+      "slice": "S5",
+      "surface": "aprobaciones",
+      "title": "Aprobaciones",
+      "question": "¿Qué tengo que decidir?",
+      "type": "new",
+      "requirements": [
+        "HITL-01/02/03",
+        "CON-05"
+      ]
+    },
+    {
+      "id": "s6-search",
+      "slice": "S6",
+      "surface": "busqueda",
+      "title": "Búsqueda de auditoría",
+      "question": "¿Cómo encuentro un caso?",
+      "type": "new",
+      "requirements": [
+        "EVD-02"
+      ]
+    },
+    {
+      "id": "s6-forensic",
+      "slice": "S6",
+      "surface": "forense",
+      "title": "Ruta forense",
+      "question": "¿Qué pasó y por qué?",
+      "type": "new",
+      "requirements": [
+        "EVD-03",
+        "EVD-05",
+        "EVD-06"
+      ]
+    }
+  ]
+}
