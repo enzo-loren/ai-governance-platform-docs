@@ -138,7 +138,7 @@ function MCP(){
       options={[{value:"autonoma",label:"Autónoma"},{value:"notificar",label:"Notificar"},{value:"requiere_aprobacion",label:"Requiere aprobación"}]}
       onChange={({detail})=>changeSupervision(row.id,detail.selectedOption.value)}/>
     </FormField>}
-    <Alert type="info">En activo, una tool pendiente o no aprobada se deniega; en descubrimiento la evaluación de esa regla puede operar en sombra. Esta acción solo modifica una muestra.</Alert>
+    <Alert type="warning">{agent.mode==="Activo"?"Sin aprobación, esta herramienta se rechaza.":"En descubrimiento, la decisión se observa sin bloquear."} Cambio de demostración.</Alert>
    </SpaceBetween>
   </Modal>
   <Modal visible={targetModal} header="Registrar target MCP · DEMO" onDismiss={()=>setTargetModal(false)}
@@ -146,7 +146,8 @@ function MCP(){
    <SpaceBetween size="m">
     <FormField label="Nombre del target"><Input value={targetName} onChange={({detail})=>setTargetName(detail.value)}/></FormField>
     <FormField label="Tipo"><Select selectedOption={targetType} options={[{value:"lambda",label:"AWS Lambda"},{value:"openapi",label:"OpenAPI HTTPS"}]} onChange={({detail})=>setTargetType(detail.selectedOption)}/></FormField>
-    <Alert type="info">La credencial real del destino se configura en AgentCore Identity o Secrets Manager y no se muestra al agente. Aquí no se solicitan ni almacenan secretos.</Alert>
+    <Alert type="warning">No ingreses secretos reales en esta demostración.</Alert>
+    <Explanation>En producción, la puerta recupera la credencial del destino desde AgentCore Identity o Secrets Manager sin mostrársela al agente.</Explanation>
    </SpaceBetween>
   </Modal>
  </SpaceBetween>;
@@ -229,7 +230,7 @@ function Policy(){
    </ColumnLayout>
    <Explanation>Resultados de ejemplo. La matriz obligatoria de al menos 30 escenarios y el parser real de Cedar no se ejecutan aquí.</Explanation>
   </Panel>
-  <Panel title="Versiones de ejemplo">
+  <Panel title="Historial de reglas">
    <Table variant="embedded" items={saved} columnDefinitions={[
     {id:"v",header:"Versión",cell:x=>"v"+x.version},
     {id:"actor",header:"Autor",cell:x=>x.author},
@@ -281,11 +282,11 @@ function Guide(){
    </ColumnLayout>
    <SpaceBetween size="s">
     <Box>Próximo paso: <strong>{next}</strong></Box>
-    <Box color="text-body-secondary" fontSize="body-s">Máximo teórico del catálogo en este corte: {currentMax} % con conexiones completas y controles aplicables.</Box>
     <KeyValuePairs columns={2} items={[
-     {label:"Añadir B",value:hasB?"Conectada parcialmente · completar "+missingB+" tools":"+"+prospectiveB+" controles · +"+(prospectiveB/27*100).toFixed(0)+" puntos teóricos"},
-     {label:"Añadir C",value:hasC?"Habilitada · cobertura por solicitud":"+"+prospectiveC+" controles · +"+(prospectiveC/27*100).toFixed(0)+" puntos teóricos"}
+     {label:"Añadir B",value:hasB?"Centralizar "+missingB+" tools restantes":"Revisar y detener ejecuciones de tools"},
+     {label:"Añadir C",value:hasC?"Atribución y permisos por persona":"Evaluar permisos y consumo por usuario"}
     ]}/>
+    <Explanation>Techo teórico del catálogo para este corte: {currentMax} % si las conexiones están completas y hay evidencia. No es una medición del agente.</Explanation>
    </SpaceBetween>
   </Container>
   <Panel title="Instrucciones por conexión" help="A es obligatoria; B puede ser parcial; C identifica al usuario mediante JWT sin sustituir la clave del agente.">
@@ -515,19 +516,16 @@ function Forensic(){
       {label:"Autor del último cambio",value:record.author},
       {label:"Detalle seleccionado",value:events.find(x=>x.id===step)?.reason||""}
      ]}/>
-     <Box variant="h3">Texto histórico de la regla · versión de esta transacción</Box>
-     <Box fontFamily="monospace" fontSize="body-s">{originalPolicies[record.policy]||"Texto histórico no disponible"}</Box>
+     <ExpandableSection headerText="Ver texto de la regla aplicada" variant="footer">
+      <Box fontFamily="monospace" fontSize="body-s">{originalPolicies[record.policy]||"Texto histórico no disponible"}</Box>
+     </ExpandableSection>
      <Explanation>Al editar una política, el producto debe conservar el texto original asociado con cada decisión, no sustituirlo por la versión actual.</Explanation>
     </Panel>
     <Panel title="Sello de evidencia">
      <SpaceBetween size="m">
-      <StatusIndicator type="warning">Object Lock GOVERNANCE · no verificado</StatusIndicator>
-      <KeyValuePairs columns={1} items={[
-       {label:"Objeto",value:"evidencia/"+record.id+".json (ejemplo)"},
-       {label:"Retención",value:"Configurada por despliegue; no medida en esta DEMO"},
-       {label:"Integridad",value:"No comprobada contra AWS"}
-      ]}/>
+      <StatusIndicator type="warning">Integridad sin verificar</StatusIndicator>
       <Button onClick={()=>setSeal(true)}>Probar inmutabilidad (demo)</Button>
+      <Explanation>Objeto ilustrativo: evidencia/{record.id}.json. La retención depende del despliegue. Se prevé S3 Object Lock GOVERNANCE, pero esta demostración no ha comprobado la inmutabilidad en AWS.</Explanation>
      </SpaceBetween>
     </Panel>
    </SpaceBetween>
