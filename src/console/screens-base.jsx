@@ -144,13 +144,13 @@ function Live(){
     <div className="desktop-table">
      <Table items={filtered} trackBy="id" header={<Header variant="h3" counter={"("+filtered.length+")"}>Solicitudes</Header>}
       columnDefinitions={[
-       {id:"id",header:"Trace ID",cell:x=><Button variant="link" onClick={()=>choose(x)}>{x.id}</Button>},
+       {id:"id",header:"Trace ID",width:104,cell:x=><Button variant="link" onClick={()=>choose(x)}>{x.id}</Button>},
        {id:"agent",header:"Agente / usuario",cell:x=><span>{x.agent} · {x.principal}</span>},
        {id:"medium",header:"Canal / destino",cell:x=><span>{x.medium} · {x.target}</span>},
        {id:"connections",header:"Conexiones",cell:x=>x.connections},
        {id:"state",header:"Decisión",cell:x=><Decision state={x.state} reason={x.reason}/>},
        {id:"cost",header:"Costo",cell:x=>x.cost},
-       {id:"actions",header:"Detalle",cell:x=><Button variant="link" onClick={()=>choose(x)}>Ver decisión</Button>}
+       {id:"actions",header:"Detalle",width:70,cell:x=><Button variant="link" ariaLabel={"Ver decisión "+x.id} onClick={()=>choose(x)}>Ver</Button>}
       ]} empty={<Box textAlign="center" padding="l">No hay eventos para estos filtros.</Box>}/>
     </div>
     <div className="mobile-cards">
@@ -189,7 +189,7 @@ function Coverage(){
  const bCount=connected?simulation.toolsMcp.length:0;
  const max=hasB?(hasC?89:67):(hasC?56:41);
  const noData=evidence.value!=="observado";
- const next=!hasC?"Conectar identidad C para reglas y consumo por usuario":!hasB?"Centralizar la ejecución de tools por MCP B":bCount<4?"Mover las tools locales restantes a MCP":"Revisar las excepciones y mantener evidencia";
+ const next=rank<2?"Revisar el catálogo de tools antes de activar en S2":!hasC?"Conectar identidad C para reglas y consumo por usuario":!hasB?"Centralizar la ejecución de tools por MCP B":bCount<4?"Mover las tools locales restantes a MCP":"Revisar las excepciones y mantener evidencia";
  const controls=[
   {name:"Autenticación del agente",state:noData?"Sin evidencia":"Activo",reason:"agent_token individual · canal A"},
   {name:"Guardrail y protección de datos",state:noData?"Sin evidencia":"Activo",reason:"Inferencia A"},
