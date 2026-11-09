@@ -115,26 +115,32 @@ function Live(){
  </SpaceBetween>;
 }
 function Coverage(){
- const {navigate,slice}=usePrototype();
- const stage=Number(slice.slice(1));
+ const {simulation,showExplanations}=usePrototype();
+ const agent=selectedFrom(simulation);
  return <SpaceBetween size="l">
-  <ColumnLayout columns={3} variant="text-grid">
-   <Panel title="A · Inferencia"><StatusIndicator type="success">Conectada</StatusIndicator><Box fontSize="body-s">Solicitudes, respuestas e intenciones observadas.</Box></Panel>
-   <Panel title="B · Tools MCP"><StatusIndicator type="stopped">No conectada</StatusIndicator><Box fontSize="body-s">Sin control sobre ejecuciones locales.</Box></Panel>
-   <Panel title="C · Identidad"><StatusIndicator type="stopped">No conectada</StatusIndicator><Box fontSize="body-s">Principal: solo_workload.</Box></Panel>
-  </ColumnLayout>
-  <Panel title="Estado de los controles" info="La cobertura no es una puntuación absoluta de seguridad: depende del catálogo, la conexión real, el modo y las evidencias.">
+  <Container header={<Header variant="h2">Cobertura del catálogo · agente {agent.name}</Header>}>
+   <SpaceBetween size="m">
+    <ColumnLayout columns={3}>
+     <div><Box color="text-body-secondary">A · Inferencia</Box><StatusIndicator type="success">Conectada (demo)</StatusIndicator></div>
+     <div><Box color="text-body-secondary">B · Tools MCP</Box><StatusIndicator type="stopped">No conectada</StatusIndicator></div>
+     <div><Box color="text-body-secondary">C · Usuario</Box><StatusIndicator type="stopped">No conectada · solo_workload</StatusIndicator></div>
+    </ColumnLayout>
+    <ProgressBar value={41} label="Máximo alcanzable con A en modo activo" additionalInfo="41 % del catálogo actual · referencia, no medición" description="Conexión A sin B ni C, catálogo completo aplicable" />
+    <Box color="text-body-secondary" fontSize="body-s">En descubrimiento los controles preventivos configurados «en sombra» no suman. Los porcentajes dependen de las conexiones, el modo, los controles aplicables y la evidencia de la ventana.</Box>
+   </SpaceBetween>
+  </Container>
+  <Panel title="Estado de los controles" info="La cobertura no es un porcentaje de seguridad absoluta: solo cuenta controles del catálogo del producto con evidencia válida.">
    <Table variant="embedded" items={[
-    {c:"Autenticación del agente",state:"Activo",reason:"agent_token verificado"},
-    {c:"Evidencia y flujo",state:"Activo",reason:"Índice durable"},
-    {c:"Políticas de tools",state:"En sombra",reason:"Se evalúan sin bloquear por política"},
-    {c:"Ejecución fuera de MCP",state:"No disponible",reason:"El agente ejecuta localmente"}
-   ]} columnDefinitions={[
-    {id:"c",header:"Control",cell:x=>x.c},{id:"state",header:"Estado",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":"stopped"}>{x.state}</StatusIndicator>},
-    {id:"reason",header:"Por qué",cell:x=>x.reason}
-   ]}/>
+     {c:"Autenticación de "+agent.name,state:"Activo",reason:"agent_token propio por agente; no compartido"},
+     {c:"Evidencia y flujo",state:"Activo",reason:"Índice durable"},
+     {c:"Políticas de tools",state:"En sombra",reason:"Solo observadas, sin denegación por política"},
+     {c:"Ejecución fuera de MCP",state:"No disponible",reason:"El agente ejecuta tools locales"}
+    ]} columnDefinitions={[
+     {id:"c",header:"Control",cell:x=>x.c},{id:"state",header:"Estado",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":"stopped"}>{x.state}</StatusIndicator>},
+     {id:"reason",header:"Por qué",cell:x=>x.reason}
+    ]}/>
   </Panel>
-  <Explanation type="warning">Fuera del perímetro: red/IAM del agente, autenticación usuario→agente y aviso final de IA.</Explanation>
+  {showExplanations&&<Alert type="warning">Máximos referenciales para controles aplicables con cobertura completa en activo: A 41 %, A+C 56 %, A+B 67 %, A+B+C 89 %. El 11 % restante está fuera del perímetro. No son resultados de pruebas ni puntuaciones de seguridad.</Alert>}
  </SpaceBetween>;
 }
 function Inventory(){
