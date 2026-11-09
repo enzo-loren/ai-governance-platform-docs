@@ -199,8 +199,7 @@ const SCENE={
     ['10:42:57','agente-demo','simulado',pill('Permitido','green'),'US$ 0,000',pill('Registrada','blue')],
     ['10:42:11','agente-demo','—',pill('Sin credencial','red'),'—',pill('Registrada','blue')]
    ],[13,18,26,20,12,16]))+
-  '<div class="m-tiles" style="margin-top:11px">'+mFact('Copia protegida','S3 Object Lock GOVERNANCE. La confirmación de la copia puede ser asíncrona.')+
-  mFact('Telemetría técnica','OTLP con gen_ai, trazas, métricas y logs. Sin secretos ni PII en claro.')+'</div>',
+  '<div class="m-section-note">Evidencia en S3 Object Lock GOVERNANCE · Telemetría OTLP sin secretos ni PII en claro</div>',
 
  's1-coverage':()=>mHeader('Tarjeta de gobernanza','agente-demo · Descubrimiento · Preset 1',badge('En descubrimiento','purple')+tip('Qué significa cobertura',explanations.coverage))+
   '<div class="m-grid three" style="margin-bottom:12px">'+
@@ -226,7 +225,7 @@ const SCENE={
    ['cambiar_fondo',pill('Crítica','amber'),'Pendiente de revisión','v1','Inferencia A'],
    ['procesar_lote',pill('Sin clasificar','red'),'Pendiente de revisión','v2','Inferencia A']
   ],[25,18,27,12,18]))+
-  '<div class="m-warning" style="margin-top:13px">S1 <b>no ejecuta</b> estas herramientas por la puerta. Solo registra intención y catálogo; el control real por MCP se incorpora en S4.</div>',
+  '<div class="m-section-note">Solo intención observada; ejecución MCP se incorpora en S4.</div>',
 
  's1-shadow':()=>mHeader('Detalle de decisión','TRACE-DEMO-0007 · inferencia · usuario no identificado',badge('En sombra','purple')+tip('Qué significa en sombra',explanations.shadow))+
   '<div class="m-grid three" style="margin-bottom:11px">'+kpi('Resultado del modelo','Conservado','ALLOW_SHADOW')+kpi('Costo','US$ 0,003','Ejemplo sintético')+kpi('Correlación','Trace ID','tool_call_id')+'</div>'+
@@ -255,8 +254,7 @@ const SCENE={
   '<div class="m-grid three" style="margin-bottom:14px">'+kpi('Costo del período','US$ 41','Presupuesto US$ 50')+kpi('Tokens','74.200','Máximo 100.000')+kpi('Solicitudes/min','28','Máximo 50')+'</div>'+
   panel('Presupuesto diario', '<div class="m-statline"><strong>US$ 41 de US$ 50</strong><span>82 % · alerta 80 %</span></div><div style="height:9px"></div>'+bar(82,'amber')+
    '<div style="display:flex;gap:8px;margin-top:13px">'+badge('50 %','green')+badge('80 %','amber')+badge('100 % · bloquear','red')+'</div>')+
-  '<div class="m-grid" style="margin-top:12px">'+panel('Acción por límite','<div class="m-rule"><span>Presupuesto USD</span>'+badge('Bloquear · 403','red')+'</div><div class="m-rule" style="margin-top:7px"><span>Solicitudes/minuto</span>'+badge('Throttling · 429','amber')+'</div>')+
-  panel('Seguimiento','<div class="m-rule"><span>Latencia gobierno p50/p95</span><strong>Medida</strong></div><div class="m-rule" style="margin-top:7px"><span>Tarifas por modelo</span><strong>Versionadas</strong></div>')+'</div>',
+  '<div class="m-rule" style="margin-top:9px"><span>Presupuesto: 403 bloqueo · Tasa: 429 throttling · Latencia p50/p95 medida</span>'+badge('Editable','blue')+'</div>',
 
  's3-identity':()=>mHeader('Identidad y resultados por rol','Conexión C · el usuario viaja en X-Gov-User-Token.',badge('C · opcional','purple')+tip('Autenticación del usuario','IDN-01: la puerta verifica la firma y claims del JWT enviado por el agente; no administra la autenticación entre usuario y aplicación cliente.'))+
   '<div class="m-grid" style="margin-bottom:11px">'+
@@ -273,8 +271,7 @@ const SCENE={
    ['elena.aprobadora','aprobador','2','US$ 17','US$ 20',pill('Alerta 80 %','amber')],
    ['solo_workload','agente','4','US$ 14','—',pill('Sin C','blue')]
   ],[24,17,16,15,13,15]))+
-  '<div class="m-grid" style="margin-top:12px">'+panel('Política de usuario','<div class="m-rule"><span>ana.consulta · presupuesto diario</span>'+badge('Solo alerta','blue')+'</div>')+
-   panel('Condición de medición','<div class="m-section-note">Usuario registrado solo con JWT válido. Los ejemplos no corresponden a usuarios reales.</div>')+'</div>',
+  '<div class="m-section-note">Los límites por persona se suman al límite por agente; sin JWT válido se registra solo_workload.</div>',
 
 
  's4-mcp':()=>mHeader('Tools por la puerta','Inventario S1 ampliado: ejecución y credenciales.',badge('B · parcial','amber')+tip('Cobertura parcial de B',explanations.mcp))+
@@ -285,12 +282,7 @@ const SCENE={
     ['eliminar_registro',pill('Crítica','red'),'Lambda MCP',pill('No aprobada','red'),pill('Bloqueada','red')],
     ['procesar_lote',pill('Sin clasificar','amber'),'Local',pill('Por revisar','amber'),pill('Fuera','amber')]
    ],[24,17,18,20,21]))+
-   '<div class="m-grid" style="margin-top:11px">'+
-    panel('Credenciales del destino '+tip('Bóveda de credenciales','PLT-02: AgentCore Identity o Secrets Manager. El agente no conoce la API key de la tool.'),
-       '<div class="m-rule"><span>Target OpenAPI · API key</span>'+badge('En bóveda','green')+'</div>')+
-    panel('Control de respuesta '+tip('Datos personales en MCP','GRD-04: la respuesta de tools/call se enmascara, salvo pii_access con C. El contenido de evidencia también se protege.'),
-       '<div class="m-rule"><span>tools/call · respuesta</span>'+badge('PII filtrada','blue')+'</div>')+
-   '</div>',
+   '<div class="m-section-note">API keys en AgentCore Identity / Secrets Manager · Respuestas MCP con PII enmascarada '+tip('Credenciales y PII','PLT-02 y GRD-04: secretos fuera del agente; respuesta de tools/call enmascarada según pii_access del usuario.')+'</div>',
 
  's4-policy':()=>mHeader('Constructor de reglas','Condiciones por parámetro · esquema validado.',btn('Guardar regla','primary')+tip('Una sola regla sobre dos canales','POL-04: se configura desde consola, valida parámetros tipados y se evalúa tanto en intención de tool (A) como en ejecución MCP (B).'))+
   '<div class="m-columns">'+
@@ -316,7 +308,7 @@ const SCENE={
   '<div class="m-section-note">Validación técnica asociada a S4: matriz versionada de ≥30 escenarios ALLOW/DENY con proveedor simulado (POL-02). No es una pantalla adicional del producto.</div>',
 
  's5-approvals':()=>mHeader('Aprobaciones','Solicitudes críticas retenidas; nunca ejecutadas por anticipado.',badge('2 pendientes','amber')+tip('Retención de operación',explanations.approval))+
-  '<div class="m-grid three" style="margin-bottom:12px">'+kpi('Pendientes','2','A la espera de aprobador')+kpi('Vencidas','1','Sin ejecución')+kpi('Plazo por defecto','15 min','Configurable por solicitud')+'</div>'+
+  
   '<div class="m-columns reverse">'+
     panel('Bandeja de trabajo', '<div class="m-event amber"><div><strong>APR-0042 · cambiar_fondo</strong><small>Diego · operador · 12 min</small></div>'+badge('Pendiente','amber')+'</div>'+
      '<div class="m-event amber"><div><strong>APR-0043 · procesar_lote</strong><small>solo_workload · 4 min</small></div>'+badge('Pendiente','amber')+'</div>'+
@@ -338,9 +330,7 @@ const SCENE={
    ['TRC-0122','agente-demo','solo_workload','eliminar_registro',pill('DENY','red'),'03 nov, 10:02'],
    ['TRC-0104','agente-demo','diego.operador','cambiar_fondo',pill('DENY','red'),'02 nov, 17:11']
   ],[17,17,18,21,13,14]))+
-  '<div class="m-tiles" style="margin-top:12px">'+
-   mFact('Consulta trazable','Cada resultado abre la ruta forense sin consultar manualmente DynamoDB o S3.')+
-   mFact('Acceso por rol','Auditor: solo lectura. No puede editar reglas ni aprobar solicitudes.')+'</div>',
+  '<div class="m-section-note">Desde un resultado se abre la ruta forense. Auditoría disponible en solo lectura.</div>',
 
  's6-forensic':()=>mHeader('Ruta forense','TRC-0137 · caso completo · correlación tool_call_id',badge('Evidencia S3','green')+tip('Prueba de inmutabilidad',explanations.immutable))+
   '<div class="m-grid" style="grid-template-columns:1.08fr .92fr">'+
@@ -357,7 +347,7 @@ const SCENE={
     panel('Sello Object Lock '+tip('Borrado de prueba','EVD-06: se intenta borrar el objeto con un rol sin permiso de bypass y se registra el rechazo S3. El botón es ilustrativo, no ejecuta AWS.'),
       '<div class="m-rule"><span>Object Lock · GOVERNANCE</span>'+badge('Retenido','green')+'</div>'+
       '<div class="m-statline" style="margin:10px 0"><span>Retención según configuración</span><span>S3 · evidencia JSON</span></div>'+
-      btn('Probar inmutabilidad','primary')+'<div class="m-good" style="margin-top:10px">Ejemplo esperado: S3 rechaza el borrado; el objeto permanece.</div>')+
+      btn('Probar inmutabilidad','primary'))+
    '</div></div>',
 
 
