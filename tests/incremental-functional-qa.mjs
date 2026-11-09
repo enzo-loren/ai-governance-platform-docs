@@ -104,7 +104,7 @@ try{
 
   await open("S4","s4-guide");
   content=await text();
-  assert(content.includes("Próximo paso")&&content.includes("Añadir B"),vp.name+" guía no propone aumento de cobertura");
+  assert(content.includes("Próximo paso")&&content.includes("Completar B")&&content.includes("Identidad C"),vp.name+" guía no prioriza integración pendiente");
   await screenshot("s4-guia");
 
   await open("S5","s5-approvals");
