@@ -190,7 +190,7 @@ function Application(){
                  <Box fontSize="body-s" color="text-body-secondary">
                    Requisitos relacionados: {active.requirements.join(" · ")} ·
                    {" "}<a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/requisitos.yaml" target="_blank" rel="noreferrer">Fuente normativa</a> ·
-                   {" "}<a href="https://github.com/enzo-loren/ai-governance-platform-docs/blob/feat/auditoria-progresion-vistas-s0-s6/src/console/editorial-board.json" target="_blank" rel="noreferrer">Pizarra completa</a>
+                   {" "}<a href="https://github.com/enzo-loren/ai-governance-platform-docs/blob/e24d1d197ec15ce62e2ca6381152fd3d64b04751/src/console/editorial-board.json" target="_blank" rel="noreferrer">Pizarra completa</a>
                  </Box>
                </SpaceBetween>
              </ExpandableSection>
