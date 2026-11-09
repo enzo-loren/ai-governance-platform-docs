@@ -33,7 +33,7 @@ function measureScene(){
  function c(n){return Math.round(n*10)/10}
  const bounds=app.getBoundingClientRect();
  const clipped=[];
- for(const element of app.querySelectorAll('.m-heading h3,.m-panel-title,.m-kpi strong,.m-table td,.m-rule strong,.m-field')){
+ for(const element of app.querySelectorAll('.m-heading h3,.m-panel-title,.m-kpi strong,.m-table td,.m-rule strong,.m-field,.m-rail-foot')){
   const rect=element.getBoundingClientRect();
   if(rect.right>bounds.right+2||rect.left<bounds.left-2||rect.bottom>bounds.bottom+2)clipped.push(element.textContent.trim().slice(0,80));
  }
