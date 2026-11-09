@@ -362,7 +362,7 @@ function setupEvents(){
  svg.addEventListener('click',e=>{if(e.target===svg||e.target.closest('#zones')||e.target.closest('#edges'))hideDetail()});
  frame.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?1.15:1/1.15,e.clientX,e.clientY)},{passive:false});
  frame.addEventListener('pointerdown',e=>{
-  if(e.target.closest('.node')||e.target.closest('#inspection'))return;
+  if(e.target.closest('.node')||e.target.closest('#node-inspector'))return;
   drag={x:e.clientX,y:e.clientY,oldX:view.x,oldY:view.y};
   frame.classList.add('dragging');frame.setPointerCapture(e.pointerId);
  });
