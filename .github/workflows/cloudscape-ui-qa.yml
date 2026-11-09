@@ -7,6 +7,7 @@ on:
       - feature/vista-limpia-explicaciones-opcionales
       - fix/cloudscape-bundle-versionado-vista-limpia
       - feat/selector-slices-por-pantalla-sin-lateral
+      - fix/agent-credentials-ui-completeness
     paths:
       - 'assets/slices.js'
       - 'assets/slices.css'
@@ -20,6 +21,7 @@ on:
       - 'scripts/stamp-console-assets.mjs'
       - 'tests/console-build-integrity.mjs'
       - 'tests/screen-versions-qa.mjs'
+      - 'tests/agent-credentials-qa.mjs'
       - 'assets/console-build/**'
       - 'assets/console-data.json'
       - 'index.html'
@@ -40,6 +42,7 @@ on:
       - 'scripts/stamp-console-assets.mjs'
       - 'tests/console-build-integrity.mjs'
       - 'tests/screen-versions-qa.mjs'
+      - 'tests/agent-credentials-qa.mjs'
       - 'assets/console-build/**'
       - 'assets/console-data.json'
       - 'index.html'
@@ -77,6 +80,8 @@ jobs:
         run: node tests/explanations-mode-qa.mjs
       - name: Verificar que cada pantalla tenga solo sus slices y no muestre el explorador
         run: node tests/screen-versions-qa.mjs
+      - name: Verificar ciclo de credenciales de agente y aislamiento A/B
+        run: node tests/agent-credentials-qa.mjs
       - name: Attach screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
@@ -87,4 +92,5 @@ jobs:
             artifacts/roadmap-v2/
             artifacts/explanations-mode/
             artifacts/screen-versions-qa/
+            artifacts/agent-security-qa/
           retention-days: 14
