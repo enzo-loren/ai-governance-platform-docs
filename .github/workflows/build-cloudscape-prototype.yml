@@ -6,6 +6,7 @@ on:
       - feature/vista-limpia-explicaciones-opcionales
       - fix/cloudscape-bundle-versionado-vista-limpia
       - feat/selector-slices-por-pantalla-sin-lateral
+      - feat/auditoria-integral-vistas-ux
     paths:
       - package.json
       - 'scripts/stamp-console-assets.mjs'
