@@ -153,12 +153,25 @@ function Approvals(){
  return <SpaceBetween size="l">
   <Alert type="info">Sesión simulada: Elena · rol aprobadora. El agent_token no es credencial para aprobar.</Alert>
   <ColumnLayout columns={2}>
-   <Table items={requests} trackBy="id" header={<Header variant="h2">Solicitudes</Header>}
+   <div className="desktop-table"><Table items={requests} trackBy="id" header={<Header variant="h2">Solicitudes</Header>}
     columnDefinitions={[
      {id:"name",header:"Operación",cell:x=><Button variant="link" onClick={()=>setSelected(x.id)}>{x.id} · {x.name}</Button>},
      {id:"state",header:"Estado",cell:x=><StatusIndicator type={status(x.id)==="Pendiente"?"pending":status(x.id)==="Vencida"?"warning":"success"}>{status(x.id)}</StatusIndicator>},
      {id:"time",header:"Plazo",cell:x=>x.time}
-    ]}/>
+    ]}/></div>
+   <div className="mobile-cards">
+    <Container header={<Header variant="h2">Solicitudes</Header>}>
+     <SpaceBetween size="s">
+      {requests.map(item=><div key={item.id} className="mobile-request">
+       <SpaceBetween size="xxs">
+        <Button variant="link" onClick={()=>setSelected(item.id)}>{item.id} · {item.name}</Button>
+        <StatusIndicator type={status(item.id)==="Pendiente"?"pending":status(item.id)==="Vencida"?"warning":"success"}>{status(item.id)}</StatusIndicator>
+        <Box fontSize="body-s" color="text-body-secondary">{item.time}</Box>
+       </SpaceBetween>
+      </div>)}
+     </SpaceBetween>
+    </Container>
+   </div>
    <Panel title={"Solicitud "+chosen.id} help="El sistema retiene la tool y devuelve PENDING_APPROVAL. Solo un humano autorizado puede aprobar; el originador no puede aprobar lo suyo.">
     <SpaceBetween size="m">
      <KeyValuePairs columns={2} items={[{label:"Tool",value:chosen.name},{label:"Originador",value:chosen.from},{label:"Monto",value:chosen.amount},{label:"Estado",value:status(chosen.id)}]}/>
