@@ -20,6 +20,7 @@ import Toggle from "@cloudscape-design/components/toggle";
 import Tabs from "@cloudscape-design/components/tabs";
 import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
 import {usePrototype,Explanation} from "./main.jsx";
+import {AgentEnrollment,AgentSelector,AgentCredentialControls,selectedFrom} from "./agent-credentials.jsx";
 
 const SIM="Simulación local: ningún dato fue guardado ni se invocó AWS.";
 const STATUS={
@@ -71,40 +72,9 @@ function SmallKpi({title,value,context}){
 const parseVal=x=>Number(String(x).replace(",","."));
 const selectOptions=(list)=>list.map(([value,label])=>({value,label}));
 function BasicAgents(){
- const {simulation,setSimulation,notify,helpOn,showExplanations}=usePrototype();
- const [agent,setAgent]=useState(simulation.agent);
- const [model,setModel]=useState({value:"bedrock-a",label:"Modelo del catálogo A"});
- const [created,setCreated]=useState(false);
- const models=selectOptions([["bedrock-a","Modelo del catálogo A"],["bedrock-b","Modelo del catálogo B"],["simulado","Modelo simulado (si se habilita)"]]);
- return <SpaceBetween size="l">
-  <Panel title="Nuevo agente" info="S0: registro, dueño y credencial. El agente nace en el modo inicial de la configuración.">
-   <ColumnLayout columns={2} variant="text-grid">
-    <SpaceBetween size="m">
-     <FormField label="Nombre del agente" description={showExplanations?"Identificador visible en la consola":undefined}>
-      <Input value={agent} onChange={({detail})=>setAgent(detail.value)} />
-     </FormField>
-     <FormField label="Modelo inicial" description={showExplanations?"Configurable desde el catálogo":undefined}>
-      <Select selectedOption={model} options={models} onChange={({detail})=>setModel(detail.selectedOption)}/>
-     </FormField>
-     <FormField label="Responsable"><Input readOnly value="Operador plataforma" /></FormField>
-     <SpaceBetween direction="horizontal" size="s">
-      <Button variant="primary" disabled={!agent.trim()} onClick={()=>{setSimulation(x=>({...x,agent:agent.trim()}));setCreated(true);notify("Agente creado en el prototipo. "+SIM);}}>Dar de alta</Button>
-      <Why title="Token del agente">El token real se muestra una sola vez, se almacena únicamente su hash y puede rotarse. Este prototipo usa una cadena ficticia sin validez.</Why>
-     </SpaceBetween>
-    </SpaceBetween>
-    <SpaceBetween size="m">
-     <Banner>Conexión A · Inferencia mediante OpenAI Chat Completions.</Banner>
-     <FormField label="BASE_URL"><Input readOnly value="{gateway}/inference/v1"/></FormField>
-     {created ? <>
-      <FormField label="agent_token (ficticio)"><Input readOnly value="gov_demo_sin_validez"/></FormField>
-      <CopyToClipboard textToCopy={'BASE_URL={gateway}/inference/v1\nAPI_KEY=gov_demo_sin_validez'} copyButtonText="Copiar ejemplo" copySuccessText="Ejemplo copiado" copyErrorText="No se pudo copiar"/>
-      <Alert type="success">Credencial de ejemplo creada. No se generó ni guardó un token real.</Alert>
-     </> : <Explanation>Al registrar el agente aparecerá una credencial de ejemplo. El token de producción se muestra una sola vez.</Explanation>}
-    </SpaceBetween>
-   </ColumnLayout>
-  </Panel>
- </SpaceBetween>;
+ return <AgentEnrollment/>;
 }
+
 function Live(){
  const {helpOn,navigate,slice}=usePrototype();
  const [paused,setPaused]=useState(false);
@@ -214,35 +184,99 @@ function Shadow(){
 function ActiveAgent(){
  const {simulation,setSimulation,notify,showExplanations}=usePrototype();
  const [dialog,setDialog]=useState(null);
- const mode=simulation.mode;
+ const selected=selectedFrom(simulation);
+ const mode=selected.mode;
+ const [modelEdit,setModelEdit]=useState(null);
+ const [presetEdit,setPresetEdit]=useState(null);
+ const models=selectOptions([["bedrock-a","Modelo del catálogo A"],["bedrock-b","Modelo del catálogo B"],["simulado","Simulado, si está disponible"]]);
+ const presets=selectOptions([["1","1 · Caja Negra Segura"],["2","2 · Operación Supervisada"],["3","3 · Blindaje Estricto"]]);
+ const model=selected.model||"bedrock-a";
+ const preset=selected.preset||"1";
+ const updateSelected=change=>{
+  setSimulation(prev=>{
+   const updated=prev.agentRegistry.map(x=>x.id===selected.id?{...x,...change}:x);
+   const next=updated.find(x=>x.id===selected.id);
+   return {...prev,agentRegistry:updated,agent:next.name,mode:next.mode};
+  });
+ };
  const apply=()=>{
-  const next=dialog==="activate"?"Activo":"Suspendido";
-  setSimulation(s=>({...s,mode:next}));notify("Modo "+next.toLowerCase()+" aplicado únicamente al prototipo. "+SIM);
+  if(dialog==="activate"&&!selected.owner){notify("El agente necesita un responsable antes de activarse.","error");return}
+  if(dialog==="retire"){
+   updateSelected({mode:"Retirado",tokens:selected.tokens.map(key=>({...key,status:"Revocada"}))});
+   notify("Agente retirado solo en la demostración: todas sus claves dejan de valer.");
+  }else if(dialog==="suspend"){
+   updateSelected({mode:"Suspendido",priorMode:mode});
+   notify("Agente "+selected.name+" suspendido en la demostración. Otros agentes no cambian.");
+  }else if(dialog==="activate"){
+   updateSelected({mode:"Activo"});
+   notify("Agente "+selected.name+" pasa a activo en la demostración.");
+  }else if(dialog==="resume"){
+   updateSelected({mode:selected.priorMode||"Descubrimiento"});
+   notify("Agente "+selected.name+" reactivado al modo anterior en demostración.");
+  }
   setDialog(null);
  };
+ const saveSettings=()=>{
+  updateSelected({model:modelEdit?.value||model,preset:presetEdit?.value||preset});
+  setModelEdit(null);setPresetEdit(null);
+  notify("Modelos y Preset del agente "+selected.name+" cambiados en DEMO. No se aplicaron a AWS.");
+ };
+ const options=modelEdit||models.find(x=>x.value===model)||models[0];
+ const policyOption=presetEdit||presets.find(x=>x.value===preset)||presets[0];
  return <SpaceBetween size="l">
-  <Panel title={simulation.agent} actions={<SpaceBetween direction="horizontal" size="s">
-   <Button onClick={()=>setSimulation(x=>({...x,presentation:!x.presentation}))}>{simulation.presentation?"Salir de presentación":"Modo presentación"}</Button>
-   {mode==="Descubrimiento"?<Button variant="primary" onClick={()=>setDialog("activate")}>Pasar a activo</Button>:null}
-   {mode==="Activo"?<Button onClick={()=>setDialog("suspend")}>Suspender agente</Button>:null}
-   {mode==="Suspendido"?<Button onClick={()=>{setSimulation(x=>({...x,mode:"Activo"}));notify("Agente reactivado en simulación.")}}>Reactivar</Button>:null}
-  </SpaceBetween>}>
-   <ColumnLayout columns={3}><SmallKpi title="Modo" value={mode} context="Estado simulado"/><SmallKpi title="Modelo permitido" value="1" context="Catálogo configurado"/><SmallKpi title="Preset" value="1" context="Caja Negra Segura"/></ColumnLayout>
-  </Panel>
-  <ColumnLayout columns={showExplanations?2:1}>
-   <Panel title="Impacto antes de activar" info="REG-01: el operador recibe las denegaciones que habrían ocurrido y la lista de tools sin clasificar antes de confirmar el cambio.">
-    <SpaceBetween size="m"><SmallKpi title="Denegaciones en sombra" value="3" context="Ventana de prueba"/><StatusIndicator type="warning">2 tools pendientes de revisión</StatusIndicator></SpaceBetween>
-   </Panel>
-   {showExplanations&&<Panel title="Qué cambia en modo activo"><SpaceBetween size="m">
-    <Decision state="Denegado" reason="Tool destructiva no permitida · Preset 1"/>
-    <Decision state="Denegado" reason="Modelo no habilitado por el agente"/>
-    <StatusIndicator type="error">Falla cerrada si falla el motor de políticas</StatusIndicator>
-   </SpaceBetween></Panel>}
-  </ColumnLayout>
-  <Modal visible={!!dialog} header={dialog==="activate"?"Confirmar paso a activo":"Suspender agente"} onDismiss={()=>setDialog(null)}
-   footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setDialog(null)}>Cancelar</Button><Button variant="primary" onClick={apply}>Confirmar simulación</Button></SpaceBetween></Box>}>
-    {dialog==="activate"?<Alert type="warning">3 solicitudes se habrían denegado y 2 tools están pendientes. El cambio real exigiría responsable y quedaría auditado.</Alert>:
-    <Alert type="warning">El Kill Switch real rechaza las solicitudes del agente en ≤60 segundos. En este prototipo solo cambiará la etiqueta.</Alert>}
+  <Container header={<Header variant="h2">Agente y operación</Header>}>
+   <SpaceBetween size="m">
+    <div className="gov-agent-picker"><AgentSelector/></div>
+    <ColumnLayout columns={4}>
+     <SmallKpi title="Estado" value={mode} context="Solo este agente"/>
+     <SmallKpi title="API keys vigentes" value={selected.tokens.filter(x=>x.status==="Activa").length.toString()} context="A y B comparten agent_token"/>
+     <SmallKpi title="Preset" value={preset} context="Configuración individual"/>
+     <SmallKpi title="Responsable" value={selected.owner||"Sin asignar"} context={selected.id}/>
+    </ColumnLayout>
+    <SpaceBetween direction="horizontal" size="s">
+     {mode==="Descubrimiento"&&<Button variant="primary" onClick={()=>setDialog("activate")}>Pasar a activo</Button>}
+     {mode!=="Suspendido"&&mode!=="Retirado"&&<Button onClick={()=>setDialog("suspend")}>Suspender agente</Button>}
+     {mode==="Suspendido"&&<Button onClick={()=>setDialog("resume")}>Reactivar agente</Button>}
+     {mode!=="Retirado"&&<Button onClick={()=>setDialog("retire")}>Retirar agente</Button>}
+     <Button onClick={()=>setSimulation(x=>({...x,presentation:!x.presentation}))}>{simulation.presentation?"Salir de presentación":"Modo presentación"}</Button>
+    </SpaceBetween>
+    {mode==="Suspendido"&&<Alert type="warning">Este agente está suspendido. En producción, sus inferencias y ejecuciones MCP deben recibir 403 en un máximo de 60 segundos. Los demás agentes siguen operando.</Alert>}
+    {mode==="Retirado"&&<Alert type="error">Agente retirado. Sus credenciales deben devolver 401 y su evidencia se conserva.</Alert>}
+    {mode!=="Retirado"&&<ColumnLayout columns={2}>
+     <FormField label="Modelo permitido" description={showExplanations?"Cambio individual de catálogo; se aplica en ≤10 s en el producto real.":undefined}>
+      <Select selectedOption={options} options={models} onChange={({detail})=>setModelEdit(detail.selectedOption)}/>
+     </FormField>
+     <FormField label="Preset de políticas">
+      <Select selectedOption={policyOption} options={presets} onChange={({detail})=>setPresetEdit(detail.selectedOption)}/>
+     </FormField>
+    </ColumnLayout>}
+    {mode!=="Retirado"&&<SpaceBetween size="s">
+     {policyOption.value==="2"&&<Alert type="warning">Preset 2 exige identidad C para escrituras y conexión B para aprobar herramientas críticas. Lo que falte se deniega con motivo explícito.</Alert>}
+     {policyOption.value==="3"&&<Alert type="warning">Preset 3 deniega por defecto hasta contar con reglas nominales por rol y tool.</Alert>}
+     <Button disabled={!modelEdit&&!presetEdit} onClick={saveSettings}>Guardar configuración (demo)</Button>
+    </SpaceBetween>}
+   </SpaceBetween>
+  </Container>
+  <AgentCredentialControls/>
+  <Container header={<Header variant="h2">Impacto de activar · datos de ejemplo</Header>}>
+   <ColumnLayout columns={2}>
+    <SmallKpi title="Decisiones que pasarían a denegado" value="3" context="Evaluadas en sombra"/>
+    <SmallKpi title="Tools pendientes de revisión" value="2" context="Revisar antes de activar"/>
+   </ColumnLayout>
+   {showExplanations&&<Box margin={{top:"s"}} color="text-body-secondary">La confirmación debe registrar responsable, actor, versión de la configuración y reglas. Los datos de impacto aquí son sintéticos.</Box>}
+  </Container>
+  <Modal visible={!!dialog} header={{activate:"Confirmar paso a activo",suspend:"Suspender solo este agente",resume:"Reactivar agente",retire:"Retirar agente"}[dialog]||"Confirmar"}
+   onDismiss={()=>setDialog(null)}
+   footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setDialog(null)}>Cancelar</Button><Button variant="primary" onClick={apply}>Confirmar (demo)</Button></SpaceBetween></Box>}>
+   <Alert type={dialog==="retire"?"error":"warning"}>
+    {dialog==="activate"
+     ?"Se aplicarían 3 denegaciones observadas en sombra; hay 2 tools pendientes. Solo cambia "+selected.name+"."
+     :dialog==="suspend"
+      ?"Las inferencias A y ejecuciones MCP B de "+selected.name+" deben responder 403 en ≤60 s. Ningún otro agente se suspende."
+      :dialog==="retire"
+       ?"Todas las claves de "+selected.name+" dejarán de funcionar con 401; su evidencia no se borrará. Los demás agentes conservan sus claves."
+       :"Se recupera el modo anterior de "+selected.name+", sin cambiar a otros agentes."}
+   </Alert>
   </Modal>
  </SpaceBetween>;
 }
