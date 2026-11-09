@@ -275,7 +275,91 @@ const SCENE={
   '<div class="m-grid" style="margin-top:12px">'+panel('Política de usuario','<div class="m-rule"><span>ana.consulta · presupuesto diario</span>'+badge('Solo alerta','blue')+'</div>')+
    panel('Condición de medición','<div class="m-section-note">Usuario registrado solo con JWT válido. Los ejemplos no corresponden a usuarios reales.</div>')+'</div>',
 
- // __SCENES__
+
+ 's4-mcp':()=>mHeader('Tools por la puerta','Inventario S1 ampliado: ejecución y credenciales.',badge('B · parcial','amber')+tip('Cobertura parcial de B',explanations.mcp))+
+   '<div class="m-grid three" style="margin-bottom:11px">'+kpi('Tools declaradas','4','Inferencia A')+kpi('Vía MCP','3 de 4','Solo 3 gobernadas')+kpi('Fuera de puerta','1','Ejecución no controlada')+'</div>'+
+   panel('Catálogo de tools y targets',table(['Tool','Clase','Destino','Aprobación','Ejecución'],[
+    ['consultar_ficha',pill('Lectura','green'),'Lambda MCP',pill('Aprobada','green'),pill('Gobernada','green')],
+    ['actualizar_precio',pill('Escritura','blue'),'OpenAPI MCP',pill('Aprobada','green'),pill('Gobernada','green')],
+    ['eliminar_registro',pill('Crítica','red'),'Lambda MCP',pill('No aprobada','red'),pill('Bloqueada','red')],
+    ['procesar_lote',pill('Sin clasificar','amber'),'Local',pill('Por revisar','amber'),pill('Fuera','amber')]
+   ],[24,17,18,20,21]))+
+   '<div class="m-grid" style="margin-top:11px">'+
+    panel('Credenciales del destino '+tip('Bóveda de credenciales','PLT-02: AgentCore Identity o Secrets Manager. El agente no conoce la API key de la tool.'),
+       '<div class="m-rule"><span>Target OpenAPI · API key</span>'+badge('En bóveda','green')+'</div>')+
+    panel('Control de respuesta '+tip('Datos personales en MCP','GRD-04: la respuesta de tools/call se enmascara, salvo pii_access con C. El contenido de evidencia también se protege.'),
+       '<div class="m-rule"><span>tools/call · respuesta</span>'+badge('PII filtrada','blue')+'</div>')+
+   '</div>',
+
+ 's4-policy':()=>mHeader('Constructor de reglas','Condiciones por parámetro · esquema validado.',btn('Guardar regla','primary')+tip('Una sola regla sobre dos canales','POL-04: se configura desde consola, valida parámetros tipados y se evalúa tanto en intención de tool (A) como en ejecución MCP (B).'))+
+  '<div class="m-columns">'+
+   panel('Nueva regla', '<div class="m-grid">'+field('Efecto','Denegar')+field('Tool','actualizar_precio')+
+    field('Parámetro numérico','descuento')+field('Condición','mayor que 10')+'</div>'+
+    '<div class="m-divider"></div><div class="m-rule"><span><b>DENEGAR</b> si descuento &gt; 10</span>'+badge('Borrador','amber')+'</div>'+
+    '<p class="m-section-note">Principal: operador · herramienta aprobada. Guardado genera una versión nueva.</p>')+
+   panel('Validación antes de aplicar','<div class="m-test-rows" style="grid-template-columns:repeat(2,minmax(0,1fr))">'+
+     '<div class="m-test"><small>descuento = 8</small><strong style="color:#087f68">ALLOW</strong><small>Condición falsa</small></div>'+
+     '<div class="m-test"><small>descuento = 25</small><strong style="color:#b64245">DENY</strong><small>Condición verdadera</small></div></div>'+
+     '<div class="m-divider"></div><div class="m-good">Parámetro declarado en el esquema JSON de la tool: número.</div>'+
+     '<div style="height:11px"></div>'+btn('Abrir editor Cedar')+
+     '<p class="m-section-note">Una regla inválida no se guarda. Su versión y autor se conservan.</p>')+
+  '</div>',
+
+ 's4-guide':()=>mHeader('Guía de conexión','El agente se integra por partes, en cualquier orden después de A.',badge('A + B parcial + C','blue')+tip('Conexión progresiva','OPS-01: muestra los pasos A/B/C y lo que habilita cada conexión. B y C son independientes y su cobertura real se mide, no se presume.'))+
+  '<div class="m-grid three" style="margin-bottom:12px">'+
+    panel('A · inferencia '+badge('Conectada','green'),'<div class="m-code" style="margin-top:6px;font-size:10px">BASE_URL={gateway}<br>/inference/v1</div><p class="m-section-note">Modelo, costo y tool_calls.</p>')+
+    panel('B · tools MCP '+badge('Parcial','amber'),'<div class="m-code" style="margin-top:6px;font-size:10px">MCP_URL={gateway}<br>/mcp</div><p class="m-section-note">3/4 tools usan la puerta.</p>')+
+    panel('C · identidad '+badge('Habilitada','green'),'<div class="m-code" style="margin-top:6px;font-size:10px">X-Gov-User-Token:<br>&lt;JWT OIDC válido&gt;</div><p class="m-section-note">Rol por solicitud.</p>')+
+  '</div>'+panel('Siguiente paso recomendado','<div class="m-rule"><span>Registrar procesar_lote como target MCP y aprobar su clasificación</span>'+btn('Ver instrucciones','primary')+'</div>'+
+    '<div class="m-hint" style="margin-top:11px">Una tool local sigue fuera de la puerta. No se contabiliza como gobernada por ejecución.</div>')+
+  '<div class="m-section-note">Validación técnica asociada a S4: matriz versionada de ≥30 escenarios ALLOW/DENY con proveedor simulado (POL-02). No es una pantalla adicional del producto.</div>',
+
+ 's5-approvals':()=>mHeader('Aprobaciones','Solicitudes críticas retenidas; nunca ejecutadas por anticipado.',badge('2 pendientes','amber')+tip('Retención de operación',explanations.approval))+
+  '<div class="m-grid three" style="margin-bottom:12px">'+kpi('Pendientes','2','A la espera de aprobador')+kpi('Vencidas','1','Sin ejecución')+kpi('Plazo por defecto','15 min','Configurable por solicitud')+'</div>'+
+  '<div class="m-columns reverse">'+
+    panel('Bandeja de trabajo', '<div class="m-event amber"><div><strong>APR-0042 · cambiar_fondo</strong><small>Diego · operador · 12 min</small></div>'+badge('Pendiente','amber')+'</div>'+
+     '<div class="m-event amber"><div><strong>APR-0043 · procesar_lote</strong><small>solo_workload · 4 min</small></div>'+badge('Pendiente','amber')+'</div>'+
+     '<div class="m-event"><div><strong>APR-0041 · transferir_fondos</strong><small>Venció · no ejecutada</small></div>'+badge('Vencida')+'</div>')+
+    panel('Solicitud APR-0042 '+tip('Separación de funciones','HITL-03: el originador no puede aprobar su propia solicitud. Sin C, un agent_token tampoco puede aprobar; sí puede un humano con rol aprobador.'),
+      '<div class="m-statline"><strong>cambiar_fondo</strong>'+badge('12 min restantes','amber')+'</div>'+
+      '<div class="m-divider"></div><div class="m-grid">'+
+      field('Agente','agente-demo')+field('Originador','Diego · operador')+
+      field('Parámetro','fondo = balanceado')+field('Estado','PENDING_APPROVAL')+'</div>'+
+      '<div class="m-warning" style="margin-top:12px">El originador no puede aprobar. Su herramienta todavía no se ha ejecutado.</div>'+
+      '<div class="m-tools" style="margin-top:13px">'+btn('Aprobar','primary')+btn('Rechazar','danger')+tip('Resultado en el protocolo','HITL-02: la aprobación válida ejecuta una sola vez; el agente recupera el resultado con gov_aprobacion_estado. Rechazar y vencer nunca ejecutan.')+'</div>')+
+  '</div>',
+
+ 's6-search':()=>mHeader('Buscar transacciones','Filtrar evidencia por varios criterios a la vez.',btn('Buscar','primary')+tip('Consulta del índice','EVD-02: filtros combinables por trace_id, usuario, agente, período, modelo, tool, decisión, canal y conexiones. Meta de respuesta < 5 s.'))+
+  '<div class="m-filter"><span>Agente: agente-demo</span><span>Usuario: todos</span><span>Decisión: DENY</span><span>Canal: todos</span></div>'+
+  '<div class="m-filter"><span>Período: últimos 7 días</span><span>Modelo: todos</span><span>Tool: todas</span><span>Conexiones: A/B/C</span></div>'+
+  panel('Resultados de la búsqueda',table(['Trace ID','Agente','Usuario','Tool / modelo','Decisión','Fecha'],[
+   ['TRC-0137','agente-demo','ana.consulta','actualizar_precio',pill('DENY','red'),'03 nov, 10:44'],
+   ['TRC-0122','agente-demo','solo_workload','eliminar_registro',pill('DENY','red'),'03 nov, 10:02'],
+   ['TRC-0104','agente-demo','diego.operador','cambiar_fondo',pill('DENY','red'),'02 nov, 17:11']
+  ],[17,17,18,21,13,14]))+
+  '<div class="m-tiles" style="margin-top:12px">'+
+   mFact('Consulta trazable','Cada resultado abre la ruta forense sin consultar manualmente DynamoDB o S3.')+
+   mFact('Acceso por rol','Auditor: solo lectura. No puede editar reglas ni aprobar solicitudes.')+'</div>',
+
+ 's6-forensic':()=>mHeader('Ruta forense','TRC-0137 · caso completo · correlación tool_call_id',badge('Evidencia S3','green')+tip('Prueba de inmutabilidad',explanations.immutable))+
+  '<div class="m-grid" style="grid-template-columns:1.08fr .92fr">'+
+   panel('Secuencia de una transacción','<div class="m-list">'+
+    '<div class="m-list-item"><span class="m-marker">1</span><div><strong>Solicitud del usuario</strong><div class="m-section-note">ana.consulta → agente-demo · JWT verificado</div></div></div>'+
+    '<div class="m-list-item"><span class="m-marker">2</span><div><strong>Modelo sugiere actualizar_precio</strong><div class="m-section-note">tool_call_id call_29 · descuento 25</div></div></div>'+
+    '<div class="m-list-item"><span class="m-marker">3</span><div><strong>Denegación Cedar</strong><div class="m-section-note">regla descuento_máximo · v3 · DENY</div></div></div>'+
+    '<div class="m-list-item"><span class="m-marker">4</span><div><strong>Respuesta gobernada</strong><div class="m-section-note">Sin tool_call denegado · evidencia sellada</div></div></div>'+
+    '</div>')+
+   '<div class="m-stack">'+
+    panel('Regla y autor '+tip('Versión exacta','EVD-03: la transacción conserva la versión de reglas y configuración con la que se decidió, aunque luego se hayan modificado.'),
+      '<div class="m-rule"><div><strong>descuento_máximo · v3</strong><div class="m-section-note">DENY si descuento &gt; 10</div></div>'+badge('Aplicada','red')+'</div>'+
+      '<div class="m-section-note">Creada por operador plataforma · historial versionado.</div>')+
+    panel('Sello Object Lock '+tip('Borrado de prueba','EVD-06: se intenta borrar el objeto con un rol sin permiso de bypass y se registra el rechazo S3. El botón es ilustrativo, no ejecuta AWS.'),
+      '<div class="m-rule"><span>Object Lock · GOVERNANCE</span>'+badge('Retenido','green')+'</div>'+
+      '<div class="m-statline" style="margin:10px 0"><span>Retención según configuración</span><span>S3 · evidencia JSON</span></div>'+
+      btn('Probar inmutabilidad','primary')+'<div class="m-good" style="margin-top:10px">Ejemplo esperado: S3 rechaza el borrado; el objeto permanece.</div>')+
+   '</div></div>',
+
+
 };
 init();
 })();
