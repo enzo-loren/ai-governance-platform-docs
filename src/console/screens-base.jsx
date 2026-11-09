@@ -174,6 +174,7 @@ function Inventory(){
     <SmallKpi title="Revisadas" value={String(reviewed)} context="Confirmadas por operador (demo)"/>
    </ColumnLayout>
   </Panel>
+  <div className="desktop-table">
   <Table items={items} trackBy="id" header={<Header variant="h2">Inventario de tools</Header>}
    filter={<TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Filtrar por nombre"/>}
    columnDefinitions={[
@@ -183,6 +184,19 @@ function Inventory(){
     {id:"state",header:"Clasificación",cell:tool=><StatusIndicator type={tool.status==="Revisada"?"success":"warning"}>{tool.status==="Revisada"?"Revisada":"Sugerida · revisar"}</StatusIndicator>},
     {id:"coverage",header:"Ejecución",cell:()=><StatusIndicator type="stopped">Fuera de MCP</StatusIndicator>}
    ]}/>
+  </div>
+  <div className="mobile-cards">
+   <SpaceBetween size="s">
+    <TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Buscar tool"/>
+    {items.map(tool=><Container key={tool.id} header={<Header variant="h3" actions={<Button onClick={()=>open(tool)}>Revisar</Button>}>{tool.id}</Header>}>
+     <SpaceBetween size="s">
+      <KeyValuePairs columns={2} items={[{label:"Clase",value:tool.kind},{label:"Esquema",value:tool.schema}]}/>
+      <StatusIndicator type={tool.status==="Revisada"?"success":"warning"}>{tool.status==="Revisada"?"Clasificación revisada":"Clase sugerida"}</StatusIndicator>
+      <Box color="text-body-secondary" fontSize="body-s">Ejecución fuera de MCP</Box>
+     </SpaceBetween>
+    </Container>)}
+   </SpaceBetween>
+  </div>
   <Explanation>En S1 se observa la intención del modelo, no la ejecución local. En S4 las tools que pasan por MCP pueden gobernarse también al ejecutarse. La aprobación de una tool es independiente de revisar su clase.</Explanation>
   <Modal visible={!!selected} header={selected?.id||"Revisar clasificación"} onDismiss={()=>setSelected(null)}
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s">
