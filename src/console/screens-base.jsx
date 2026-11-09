@@ -22,6 +22,7 @@ import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
 import ExpandableSection from "@cloudscape-design/components/expandable-section";
 import {usePrototype,Explanation} from "./main.jsx";
 import {AgentEnrollment,AgentSelector,AgentCredentialControls,selectedFrom} from "./agent-credentials.jsx";
+import {mcpFor,approvalsFor,supervisionFor} from "./agent-tool-state.js";
 
 const SIM="Simulación local: ningún dato fue guardado ni se invocó AWS.";
 const STATUS={
@@ -186,7 +187,7 @@ function Coverage(){
  const agent=selectedFrom(simulation);
  const rank=Number(slice.slice(1));
  const hasB=rank>=4,hasC=rank>=3;
- const bCount=hasB?simulation.toolsMcp.length:0;
+ const bCount=hasB?mcpFor(simulation,agent.id).length:0;
  const max=hasB?(hasC?89:67):(hasC?56:41);
  const noData=evidence.value!=="observado";
  const outcomes=[
@@ -250,8 +251,12 @@ function Coverage(){
 }
 
 function Inventory(){
- const {notify,simulation,setSimulation}=usePrototype();
+ const {notify,simulation,setSimulation,slice,navigate}=usePrototype();
  const currentAgent=selectedFrom(simulation);
+ const rank=Number(slice.slice(1));
+ const mcp=rank>=4?mcpFor(simulation,currentAgent.id):[];
+ const approved=rank>=4?approvalsFor(simulation,currentAgent.id):[];
+ const supervision=rank>=5?supervisionFor(simulation,currentAgent.id):{};
  const [filter,setFilter]=useState("");
  const [selected,setSelected]=useState(null);
  const toolKey=id=>currentAgent.id+":"+id;
@@ -281,7 +286,7 @@ function Inventory(){
  };
  return <SpaceBetween size="l">
   <AgentSelector/>
-  <Panel title="Descubrimiento de herramientas" info="INF-02: cada declaración de tools se cataloga por agente y versión de esquema; la clase automática es sugerida, no una aprobación.">
+  <Panel title="Descubrimiento de herramientas" info="INF-02: cada declaración de tools se cataloga por agente y versión de esquema; la clase automática es sugerida, no una aprobación." actions={rank>=4?<Button onClick={()=>navigate("s4-mcp")}>Administrar ejecución MCP</Button>:undefined}>
    <ColumnLayout columns={3}>
     <SmallKpi title="Detectadas" value="4" context="Inferencias simuladas"/>
     <SmallKpi title="Sin clasificar" value={String(unclassified)} context="Requieren revisión"/>
@@ -296,7 +301,8 @@ function Inventory(){
     {id:"kind",header:"Clase",cell:tool=>tool.kind},
     {id:"schema",header:"Esquema",cell:tool=>tool.schema},
     {id:"state",header:"Clasificación",cell:tool=><StatusIndicator type={tool.status==="Revisada"?"success":"warning"}>{tool.status==="Revisada"?"Revisada":"Sugerida · revisar"}</StatusIndicator>},
-    {id:"coverage",header:"Ejecución",cell:()=><StatusIndicator type="stopped">Fuera de MCP</StatusIndicator>}
+    {id:"coverage",header:"Ejecución",cell:tool=><StatusIndicator type={mcp.includes(tool.id)?"success":"stopped"}>{mcp.includes(tool.id)?"Por MCP":"Fuera de MCP"}</StatusIndicator>},
+    ...(rank>=4?[{id:"approval",header:"Aprobación",cell:tool=><StatusIndicator type={approved.includes(tool.id)?"success":"warning"}>{approved.includes(tool.id)?"Aprobada":"Pendiente"}</StatusIndicator>}]:[])
    ]}/>
   </div>
   <div className="mobile-cards">
@@ -306,12 +312,15 @@ function Inventory(){
      <SpaceBetween size="s">
       <KeyValuePairs columns={2} items={[{label:"Clase",value:tool.kind},{label:"Esquema",value:tool.schema}]}/>
       <StatusIndicator type={tool.status==="Revisada"?"success":"warning"}>{tool.status==="Revisada"?"Clasificación revisada":"Clase sugerida"}</StatusIndicator>
-      <Box color="text-body-secondary" fontSize="body-s">Ejecución fuera de MCP</Box>
+      <StatusIndicator type={mcp.includes(tool.id)?"success":"stopped"}>{mcp.includes(tool.id)?"Ejecución por MCP":"Ejecución fuera de MCP"}</StatusIndicator>
+      {rank>=4&&<StatusIndicator type={approved.includes(tool.id)?"success":"warning"}>{approved.includes(tool.id)?"Aprobada":"Pendiente de aprobación"}</StatusIndicator>}
+      {rank>=5&&<Box fontSize="body-s">Supervisión: {supervision[tool.id]||"Autónoma"}</Box>}
      </SpaceBetween>
     </Container>)}
    </SpaceBetween>
   </div>
-  <Explanation>En S1 se observa la intención del modelo, no la ejecución local. En S4 las tools que pasan por MCP pueden gobernarse también al ejecutarse. La aprobación de una tool es independiente de revisar su clase.</Explanation>
+  {rank>=4&&<Button variant="link" onClick={()=>navigate("s4-mcp")}>Ver destinos y ejecución por MCP</Button>}
+  <Explanation>El catálogo sigue disponible al conectar B. A descubre la intención del modelo; B gobierna la ejecución únicamente de las tools centralizadas. Clasificar una herramienta no la aprueba.</Explanation>
   <Modal visible={!!selected} header={selected?.id||"Revisar clasificación"} onDismiss={()=>setSelected(null)}
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s">
     <Button onClick={()=>setSelected(null)}>Cancelar</Button>
@@ -355,7 +364,7 @@ function Shadow(){
  </SpaceBetween>;
 }
 function ActiveAgent(){
- const {simulation,setSimulation,notify,showExplanations}=usePrototype();
+ const {simulation,setSimulation,notify,showExplanations,navigate}=usePrototype();
  const [dialog,setDialog]=useState(null);
  const selected=selectedFrom(simulation);
  const mode=selected.mode;
@@ -400,6 +409,7 @@ function ActiveAgent(){
   <Container header={<Header variant="h2">Agente y operación</Header>}>
    <SpaceBetween size="m">
     <div className="gov-agent-picker"><AgentSelector/></div>
+    <Button variant="link" onClick={()=>navigate("s0-connect")}>Volver al listado de agentes</Button>
     <ColumnLayout columns={4}>
      <SmallKpi title="Estado" value={mode} context="Solo este agente"/>
      <SmallKpi title="API keys vigentes" value={selected.tokens.filter(x=>x.status==="Activa").length.toString()} context="Solo este agente"/>
