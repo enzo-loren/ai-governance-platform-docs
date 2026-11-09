@@ -34,8 +34,11 @@ const STATUS={
  "Registrada":"success",
  "Vencida":"warning"
 };
+function ShadowLabel(){
+ return <span className="governance-shadow"><svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.8"/></svg>En sombra</span>;
+}
 function Decision({state,reason}){
- return <SpaceBetween size="xxs"><StatusIndicator type={STATUS[state]||"info"}>{state}</StatusIndicator>{reason&&<Box color="text-body-secondary" fontSize="body-s">{reason}</Box>}</SpaceBetween>;
+ return <SpaceBetween size="xxs">{state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={STATUS[state]||"info"}>{state}</StatusIndicator>}{reason&&<Box color="text-body-secondary" fontSize="body-s">{reason}</Box>}</SpaceBetween>;
 }
 function Why({title,children}){
  const {helpOn}=usePrototype();
@@ -91,9 +94,11 @@ function BasicAgents(){
     <SpaceBetween size="m">
      <Banner>Conexión A · Inferencia mediante OpenAI Chat Completions.</Banner>
      <FormField label="BASE_URL"><Input readOnly value="{gateway}/inference/v1"/></FormField>
-     <FormField label="agent_token (ficticio)"><Input readOnly value="gov_demo_sin_validez"/></FormField>
-     <CopyToClipboard textToCopy={'BASE_URL={gateway}/inference/v1\nAPI_KEY=gov_demo_sin_validez'} copyButtonText="Copiar ejemplo" copySuccessText="Ejemplo copiado" copyErrorText="No se pudo copiar"/>
-     {created&&<Alert type="success">Alta simulada. No se ha generado ni guardado un token real.</Alert>}
+     {created ? <>
+      <FormField label="agent_token (ficticio)"><Input readOnly value="gov_demo_sin_validez"/></FormField>
+      <CopyToClipboard textToCopy={'BASE_URL={gateway}/inference/v1\nAPI_KEY=gov_demo_sin_validez'} copyButtonText="Copiar ejemplo" copySuccessText="Ejemplo copiado" copyErrorText="No se pudo copiar"/>
+      <Alert type="success">Ejemplo de credencial visible tras el alta simulada. No se generó ni guardó un token real.</Alert>
+     </> : <Alert type="info">Al dar de alta el agente aparecerá la credencial de demostración. En el sistema real se muestra una sola vez.</Alert>}
     </SpaceBetween>
    </ColumnLayout>
   </Panel>
@@ -154,7 +159,7 @@ function Coverage(){
     {c:"Políticas de tools",state:"En sombra",reason:"Se evalúan sin bloquear por política"},
     {c:"Ejecución fuera de MCP",state:"No disponible",reason:"El agente ejecuta localmente"}
    ]} columnDefinitions={[
-    {id:"c",header:"Control",cell:x=>x.c},{id:"state",header:"Estado",cell:x=><StatusIndicator type={x.state==="Activo"?"success":x.state==="En sombra"?"info":"stopped"}>{x.state}</StatusIndicator>},
+    {id:"c",header:"Control",cell:x=>x.c},{id:"state",header:"Estado",cell:x=>{x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":"stopped"}>{x.state}</StatusIndicator>}},
     {id:"reason",header:"Por qué",cell:x=>x.reason}
    ]}/>
   </Panel>
@@ -196,7 +201,7 @@ function Shadow(){
  return <SpaceBetween size="l">
   <Panel title="Historia de la transacción">
    <SpaceBetween size="s">{history.map(x=><div key={x.id} className={"step-entry "+(selected===x.id?"selected":"")}>
-    <Button variant="link" onClick={()=>setSelected(x.id)}>{x.n}</Button><Decision state={x.state} reason={x.why}/>
+    <Button variant="link" onClick={()=>setSelected(x.id)}>{x.n}</Button><Decision state={x.state} reason={x.why}/>{x.id==="pii"&&<Badge color="blue">PII enmascarada</Badge>}
    </div>)}</SpaceBetween>
   </Panel>
   <Panel title="Detalle de la evaluación">
@@ -216,6 +221,7 @@ function ActiveAgent(){
  };
  return <SpaceBetween size="l">
   <Panel title={simulation.agent} actions={<SpaceBetween direction="horizontal" size="s">
+   <Button onClick={()=>setSimulation(x=>({...x,presentation:!x.presentation}))}>{simulation.presentation?"Salir de presentación":"Modo presentación"}</Button>
    {mode==="Descubrimiento"?<Button variant="primary" onClick={()=>setDialog("activate")}>Pasar a activo</Button>:null}
    {mode==="Activo"?<Button onClick={()=>setDialog("suspend")}>Suspender agente</Button>:null}
    {mode==="Suspendido"?<Button onClick={()=>{setSimulation(x=>({...x,mode:"Activo"}));notify("Agente reactivado en simulación.")}}>Reactivar</Button>:null}
