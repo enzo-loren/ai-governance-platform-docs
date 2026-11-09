@@ -109,13 +109,19 @@ export function AgentEnrollment(){
   <Container header={<Header variant="h2" description={showExplanations?"Credenciales existentes ocultas: solo puede verse una nueva al emitirla.":undefined}>Agentes registrados</Header>}>
    <SpaceBetween size="m">
     <FormField label="Filtrar agentes"><Input ariaLabel="Filtrar agentes" value={lookup} onChange={({detail})=>setLookup(detail.value)} placeholder="Buscar por nombre"/></FormField>
-    <Table items={filtered} trackBy="id" variant="embedded" empty={<Box color="text-body-secondary">No hay agentes con ese nombre.</Box>} columnDefinitions={[
+    <div className="desktop-table"><Table items={filtered} trackBy="id" variant="embedded" empty={<Box color="text-body-secondary">No hay agentes con ese nombre.</Box>} columnDefinitions={[
      {id:"name",header:"Agente",cell:x=><Button variant="link" onClick={()=>setSimulation(prev=>({...prev,selectedAgentId:x.id,agent:x.name,mode:x.mode}))}>{x.name}</Button>},
      {id:"owner",header:"Responsable",cell:x=>x.owner},
      {id:"mode",header:"Modo",cell:x=>x.mode},
      {id:"credentials",header:"API keys activas",cell:x=>activeCount(x)},
      {id:"id",header:"Identidad",cell:x=><Box fontFamily="monospace" fontSize="body-s">{x.id}</Box>}
-    ]}/>
+    ]}/></div>
+    <div className="mobile-cards"><SpaceBetween size="s">
+     {filtered.map(x=><Container key={x.id} header={<Header variant="h3" actions={<Button onClick={()=>setSimulation(prev=>({...prev,selectedAgentId:x.id,agent:x.name,mode:x.mode}))}>Seleccionar</Button>}>{x.name}</Header>}>
+      <KeyValuePairs columns={2} items={[{label:"Responsable",value:x.owner},{label:"Modo",value:x.mode},{label:"Claves vigentes",value:String(activeCount(x))},{label:"Identidad",value:x.id}]}/>
+     </Container>)}
+     {!filtered.length&&<Box color="text-body-secondary">No hay agentes con ese nombre.</Box>}
+    </SpaceBetween></div>
     <Explanation>Las claves existentes no pueden recuperarse. Puedes rotarlas o revocarlas abajo desde S0; la suspensión individual se incorpora en S2.</Explanation>
     {agent&&<KeyValuePairs columns={2} items={[{label:"Agente seleccionado",value:agent.name},{label:"Credencial vigente",value:agent.tokens.filter(x=>x.status==="Activa").map(x=>"•••• "+x.suffix).join(" / ")||"Ninguna"}]}/>}
    </SpaceBetween>
