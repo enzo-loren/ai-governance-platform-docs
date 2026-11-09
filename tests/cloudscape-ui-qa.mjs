@@ -127,11 +127,20 @@ try{
    "S0: la clave emitida se quedó visible después de cerrar la entrega única");
  await enter("S2","s2-activate");
  await interactive.getByRole("button",{name:"Modo presentación"}).click();
- check(await interactive.locator(".presentation-mode").count()===1,
-   "S2: modo presentación debe modificar el layout");
- await interactive.getByRole("button",{name:"Salir de presentación"}).click();
- check(await interactive.locator(".presentation-mode").count()===0,
-   "S2: presentación debe poder cerrarse");
+ check(await interactive.getByTestId("presentation-stage").count()===1,
+   "S2: modo presentación debe ser una escena independiente, no CSS de zoom");
+ check(await interactive.getByRole("heading",{name:"Del descubrimiento al control"}).count()===1,
+   "S2: escena no describe el recorrido de modo activo");
+ check(await interactive.locator(".prototype-controls").count()===0,
+   "S2: pantalla de proyección conserva formularios o selector de slice");
+ await interactive.getByRole("button",{name:"Siguiente"}).click();
+ check(await interactive.getByRole("heading",{name:"La decisión pasa a ser exigible"}).count()===1,
+   "S2: los pasos de la presentación no son navegables");
+ await interactive.getByRole("button",{name:"Volver a la consola"}).click();
+ check(await interactive.getByTestId("presentation-stage").count()===0,
+   "S2: no se puede volver al modo operativo");
+ check(await interactive.getByRole("button",{name:"Modo presentación"}).count()===1,
+   "S2: el control de entrada no se restauró");
  await enter("S3","s3-identity");
  const beforeIdentity=await interactive.locator("#console-content").innerText();
  await interactive.getByText("Ana · consulta",{exact:true}).first().click();
