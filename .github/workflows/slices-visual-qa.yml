@@ -1,0 +1,36 @@
+name: Slice screens visual QA
+on:
+  push:
+    branches:
+      - feature/roadmap-vistas-incrementales-slices
+  pull_request:
+    paths:
+      - index.html
+      - 'assets/slices.css'
+      - 'assets/slices.js'
+      - 'tests/slices-visual-qa.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser and runner
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run real browser visual suite
+        run: node tests/slices-visual-qa.mjs
+      - name: Upload reviewed screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slices-visual-qa
+          path: artifacts/slices-visual/
+          retention-days: 14
