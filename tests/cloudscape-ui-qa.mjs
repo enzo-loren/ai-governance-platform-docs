@@ -24,9 +24,9 @@ try{
   const errs=[];
   page.on("pageerror",e=>errs.push(e.message));
   for(const [slice,view] of views){
-   await page.goto(route(slice,view),{waitUntil:"load"});
-   try {await page.locator("#governance-root h1").first().waitFor({timeout:12000})}
-   catch(e){failures.push(vp.id+"/"+view+" no se renderiza h1 · "+e.message.slice(0,180));continue}
+   console.log("Testing",vp.id,slice,view); await page.goto(route(slice,view),{waitUntil:"domcontentloaded",timeout:15000});
+   try {await page.locator("#governance-root h1").first().waitFor({timeout:6500})}
+   catch(e){failures.push(vp.id+"/"+view+" no se renderiza h1 · "+e.message.slice(0,180));throw e}
    const data=await page.evaluate(()=>{
     const root=document.querySelector("#governance-root"), h=document.querySelector("h1");
     const content=document.querySelector("#console-content");
