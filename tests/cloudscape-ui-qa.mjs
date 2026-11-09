@@ -43,6 +43,11 @@ try{
    check(data.cloudscape>10,vp.id+"/"+view+" no usa componentes reales Cloudscape: "+data.cloudscape);
    check(data.hasLayout,vp.id+"/"+view+" no tiene Layout");
    check(data.pageOverflow<6,vp.id+"/"+view+" overflow horizontal "+data.pageOverflow+"px");
+   if(vp.id==="mobile"&&view==="s5-approvals"){
+     const mobile=await page.locator(".mobile-cards .mobile-request").count();
+     check(mobile===3,"S5 móvil: deben existir tres tarjetas de aprobaciones en lugar de la tabla comprimida");
+     check(!await page.locator(".desktop-table").isVisible(),"S5 móvil: tabla de escritorio debe ocultarse");
+   }
    records.push({viewport:vp.id,slice,view,...data});
    if(vp.id==="desktop"||["s0-connect","s4-mcp","s5-approvals","s6-forensic"].includes(view)){
     await page.screenshot({path:out+"/"+vp.id+"-"+view+".png",fullPage:true});
