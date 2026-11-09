@@ -8,6 +8,7 @@ on:
       - fix/cloudscape-bundle-versionado-vista-limpia
       - feat/selector-slices-por-pantalla-sin-lateral
       - fix/agent-credentials-ui-completeness
+      - feat/auditoria-integral-vistas-ux
     paths:
       - 'assets/slices.js'
       - 'assets/slices.css'
