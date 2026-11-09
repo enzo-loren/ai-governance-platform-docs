@@ -50,27 +50,54 @@ function MCP(){
  const {simulation,setSimulation,notify,helpOn,showExplanations}=usePrototype();
  const [filter,setFilter]=useState("");
  const [row,setRow]=useState(null);
+ const [approved,setApproved]=useState(["consultar_ficha","actualizar_precio"]);
+ const [targetName,setTargetName]=useState("");
+ const [targetType,setTargetType]=useState({value:"lambda",label:"AWS Lambda"});
+ const [targetModal,setTargetModal]=useState(false);
+ const [targets,setTargets]=useState([
+  {id:"lambda-demo",type:"AWS Lambda",secret:"IAM / AgentCore Identity",status:"Registrado (demo)"},
+  {id:"openapi-demo",type:"OpenAPI HTTPS",secret:"API key / Secrets Manager",status:"Registrado (demo)"}
+ ]);
  const mcp=simulation.toolsMcp;
  const filtered=tools.filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
  const toggle=(id,checked)=>{
-  setSimulation(v=>({...v,toolsMcp:checked?[...new Set([...v.toolsMcp,id])]:v.toolsMcp.filter(name=>name!==id)}));
-  notify("Cobertura MCP modificada solo en esta demostración.");
+  setSimulation(prev=>({...prev,toolsMcp:checked?[...new Set([...prev.toolsMcp,id])]:prev.toolsMcp.filter(name=>name!==id)}));
+  notify("Cobertura MCP de la demostración actualizada.");
  };
- const decision=x=>mcp.includes(x.id)?x.when:"Fuera de la puerta";
+ const decision=x=>!mcp.includes(x.id)?"Fuera de la puerta":approved.includes(x.id)?"Permitido":"Denegado";
+ const register=()=>{
+  if(!targetName.trim())return;
+  if(targets.some(x=>x.id.toLowerCase()===targetName.trim().toLowerCase())){notify("Ya existe un target con ese nombre.","error");return}
+  setTargets(old=>[...old,{id:targetName.trim(),type:targetType.label,secret:targetType.value==="lambda"?"IAM / AgentCore Identity":"Secrets Manager",status:"Registrado (demo)"}]);
+  setTargetName("");setTargetModal(false);
+  notify("Target registrado en la demostración. No se creó ningún recurso AWS.");
+ };
  return <SpaceBetween size="l">
   <ColumnLayout columns={3}>
    <Panel title="Tools declaradas"><div className="kpi-value">4</div><Box color="text-body-secondary">En inferencia A</Box></Panel>
    <Panel title="Tools por MCP"><div className="kpi-value">{mcp.length} de 4</div><Box color="text-body-secondary">Cobertura B parcial</Box></Panel>
    <Panel title="Fuera de la puerta"><div className="kpi-value">{4-mcp.length}</div><Box color="text-body-secondary">Ejecución no gobernada</Box></Panel>
   </ColumnLayout>
+  <Container header={<Header variant="h2" actions={<Button onClick={()=>setTargetModal(true)}>Registrar target (demo)</Button>}>Targets MCP y credenciales de destino</Header>}>
+   <SpaceBetween size="m">
+    <Table variant="embedded" items={targets} trackBy="id" columnDefinitions={[
+     {id:"target",header:"Target",cell:x=>x.id},
+     {id:"type",header:"Tipo",cell:x=>x.type},
+     {id:"secret",header:"Autenticación hacia el target",cell:x=>x.secret},
+     {id:"status",header:"Estado",cell:x=><StatusIndicator type="success">{x.status}</StatusIndicator>}
+    ]}/>
+    <Box color="text-body-secondary" fontSize="body-s">Una credencial de target no es el agent_token. El agente presenta su propia key para A y B; la puerta inyecta las credenciales de Lambda/OpenAPI sin exponerlas al agente.</Box>
+   </SpaceBetween>
+  </Container>
   <div className="desktop-table">
    <Table items={filtered} trackBy="id"
-    header={<Header variant="h2" info={showExplanations?<Button variant="link" onClick={()=>helpOn("Cobertura B","B gobierna la ejecución exclusivamente de tools invocadas por targets MCP. Las tools locales permanecen fuera de la puerta.")}>¿Qué cubre B?</Button>:undefined}>Herramientas y destinos</Header>}
+    header={<Header variant="h2" info={showExplanations?<Button variant="link" onClick={()=>helpOn("Cobertura B","La ejecución solo se controla si la tool pasa por un target MCP registrado. El catálogo de inferencia por sí solo no controla una ejecución local.")}>¿Qué cubre B?</Button>:undefined}>Herramientas y destinos</Header>}
     filter={<TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Filtrar tools"/>}
     columnDefinitions={[
      {id:"name",header:"Tool",cell:x=><Button variant="link" onClick={()=>setRow(x)}>{x.id}</Button>},
      {id:"class",header:"Clase",cell:x=>x.kind},
      {id:"target",header:"Destino",cell:x=>mcp.includes(x.id)?x.target:"Local"},
+     {id:"approved",header:"Aprobación",cell:x=><StatusIndicator type={approved.includes(x.id)?"success":"warning"}>{approved.includes(x.id)?"Aprobada":"Pendiente / no aprobada"}</StatusIndicator>},
      {id:"state",header:"Decisión",cell:x=><State value={decision(x)}/>},
      {id:"toggle",header:"Usar MCP (demo)",cell:x=><Toggle checked={mcp.includes(x.id)} onChange={({detail})=>toggle(x.id,detail.checked)}>MCP</Toggle>}
     ]}/>
@@ -81,15 +108,34 @@ function MCP(){
     {filtered.map(x=><Container key={x.id} header={<Header variant="h3" actions={<Toggle checked={mcp.includes(x.id)} onChange={({detail})=>toggle(x.id,detail.checked)}>MCP</Toggle>}>{x.id}</Header>}>
      <SpaceBetween size="s">
       <State value={decision(x)}/>
+      <StatusIndicator type={approved.includes(x.id)?"success":"warning"}>{approved.includes(x.id)?"Aprobada":"Pendiente"}</StatusIndicator>
       <KeyValuePairs columns={2} items={[{label:"Clase",value:x.kind},{label:"Destino",value:mcp.includes(x.id)?x.target:"Local"}]}/>
       <Button variant="link" onClick={()=>setRow(x)}>Ver detalle de tool</Button>
      </SpaceBetween>
     </Container>)}
    </SpaceBetween>
   </div>
-  <Explanation>Las credenciales viven en AgentCore Identity o Secrets Manager. El agente no las recibe y las respuestas MCP pasan por protección PII.</Explanation>
-  <Modal visible={!!row} header={row?.id||"Tool"} onDismiss={()=>setRow(null)} footer={<Box float="right"><Button onClick={()=>setRow(null)}>Cerrar</Button></Box>}>
-   <KeyValuePairs columns={2} items={[{label:"Clase",value:row?.kind||""},{label:"Destino",value:row?.target||""},{label:"Cobertura B",value:row&&mcp.includes(row.id)?"MCP":"Local"},{label:"Estado del catálogo",value:row?.approved?"Aprobada":"Pendiente / no aprobada"}]}/>
+  <Modal visible={!!row} header={row?.id||"Tool"} onDismiss={()=>setRow(null)}
+   footer={<Box float="right"><SpaceBetween direction="horizontal" size="s">
+    <Button onClick={()=>setRow(null)}>Cerrar</Button>
+    {row&&<Button variant="primary" onClick={()=>{
+     setApproved(old=>old.includes(row.id)?old.filter(id=>id!==row.id):[...old,row.id]);
+     notify("Aprobación de "+row.id+" modificada únicamente en DEMO.");
+     setRow(null);
+    }}>{approved.includes(row?.id)?"Quitar aprobación (demo)":"Aprobar tool (demo)"}</Button>}
+   </SpaceBetween></Box>}>
+   <SpaceBetween size="m">
+    <KeyValuePairs columns={2} items={[{label:"Clase",value:row?.kind||""},{label:"Destino",value:row?.target||""},{label:"Cobertura B",value:row&&mcp.includes(row.id)?"MCP":"Local"},{label:"Aprobación",value:row&&approved.includes(row.id)?"Aprobada":"Pendiente"}]}/>
+    <Alert type="info">En activo, una tool pendiente o no aprobada se deniega; en descubrimiento la evaluación de esa regla puede operar en sombra. Esta acción solo modifica una muestra.</Alert>
+   </SpaceBetween>
+  </Modal>
+  <Modal visible={targetModal} header="Registrar target MCP · DEMO" onDismiss={()=>setTargetModal(false)}
+   footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setTargetModal(false)}>Cancelar</Button><Button variant="primary" disabled={!targetName.trim()} onClick={register}>Registrar (demo)</Button></SpaceBetween></Box>}>
+   <SpaceBetween size="m">
+    <FormField label="Nombre del target"><Input value={targetName} onChange={({detail})=>setTargetName(detail.value)}/></FormField>
+    <FormField label="Tipo"><Select selectedOption={targetType} options={[{value:"lambda",label:"AWS Lambda"},{value:"openapi",label:"OpenAPI HTTPS"}]} onChange={({detail})=>setTargetType(detail.selectedOption)}/></FormField>
+    <Alert type="info">La credencial real del destino se configura en AgentCore Identity o Secrets Manager y no se muestra al agente. Aquí no se solicitan ni almacenan secretos.</Alert>
+   </SpaceBetween>
   </Modal>
  </SpaceBetween>;
 }
