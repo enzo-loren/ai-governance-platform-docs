@@ -1,33 +1,29 @@
-# Pantalla específica: versiones por slice y sin barra lateral
+# Superficies funcionales y versiones por slice
 
-## Regla de diseño
+La consola muestra una **tarea de producto**, no una pantalla arbitraria por requisito. «Producto acumulado» conserva cada superficie con sus funciones disponibles hasta el corte; una actualización reemplaza una versión anterior solo cuando **no se pierde ninguna tarea previa**.
 
-La consola de prototipo se utiliza como **visor de una pantalla concreta**, no como un explorador paralelo al roadmap. La elección de pantalla ocurre en la página principal; la consola solo permite comparar sus versiones cuando realmente existen.
+Fuente: [requisitos.yaml](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/requisitos.yaml), especialmente REG-02, REG-01, REG-03, FIN-02, FIN-03, INF-02, MCP-01 y CON-07, y [04-ux.md](https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/04-ux.md).
 
-**Fuente:** `insumo/requisitos.yaml` y `insumo/contexto/04-ux.md`; las versiones se obtienen directamente de `assets/console-data.json`, por la clave `surface`, sin mantener un segundo catálogo manual.
+## Veredicto por transición
 
-## Versiones relevantes
+| Corte | Pantalla | Clasificación | Motivo |
+|---|---|---|---|
+| S0 → S2 | Alta/listado de agentes → Control individual | **Dos superficies nuevas** | Registrar y listar muchos agentes no equivale a activar, suspender o configurar uno. Ambas operaciones deben coexistir. |
+| S2 → S3 | Consumo y límites → Consumo por persona | **Una actualización de la misma superficie** | FIN-03 amplía los límites de FIN-02: conserva edición por agente, añade desglose y cuota por usuario, y solo_workload hereda del agente. |
+| S1 → S4 | Catálogo de tools → Ejecución MCP | **Dos superficies nuevas** | INF-02 clasifica y versiona declaraciones; MCP-01 registra targets y controla ejecuciones. La consola CON-07 debe conservar ambas tareas, con acceso cruzado y estados compartidos por agente. |
 
-| Superficie | Pantallas | Versiones del selector |
-|---|---|---|
-| Agentes | `s0-connect` → `s2-activate` | S0 y S2 |
-| Consumo | `s2-limits` → `s3-user-spend` | S2 y S3 |
-| Tools | `s1-inventory` → `s4-mcp` | S1 y S4 |
+## Navegación en S6
 
-Las nueve superficies restantes tienen una única versión y, por tanto, **no muestran un desplegable**. La interfaz se limita a indicar su slice. Todos los ejemplos corresponden al catálogo S0–S6 actual, no suponen futuras versiones todavía no planificadas.
+- **Agentes** (`s0-connect`) es una pantalla independiente. Desde S2 aparece **Administrar** por agente; conduce a la ficha **Control del agente** (`s2-activate`) conservando el agente seleccionado. **Volver al listado** no borra las modificaciones de la sesión.
+- **Catálogo** (`s1-inventory`) permanece navegable, también al abrir `?slice=S6&screen=s1-inventory`. Desde S4 muestra para cada tool si pasa por MCP y si está aprobada, sin perder la revisión de clase o esquema. **Administrar ejecución MCP** abre `s4-mcp` y **Volver al catálogo** regresa, preservando el estado por agente.
+- **Consumo** (`s2-limits` en S2 y `s3-user-spend` desde S3) es la única superficie con selector **Versión de esta pantalla**. En S3 muestra primero límites del agente y el desglose de personas, y permite cambiar el alcance para editar límites individuales.
 
-## Navegación
+Una URL de un corte futuro conserva la **misma superficie** de la ruta solicitada, sin forzar un salto desde el listado al detalle ni desde el catálogo a la ejecución. La ruta a una superficie todavía no disponible en el slice solicitado no debe ofrecerse desde la UI. El menú lateral no se habilita.
 
-- El menú lateral de Cloudscape se elimina completamente, **incluido su botón de apertura**. Se utiliza `AppLayout` con `navigation={null}`, `navigationHide` y `navigationTriggerHide`; así se conserva la estructura Cloudscape del contenido.
-- El enlace superior «Volver a slices» permanece como única salida al roadmap. Se retira el botón duplicado dentro del encabezado de cada pantalla.
-- Al seleccionar otra versión, la pantalla permanece en la **misma superficie**. Se actualizan el título, la URL `slice`/`screen` y los datos simulados propios de la versión. La navegación Atrás restaura la selección anterior.
-- Una URL al producto acumulado, por ejemplo `?slice=S6&screen=s1-inventory`, muestra la última versión disponible de la superficie Tools (S4), no una pantalla ajena.
-- El modo predeterminado **sin explicaciones** y el interruptor opcional se conservan, así como la advertencia de prototipo con datos sintéticos.
+## Cardinalidad
+
+S0: 2, S1: 5, S2: 7, S3: 8, S4: 11, S5: 12, S6: **14 superficies acumuladas**. El catálogo describe **15 versiones** y **una sola sustitución funcional** (Consumo S2→S3).
 
 ## Verificación
 
-`tests/screen-versions-qa.mjs` prueba las 15 versiones declaradas, en desktop y móvil: selector solo para superficies con cambios, opciones exactas, cambio de versión, historial del navegador, etiquetas para versiones únicas, ausencia de enlaces del menú lateral, vista previa y desbordes horizontales.
-
-`tests/cloudscape-ui-qa.mjs`, `tests/roadmap-v2-navigation-qa.mjs` y `tests/explanations-mode-qa.mjs` se ejecutan en la misma CI, después de compilar el bundle y verificar la huella de contenido, para no repetir el problema de recursos desactualizados.
-
-**Límites:** estas pantallas siguen siendo prototipos navegables con datos sintéticos y sin integración real con AWS. La correspondencia es con las modificaciones documentadas actualmente en `insumo/`, no una promesa de que cada pantalla no vaya a evolucionar en slices posteriores.
+Las suites `screen-versions-qa.mjs` y `surface-contract-qa.mjs` comprueban selector único, coexistencia, cambios de corte, apertura desde listado/catálogo, persistencia por agente y por usuario, y navegación de retorno en escritorio y móvil. No acreditan backend AWS ni seguridad de credenciales reales.
