@@ -27,7 +27,7 @@ const fromLocation=()=>{
  const q=new URLSearchParams(location.search);
  const valid=data.stages.some(x=>x.id===q.get("slice"))?q.get("slice"):"S0";
  const wanted=findScreen(q.get("screen"));
- const current=wanted&&sliceIndex(wanted.slice)<=sliceIndex(valid)?wanted:null;
+ const current=latestScreens(valid).find(x=>x.id===wanted?.id)||null;
  return {slice:valid,screen:current?.id||data.screens.find(x=>x.slice===valid)?.id||"s0-connect"};
 };
 function latestScreens(slice){
@@ -48,8 +48,8 @@ function Application(){
  const visible=useMemo(()=>latestScreens(slice),[slice]);
  const navigate=useCallback((screenId,newSlice=slice,replace=false)=>{
   if(!data.stages.some(s=>s.id===newSlice))return;
-  let target=findScreen(screenId);
-  if(!target||sliceIndex(target.slice)>sliceIndex(newSlice))target=latestScreens(newSlice)[0];
+  const available=latestScreens(newSlice);
+  let target=available.find(x=>x.id===screenId)||available[0];
   const next={slice:newSlice,screen:target.id};
   const q=new URLSearchParams(location.search);
   q.set("slice",newSlice);q.set("screen",target.id);
