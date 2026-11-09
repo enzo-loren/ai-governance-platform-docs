@@ -238,41 +238,63 @@ function Policy(){
  </SpaceBetween>;
 }
 
+
 function Guide(){
- const {helpOn,showExplanations,simulation}=usePrototype();
+ const {helpOn,showExplanations,simulation,slice}=usePrototype();
  const [tab,setTab]=useState("a");
  const agent=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)||simulation.agentRegistry[0];
+ const hasC=Number(slice.slice(1))>=3;
+ const hasB=Number(slice.slice(1))>=4&&simulation.toolsMcp.length>0;
+ const connectedB=hasB?simulation.toolsMcp.length:0;
+ const missingB=4-connectedB;
  const placeholder="<AGENT_TOKEN_DE_"+agent.name.toUpperCase().replace(/[^A-Z0-9]+/g,"_")+">";
+ const currentMax=hasB?(hasC?89:67):(hasC?56:41);
+ const next=!hasC?"C · identidad de usuario":!hasB?"B · tools MCP":missingB>0?"B · centralizar "+missingB+" tools":"Mantener cobertura y revisar evidencia";
+ const prospectiveB=hasB?0:hasC?9:7;
+ const prospectiveC=hasC?0:hasB?6:4;
  const tabs=[
   {id:"a",label:"A · Inferencia",content:<SpaceBetween size="m">
-    <KeyValuePairs columns={2} items={[{label:"Agente",value:agent.name},{label:"Autenticación",value:"Bearer agent_token · uno por agente"}]}/>
-    <FormField label="BASE_URL"><Input readOnly value="{gateway}/inference/v1"/></FormField>
-    <FormField label="API key · agent_token"><Input readOnly value={placeholder}/></FormField>
-    <CopyToClipboard textToCopy={"BASE_URL={gateway}/inference/v1\nAPI_KEY="+placeholder} copyButtonText="Copiar configuración A" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
-    <Box color="text-body-secondary" fontSize="body-s">La clave se entrega una sola vez al crear o rotar este agente. No se puede consultar después. La key del SDK identifica al agente; no es una key de Bedrock.</Box>
-   </SpaceBetween>},
+   <KeyValuePairs columns={2} items={[{label:"Agente",value:agent.name},{label:"Autenticación",value:"Bearer agent_token · clave individual"}]}/>
+   <FormField label="BASE_URL"><Input readOnly value="{gateway}/inference/v1"/></FormField>
+   <FormField label="API key · agent_token"><Input readOnly value={placeholder}/></FormField>
+   <CopyToClipboard textToCopy={"BASE_URL={gateway}/inference/v1\\nAPI_KEY="+placeholder+"\\nX-Gov-Trace-Id: <TRACE_ID_OPCIONAL>"} copyButtonText="Copiar configuración A" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
+   <Explanation>La API key es un secreto opaco emitido una sola vez para este agente; no es la clave del proveedor de modelos.</Explanation>
+  </SpaceBetween>},
   {id:"b",label:"B · MCP",content:<SpaceBetween size="m">
-    <Alert type="warning">Solo se controlan las tools registradas y ejecutadas por MCP; las locales quedan fuera de la puerta.</Alert>
-    <KeyValuePairs columns={2} items={[{label:"Agente",value:agent.name},{label:"Autenticación",value:"Mismo agent_token de A"}]}/>
-    <CopyToClipboard textToCopy={"MCP_URL={gateway}/mcp\nAGENT_TOKEN="+placeholder} copyButtonText="Copiar configuración B" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
-    <Box color="text-body-secondary" fontSize="body-s">Las credenciales hacia targets Lambda/OpenAPI se guardan en AgentCore Identity o Secrets Manager; nunca se entregan al agente.</Box>
-   </SpaceBetween>},
+   <Alert type={missingB>0?"warning":"success"}>{missingB>0?missingB+" de 4 tools siguen fuera de ejecución gobernada por MCP.":"Las 4 tools de ejemplo pasan por MCP."}</Alert>
+   <KeyValuePairs columns={2} items={[{label:"Agente",value:agent.name},{label:"Autenticación",value:"Mismo agent_token de A"},{label:"Cobertura",value:connectedB+" de 4 tools en el corte"}]}/>
+   <CopyToClipboard textToCopy={"MCP_URL={gateway}/mcp\\nAGENT_TOKEN="+placeholder+"\\nX-Gov-Trace-Id: <TRACE_ID_OPCIONAL>"} copyButtonText="Copiar configuración B" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
+   <Explanation>Registra primero los targets Lambda o OpenAPI en la puerta. Las credenciales hacia el destino quedan en AgentCore Identity o Secrets Manager, no en el agente.</Explanation>
+  </SpaceBetween>},
   {id:"c",label:"C · Usuario",content:<SpaceBetween size="m">
-    <KeyValuePairs columns={2} items={[{label:"Identidad agente",value:agent.name+" · agent_token"},{label:"Identidad usuario",value:"JWT OIDC por solicitud"}]}/>
-    <CopyToClipboard textToCopy="X-Gov-User-Token: <JWT OIDC del usuario>" copyButtonText="Copiar cabecera C" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
-    <Box color="text-body-secondary" fontSize="body-s">El JWT de C no reemplaza la API key del agente. Sin JWT se usa solo_workload. Un token inválido se rechaza o degrada según configuración.</Box>
-   </SpaceBetween>}
+   <KeyValuePairs columns={2} items={[{label:"Identidad agente",value:agent.name+" · agent_token"},{label:"Identidad usuario",value:"JWT OIDC · uno por solicitud"},{label:"Cobertura ilustrativa",value:hasC?"2 de 3 solicitudes con JWT válido":"Conexión aún no incorporada"}]}/>
+   <CopyToClipboard textToCopy={"Authorization: Bearer "+placeholder+"\\nX-Gov-User-Token: <JWT_OIDC_DEL_USUARIO>\\nX-Gov-Trace-Id: <TRACE_ID_OPCIONAL>"} copyButtonText="Copiar cabeceras C" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
+   <Explanation>C se reenvía en inferencia y MCP. El emisor debe estar configurado; sin JWT válido se utiliza solo_workload o se rechaza, según política. El token de usuario no reemplaza al del agente.</Explanation>
+  </SpaceBetween>}
  ];
  return <SpaceBetween size="l">
-  <Panel title="Conectar por partes" help="A usa una clave propia. B reutiliza esa clave para MCP. C agrega un JWT diferente, del usuario final.">
+  <Container header={<Header variant="h2">Plan de conexión · {agent.name}</Header>}>
+   <ColumnLayout columns={3}>
+    <div><Box color="text-body-secondary">Conexión A</Box><State value="Permitido"/></div>
+    <div><Box color="text-body-secondary">Conexión B</Box><StatusIndicator type={hasB?"success":"stopped"}>{hasB?connectedB+" de 4 tools · demo":"Pendiente"}</StatusIndicator></div>
+    <div><Box color="text-body-secondary">Conexión C</Box><StatusIndicator type={hasC?"success":"stopped"}>{hasC?"JWT · demo":"Pendiente"}</StatusIndicator></div>
+   </ColumnLayout>
+   <SpaceBetween size="s">
+    <Box>Próximo paso: <strong>{next}</strong></Box>
+    <Box color="text-body-secondary" fontSize="body-s">Máximo teórico del catálogo en este corte: {currentMax} % con conexiones completas y controles aplicables.</Box>
+    <KeyValuePairs columns={2} items={[
+     {label:"Añadir B",value:hasB?"Conectada parcialmente · completar "+missingB+" tools":"+"+prospectiveB+" controles · +"+(prospectiveB/27*100).toFixed(0)+" puntos teóricos"},
+     {label:"Añadir C",value:hasC?"Habilitada · cobertura por solicitud":"+"+prospectiveC+" controles · +"+(prospectiveC/27*100).toFixed(0)+" puntos teóricos"}
+    ]}/>
+   </SpaceBetween>
+  </Container>
+  <Panel title="Instrucciones por conexión" help="A es obligatoria; B puede ser parcial; C identifica al usuario mediante JWT sin sustituir la clave del agente.">
    <Tabs tabs={tabs} activeTabId={tab} onChange={({detail})=>setTab(detail.activeTabId)}/>
   </Panel>
-  <Panel title="Cierre de brechas">
-   <Alert type="warning">procesar_lote sigue local y no se gobierna su ejecución. Se debe registrar como target MCP, clasificar y aprobar.</Alert>
-   {showExplanations&&<Button onClick={()=>helpOn("Validación técnica","POL-02 exige una matriz versionada de al menos 30 escenarios ALLOW/DENY contra el proveedor simulado. No es otra pantalla de gerencia.")}>Validaciones exigidas</Button>}
-  </Panel>
+  {showExplanations&&<Button onClick={()=>helpOn("Pruebas exigidas","POL-02 requiere una matriz versionada de al menos 30 escenarios ALLOW/DENY con el proveedor simulado. La guía no sustituye esos tests.")}>Ver validaciones técnicas</Button>}
  </SpaceBetween>;
 }
+
 function Approvals(){
  const {simulation,setSimulation,notify}=usePrototype();
  const [selected,setSelected]=useState("APR42");
