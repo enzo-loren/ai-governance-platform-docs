@@ -55,7 +55,9 @@
     const path=route(selected,s.id);
     return '<article class="screen-card"><div class="screen-meta"><span class="screen-eyebrow">'+text(s.slice+" · "+s.title)+'</span>'+
       '<span class="'+(past?"delta-existing":s.type==="update"?"delta-update":"delta-new")+'">'+badge+'</span></div>'+
-      '<div class="shot"><div class="preview-skeleton" aria-hidden="true"><span>Vista previa de Cloudscape</span></div>'+
+      '<div class="shot"><div class="preview-skeleton" aria-hidden="true"><div class="preview-mini-rail"><b>G·</b><span>Agentes</span><span>Flujo</span><span>Reglas</span></div>'+
+      '<div class="preview-mini-main"><div class="preview-mini-top">AI Governance · Cloudscape</div><strong>'+text(s.title)+'</strong><p>'+text(s.question)+'</p>'+
+      '<div class="preview-mini-rows"><i></i><i></i><i></i></div><div class="preview-mini-help">Abre la pantalla para interactuar</div></div></div>'+
       '<div class="screen-canvas"><iframe class="cloudscape-preview" loading="lazy" tabindex="-1" aria-hidden="true" title="Vista previa de '+text(s.title)+'" data-preview-src="'+route(selected,s.id,true)+'"></iframe></div>'+
       '<a class="preview-link" href="'+path+'" aria-label="Explorar '+text(s.title)+' en la consola navegable"></a></div>'+
       '<div class="card-bottom"><div><h3>'+text(s.title)+'</h3><p>'+text(s.question)+'</p></div>'+
