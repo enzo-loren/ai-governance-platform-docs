@@ -174,7 +174,7 @@ function Inventory(){
  };
  const save=()=>{
   if(!selected)return;
-  setReviews(prev=>({...prev,[selected.id], [selected.id]:{...draft,confirmed:true}}));
+  setReviews(prev=>({...prev,[selected.id]:{...draft,confirmed:true}}));
   notify("Clasificación de "+selected.id+" revisada solo en la DEMO.");
   setSelected(null);
  };
