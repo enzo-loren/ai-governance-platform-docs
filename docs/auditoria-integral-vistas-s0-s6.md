@@ -32,7 +32,8 @@ La distribución por slices es razonable y no requiere crear pantallas adicional
 2. **Navegación centrada en la pantalla:** no se reintroduce menú lateral; selección de slices solo cuando una superficie realmente cambia (Agentes S0/S2; Consumo S2/S3; Tools S1/S4).
 3. **Divulgación progresiva:** se mantiene modo limpio por defecto; la ayuda se habilita con «Mostrar explicaciones». Los estados críticos y las advertencias de validación nunca dependen de ese interruptor.
 4. **Simulación honesta:** cifras y cambios sintéticos se identifican como DEMO; ningún clic equivale a registrar un agente, guardar Cedar, emitir tokens, aprobar o desplegar en AWS.
-5. **Mantener Cloudscape real:** componentes `Container`, `Table`, `Select`, `FormField`, `Alert`, `StatusIndicator`, `Modal`, `KeyValuePairs` y `AppLayout`.
+5. **Layouts adaptativos por tipo de información:** móvil utiliza tarjetas para flujo de inferencias S0, clasificación S1, MCP S4, bandeja S5 y búsqueda S6; escritorio retiene tablas útiles. Se corrigió una columna vacía de S5 causada por ocultar solo visualmente un hijo de `ColumnLayout`.
+6. **Mantener Cloudscape real:** componentes `Container`, `Table`, `Select`, `FormField`, `Alert`, `StatusIndicator`, `Modal`, `KeyValuePairs` y `AppLayout`.
 
 ## Deuda de interfaz y backend priorizada
 
