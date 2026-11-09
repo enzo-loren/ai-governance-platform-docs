@@ -44,6 +44,14 @@ try{
    const items=await page.locator('.screen-card').allTextContents();
    check(items.every(t=>/Explorar/.test(t)),scenario.name+' '+stage+' botón sin verbo claro');
    if(['S0','S4','S6'].includes(stage)){
+    const frames=await page.locator(".screen-card iframe.cloudscape-preview").count();
+    for(let frameIndex=0;frameIndex<frames;frameIndex++){
+      await page.locator(".screen-card iframe.cloudscape-preview").nth(frameIndex).scrollIntoViewIfNeeded();
+      await page.waitForFunction(index=>{
+        const frame=document.querySelectorAll(".screen-card iframe.cloudscape-preview")[index];
+        return !!frame?.contentDocument?.querySelector("#governance-root h1");
+      },frameIndex,{timeout:18000});
+    }
     await page.screenshot({path:folder+'/'+scenario.name+'-'+stage.toLowerCase()+'-cambios.png',fullPage:true});
    }
    await page.locator('#mode-all').click();
