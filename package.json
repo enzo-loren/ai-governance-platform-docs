@@ -1,0 +1,19 @@
+{
+  "name": "ai-governance-ui-prototype",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "check": "node --check assets/slices.js"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@cloudscape-design/components": "3.0.1407",
+    "@cloudscape-design/global-styles": "^1.0.0"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}
