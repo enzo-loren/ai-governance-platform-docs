@@ -1,6 +1,7 @@
 import {chromium} from "playwright";
 import {spawn} from "node:child_process";
-import {mkdir,writeFile} from "node:fs/promises";
+import {mkdir,writeFile,readFile} from "node:fs/promises";
+const assetVersion=JSON.parse(await readFile("assets/console-build/version.json","utf8")).version;
 
 const base="http://127.0.0.1:8877/";
 const output="artifacts/explanations-mode";
@@ -99,8 +100,17 @@ try{
 
   // Regresión reportada por el usuario: al abrir directamente Ruta forense S6
   // deben verse título de producto y el interruptor; nunca la vieja pregunta.
-  await page.goto(base+"assets/console.html?slice=S6&screen=s6-forensic",{waitUntil:"domcontentloaded"});
+  const scriptRequests=[];
+  const watchScript=request=>{
+    const url=new URL(request.url());
+    if(url.pathname.endsWith("/assets/console-build/app.js"))scriptRequests.push(url.searchParams.get("v"));
+  };
+  page.on("request",watchScript);
+  await page.goto(base+"assets/console.html?slice=S6&screen=s6-forensic&v="+assetVersion,{waitUntil:"domcontentloaded"});
   await page.locator("#governance-root h1").first().waitFor({timeout:12000});
+  check(scriptRequests.length>=1 && scriptRequests.every(v=>v===assetVersion),
+    viewport.name+" S6: JavaScript del bundle cargado sin huella actual: "+JSON.stringify(scriptRequests));
+  page.off("request",watchScript);
   check((await page.locator("#governance-root h1").first().textContent()).trim()==="Ruta forense",
     viewport.name+" S6: sigue mostrando pregunta antigua en lugar del título");
   const s6Toggle=page.locator(".explanations-switch input[type=checkbox]");
