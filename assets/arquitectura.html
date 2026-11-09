@@ -53,7 +53,7 @@ svg text{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 .label-a{font-size:15px;fill:#165fa8;font-weight:750}
 .label-b{font-size:15px;fill:#007966;font-weight:750}
 .label-c{font-size:15px;fill:#6b42aa;font-weight:750}
-[data-when]{display:none}
+[data-when]:not([data-visible="true"]){display:none}
 .diagram-key{display:flex;flex-wrap:wrap;gap:9px 18px;padding:0 22px 17px;font-size:12px;color:#52677f}
 .key{display:flex;align-items:center;gap:7px}
 .swatch{height:4px;width:21px;border-radius:3px;background:#2771c6}
@@ -224,11 +224,11 @@ svg text{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
       buttons[name].setAttribute('aria-pressed',String(state[name]));
       buttons[name].querySelector('.indicator').textContent=state[name]?'✓':'+';
       document.querySelectorAll('[data-when="' + name + '"]').forEach(function(el){
-        el.style.display=state[name]?'':'none';
+        el.setAttribute('data-visible',String(state[name]));
         el.setAttribute('aria-hidden',String(!state[name]));
       });
     });
-    elements.code.textContent=key().toUpperCase().replace('AB','A+B').replace('AC','A+C').replace('ABC','A+B+C');
+    elements.code.textContent={a:'A',ab:'A+B',ac:'A+C',abc:'A+B+C'}[key()];
     elements.title.textContent=v.title;
     elements.score.textContent=v.score;
     elements.summary.textContent=v.summary;
