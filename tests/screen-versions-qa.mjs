@@ -111,10 +111,16 @@ try{
   // Vista acumulada: abrir una versión anterior no debe forzar a mostrar otra pantalla.
   await page.goto(base+"assets/console.html?slice=S6&screen=s1-inventory",{waitUntil:"domcontentloaded"});
   await pageReady(page);
-  check(await page.locator("#governance-root h1").first().textContent()==="Tools por MCP",
-   vp.name+" acumulado no resuelve la versión vigente de la misma superficie");
-  check(await page.getByTestId("screen-version-selector").count()===1,
-   vp.name+" el acumulado rompe versiones de Tools");
+  check(await page.locator("#governance-root h1").first().textContent()==="Tools detectadas",
+   vp.name+" acumulado sustituye indebidamente el catálogo por MCP");
+  check(await page.getByTestId("screen-version-selector").count()===0,
+   vp.name+" catálogo sigue mostrando versiones inexistentes");
+  check(await page.getByRole("button",{name:"Administrar ejecución MCP"}).count()===1,
+   vp.name+" catálogo acumulado no enlaza con MCP");
+  await page.goto(base+"assets/console.html?slice=S6&screen=s0-connect",{waitUntil:"domcontentloaded"});
+  await pageReady(page);
+  check(await page.locator("#governance-root h1").first().textContent()==="Alta del agente",
+   vp.name+" acumulado sustituye el listado de agentes por una ficha");
 
   // Modo vista previa, sin controles ni navegación lateral.
   await page.goto(base+"assets/console.html?slice=S6&screen=s6-forensic&preview=1",{waitUntil:"domcontentloaded"});
