@@ -83,7 +83,7 @@ function Application(){
   </div>}
   <AppLayout
    headerSelector="#console-top"
-   navigationHide={preview}
+   navigationHide={preview||simulation.presentation}
    toolsHide
    navigationWidth={250}
    maxContentWidth={1220}
