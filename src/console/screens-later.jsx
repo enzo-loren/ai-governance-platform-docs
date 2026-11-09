@@ -240,7 +240,7 @@ function Guide(){
     <Box color="text-body-secondary" fontSize="body-s">Las credenciales hacia targets Lambda/OpenAPI se guardan en AgentCore Identity o Secrets Manager; nunca se entregan al agente.</Box>
    </SpaceBetween>},
   {id:"c",label:"C · Usuario",content:<SpaceBetween size="m">
-    <KeyValuePairs columns={2} items={[{label:"Identidad agente",value:agent.name+" · agent_token"},{label:"Identidad usuario",value:"JWT OIDC por solicitud"}]}/>
+    <KeyValuePairs columns={2} items={[{label:"Identidad agente",value:agent.name+" · agent_token"},{label:"Identidad usuario",value:"JWT OIDC por solicitud"},{label:"Correlación",value:"X-Gov-Trace-Id"}]}/>
     <CopyToClipboard textToCopy={"X-Gov-User-Token: <JWT OIDC del usuario>\nX-Gov-Trace-Id: <ID de correlación>"} copyButtonText="Copiar cabeceras C y trazabilidad" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
     <Box color="text-body-secondary" fontSize="body-s">Validación de JWT: firma/JWKS, issuer, audiencia y vencimiento; el trace ID permite correlacionar la misma operación entre inferencia y tools.</Box>
     <Box color="text-body-secondary" fontSize="body-s">El JWT de C no reemplaza la API key del agente. Sin JWT se usa solo_workload. Un token inválido se rechaza o degrada según configuración.</Box>
@@ -503,7 +503,7 @@ function Forensic(){
     </Panel>
     <Panel title="Sello de evidencia">
      <SpaceBetween size="m">
-      <StatusIndicator type="success">Object Lock GOVERNANCE · contrato objetivo</StatusIndicator>
+      <StatusIndicator type="info">Object Lock GOVERNANCE · diseño objetivo</StatusIndicator>
       <KeyValuePairs columns={1} items={[
        {label:"Objeto",value:"evidencia/"+record.id+".json (ejemplo)"},
        {label:"Retención hasta",value:"2027-11-09 · ejemplo, no medido"},
