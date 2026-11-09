@@ -3,9 +3,13 @@ on:
   push:
     branches:
       - feat/cloudscape-navegacion-slices
+      - fix/roadmap-cloudscape-cache-navigation-ux
     paths:
       - 'assets/slices.js'
       - 'assets/slices.css'
+      - 'assets/roadmap-cloudscape-v2.js'
+      - 'assets/roadmap-cloudscape-v2.css'
+      - 'tests/roadmap-v2-navigation-qa.mjs'
       - 'assets/console.html'
       - 'assets/console-build/**'
       - 'assets/console-data.json'
@@ -17,6 +21,9 @@ on:
     paths:
       - 'assets/slices.js'
       - 'assets/slices.css'
+      - 'assets/roadmap-cloudscape-v2.js'
+      - 'assets/roadmap-cloudscape-v2.css'
+      - 'tests/roadmap-v2-navigation-qa.mjs'
       - 'assets/console.html'
       - 'assets/console-build/**'
       - 'assets/console-data.json'
@@ -45,10 +52,14 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify real Cloudscape UI and navigation
         run: node tests/cloudscape-ui-qa.mjs
+      - name: Verify cache isolation, navigation and accessibility of roadmap
+        run: node tests/roadmap-v2-navigation-qa.mjs
       - name: Attach screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cloudscape-ui-qa
-          path: artifacts/cloudscape-qa/
+          path: |
+            artifacts/cloudscape-qa/
+            artifacts/roadmap-v2/
           retention-days: 14
