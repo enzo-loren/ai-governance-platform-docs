@@ -2,6 +2,12 @@ import {chromium} from "playwright";
 import {spawn} from "node:child_process";
 import {mkdir,writeFile,readFile} from "node:fs/promises";
 const assetVersion=JSON.parse(await readFile("assets/console-build/version.json","utf8")).version;
+const catalog=JSON.parse(await readFile("assets/console-data.json","utf8"));
+const editorial=JSON.parse(await readFile("src/console/editorial-board.json","utf8"));
+const surfaces=[...new Set(catalog.screens.map(screen=>screen.surface))];
+const missing=surfaces.filter(surface=>!editorial[surface]||["visible","required","optional","decision"].some(key=>!editorial[surface][key]?.trim()));
+if(missing.length)throw Error("Pizarra incompleta para superficies: "+missing.join(", "));
+
 
 const base="http://127.0.0.1:8877/";
 const output="artifacts/explanations-mode";
