@@ -61,3 +61,13 @@ body{background:#f8f9fc;scroll-behavior:smooth}
  .prototype-actions>div:first-child{min-width:0}
  .prototype-status{margin-bottom:2px}
 }
+
+/* Presentación de una sola pantalla, sin navegación lateral.
+ * Un desplegable aparece únicamente si la superficie tiene varias versiones. */
+.screen-version-single{display:flex;align-items:center;min-height:38px;max-width:100%}
+.screen-version-single [class*="awsui_badge"]{white-space:normal;line-height:1.4}
+.prototype-actions>div:first-child{min-width:0}
+.prototype-actions:has([data-testid="screen-version-selector"])>div:first-child{min-width:215px}
+@media(max-width:700px){
+ .prototype-actions:has([data-testid="screen-version-selector"])>div:first-child{min-width:0}
+}
