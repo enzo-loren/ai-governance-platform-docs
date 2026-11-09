@@ -48,22 +48,42 @@ function MCP(){
  const [filter,setFilter]=useState("");
  const [row,setRow]=useState(null);
  const mcp=simulation.toolsMcp;
+ const filtered=tools.filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
+ const toggle=(id,checked)=>{
+  setSimulation(v=>({...v,toolsMcp:checked?[...new Set([...v.toolsMcp,id])]:v.toolsMcp.filter(name=>name!==id)}));
+  notify("Cobertura MCP modificada solo en esta demostración.");
+ };
+ const decision=x=>mcp.includes(x.id)?x.when:"Fuera de la puerta";
  return <SpaceBetween size="l">
   <ColumnLayout columns={3}>
    <Panel title="Tools declaradas"><div className="kpi-value">4</div><Box color="text-body-secondary">En inferencia A</Box></Panel>
    <Panel title="Tools por MCP"><div className="kpi-value">{mcp.length} de 4</div><Box color="text-body-secondary">Cobertura B parcial</Box></Panel>
    <Panel title="Fuera de la puerta"><div className="kpi-value">{4-mcp.length}</div><Box color="text-body-secondary">Ejecución no gobernada</Box></Panel>
   </ColumnLayout>
-  <Table items={tools.filter(x=>x.id.includes(filter.toLowerCase()))} trackBy="id"
-   header={<Header variant="h2" info={<Button variant="link" onClick={()=>helpOn("Cobertura B","B gobierna la ejecución exclusivamente de tools invocadas por targets MCP. Las tools locales permanecen fuera de la puerta.")}>¿Qué cubre B?</Button>}>Herramientas y destinos</Header>}
-   filter={<TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Filtrar tools"/>}
-   columnDefinitions={[
-    {id:"name",header:"Tool",cell:x=><Button variant="link" onClick={()=>setRow(x)}>{x.id}</Button>},
-    {id:"class",header:"Clase",cell:x=>x.kind},
-    {id:"target",header:"Destino",cell:x=>mcp.includes(x.id)?x.target:"Local"},
-    {id:"state",header:"Decisión",cell:x=><State value={!mcp.includes(x.id)?"Fuera de la puerta":x.when}/>},
-    {id:"toggle",header:"Usar MCP (demo)",cell:x=><Toggle checked={mcp.includes(x.id)} onChange={({detail})=>{setSimulation(s=>({...s,toolsMcp:detail.checked?[...new Set([...s.toolsMcp,x.id])]:s.toolsMcp.filter(v=>v!==x.id)}));notify("Cobertura MCP modificada solo en esta demostración.")}}>MCP</Toggle>}
-   ]}/>
+  <div className="desktop-table">
+   <Table items={filtered} trackBy="id"
+    header={<Header variant="h2" info={<Button variant="link" onClick={()=>helpOn("Cobertura B","B gobierna la ejecución exclusivamente de tools invocadas por targets MCP. Las tools locales permanecen fuera de la puerta.")}>¿Qué cubre B?</Button>}>Herramientas y destinos</Header>}
+    filter={<TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Filtrar tools"/>}
+    columnDefinitions={[
+     {id:"name",header:"Tool",cell:x=><Button variant="link" onClick={()=>setRow(x)}>{x.id}</Button>},
+     {id:"class",header:"Clase",cell:x=>x.kind},
+     {id:"target",header:"Destino",cell:x=>mcp.includes(x.id)?x.target:"Local"},
+     {id:"state",header:"Decisión",cell:x=><State value={decision(x)}/>},
+     {id:"toggle",header:"Usar MCP (demo)",cell:x=><Toggle checked={mcp.includes(x.id)} onChange={({detail})=>toggle(x.id,detail.checked)}>MCP</Toggle>}
+    ]}/>
+  </div>
+  <div className="mobile-cards">
+   <SpaceBetween size="s">
+    <TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Buscar herramienta"/>
+    {filtered.map(x=><Container key={x.id} header={<Header variant="h3" actions={<Toggle checked={mcp.includes(x.id)} onChange={({detail})=>toggle(x.id,detail.checked)}>MCP</Toggle>}>{x.id}</Header>}>
+     <SpaceBetween size="s">
+      <State value={decision(x)}/>
+      <KeyValuePairs columns={2} items={[{label:"Clase",value:x.kind},{label:"Destino",value:mcp.includes(x.id)?x.target:"Local"}]}/>
+      <Button variant="link" onClick={()=>setRow(x)}>Ver detalle de tool</Button>
+     </SpaceBetween>
+    </Container>)}
+   </SpaceBetween>
+  </div>
   <Alert type="info">Claves de targets en AgentCore Identity o Secrets Manager; el agente nunca las recibe. Respuestas de tools MCP protegidas por el control PII.</Alert>
   <Modal visible={!!row} header={row?.id||"Tool"} onDismiss={()=>setRow(null)} footer={<Box float="right"><Button onClick={()=>setRow(null)}>Cerrar</Button></Box>}>
    <KeyValuePairs columns={2} items={[{label:"Clase",value:row?.kind||""},{label:"Destino",value:row?.target||""},{label:"Cobertura B",value:row&&mcp.includes(row.id)?"MCP":"Local"},{label:"Estado del catálogo",value:row?.approved?"Aprobada":"Pendiente / no aprobada"}]}/>
