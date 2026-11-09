@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feat/cloudscape-navegacion-slices
+      - feature/vista-limpia-explicaciones-opcionales
     paths:
       - package.json
       - vite.config.mjs
@@ -37,5 +38,5 @@ jobs:
           git add assets/console-build/ package-lock.json
           if ! git diff --cached --quiet; then
             git commit -m "build: compilar prototipo Cloudscape para hosting estático"
-            git push origin HEAD:feat/cloudscape-navegacion-slices
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
