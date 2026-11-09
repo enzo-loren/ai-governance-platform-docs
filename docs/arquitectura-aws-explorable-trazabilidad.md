@@ -22,17 +22,17 @@ Este documento acompaña el código del diagrama, pero **no aparece en la págin
 - **SP-05**: ejecución de operación aprobada por el mismo Gateway es una decisión objetivo sujeta a validación, con plan B documentado.
 - **Módulo B**: agente sintético de prueba desplegado por separado y opcional en el mapa. No es un componente interno del Módulo A.
 - **Proveedor simulado**: target opcional activado solo por configuración.
-- **Servicios de referencia**: CDK, Lambda, AgentCore Gateway/Identity, Bedrock, API Gateway, Cognito, DynamoDB y S3 Object Lock GOVERNANCE. El diagrama expresa responsabilidades lógicas, no recursos individuales ni costos de una región real.
+- **Servicios de referencia**: CDK, Lambda, AgentCore Gateway/Identity, Bedrock, API Gateway, Cognito, DynamoDB y S3 Object Lock GOVERNANCE. Las credenciales de tools pueden estar en AgentCore Identity o Secrets Manager (PLT-02). La telemetría NFR-05 usa OTLP y `gen_ai`, con destino configurable (por ejemplo CloudWatch o AgentCore Observability), y no bloquea solicitudes. El diagrama expresa responsabilidades lógicas, no recursos individuales ni costos de una región real.
 
 ## Iconos y disponibilidad
 
-Los iconos se referencian **sin modificar** desde [AWS Icons for PlantUML, tag v23.1](https://github.com/awslabs/aws-icons-for-plantuml/tree/v23.1/dist), generados a partir del paquete oficial de AWS Architecture Icons. Sus URLs exactas se enumeran en \`assets/arquitectura-explorable.js\`. Los nombres de los 10 PNG se comprobaron contra el árbol del repositorio upstream; la página no los empaqueta localmente. El detalle textual sigue siendo visible aunque la red bloquee las imágenes. El conjunto de iconos está sujeto a las condiciones de AWS publicadas por su repositorio.
+Los iconos se referencian **sin modificar** desde [AWS Icons for PlantUML, tag v23.1](https://github.com/awslabs/aws-icons-for-plantuml/tree/v23.1/dist), generados a partir del paquete oficial de AWS Architecture Icons. Sus URLs exactas se enumeran en \`assets/arquitectura-explorable.js\`. Los nombres de los 12 PNG se comprobaron contra el árbol del repositorio upstream; la página no los empaqueta localmente. El detalle textual sigue siendo visible aunque la red bloquee las imágenes. El conjunto de iconos está sujeto a las condiciones de AWS publicadas por su repositorio.
 
 ## Control de calidad
 
 **Revisado programáticamente:**
 
-- JavaScript sintácticamente válido, con 36 nodos, 8 zonas y 42 relaciones etiquetadas (incluye alternativas y prueba opcional).
+- JavaScript sintácticamente válido, con 37 nodos, 8 zonas y 43 relaciones etiquetadas (incluye alternativas y prueba opcional).
 - No hay nodos superpuestos según sus rectángulos de coordenadas.
 - Toda relación referencia identificadores de nodos existentes.
 - Prueba de montaje de DOM simulado: A=41, A+B=67, A+B+C=89, A+C=56, zoom=140 %.
