@@ -223,6 +223,8 @@ function Guide(){
  const [tab,setTab]=useState("a");
  const agent=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)||simulation.agentRegistry[0];
  const placeholder="<AGENT_TOKEN_DE_"+agent.name.toUpperCase().replace(/[^A-Z0-9]+/g,"_")+">";
+ const mcpCount=(agent.toolsMcp||[]).length;
+ const observedCount=(agent.discoveredTools||[]).length;
  const tabs=[
   {id:"a",label:"A · Inferencia",content:<SpaceBetween size="m">
     <KeyValuePairs columns={2} items={[{label:"Agente",value:agent.name},{label:"Autenticación",value:"Bearer agent_token · uno por agente"}]}/>
@@ -250,7 +252,7 @@ function Guide(){
     <AgentSelector/>
     <ColumnLayout columns={3}>
      <div><Box color="text-body-secondary">A · Inferencia</Box><StatusIndicator type="success">Base obligatoria</StatusIndicator></div>
-     <div><Box color="text-body-secondary">B · MCP</Box><StatusIndicator type="warning">Parcial en demo</StatusIndicator></div>
+     <div><Box color="text-body-secondary">B · MCP</Box><StatusIndicator type={mcpCount?"warning":"stopped"}>{mcpCount?mcpCount+" de "+observedCount+" tools · DEMO":"No conectada"}</StatusIndicator></div>
      <div><Box color="text-body-secondary">C · JWT usuario</Box><StatusIndicator type="stopped">Sin verificar</StatusIndicator></div>
     </ColumnLayout>
     <KeyValuePairs columns={2} items={[
