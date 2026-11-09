@@ -19,6 +19,7 @@ import CopyToClipboard from "@cloudscape-design/components/copy-to-clipboard";
 import Toggle from "@cloudscape-design/components/toggle";
 import Tabs from "@cloudscape-design/components/tabs";
 import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
+import ExpandableSection from "@cloudscape-design/components/expandable-section";
 import {usePrototype,Explanation} from "./main.jsx";
 import {AgentEnrollment,AgentSelector,AgentCredentialControls,selectedFrom} from "./agent-credentials.jsx";
 
@@ -190,6 +191,31 @@ function Coverage(){
  const max=hasB?(hasC?89:67):(hasC?56:41);
  const noData=evidence.value!=="observado";
  const next=rank<2?"Revisar el catálogo de tools antes de activar en S2":!hasC?"Conectar identidad C para reglas y consumo por usuario":!hasB?"Centralizar la ejecución de tools por MCP B":bCount<4?"Mover las tools locales restantes a MCP":"Revisar las excepciones y mantener evidencia";
+
+ const catalog=[
+  ["CTRL-01","Autenticación de agente",["A"],false],["CTRL-02","Inventario de modelos",["A"],false],
+  ["CTRL-03","Modelos permitidos",["A"],true],["CTRL-04","Inventario de tools",["A"],false],
+  ["CTRL-05","Guardrail semántico",["A"],false],["CTRL-06","PII de respuestas del modelo",["A"],false],
+  ["CTRL-07","Intenciones de tools bloqueadas",["A"],true],["CTRL-08","Costo y tokens por agente",["A"],false],
+  ["CTRL-09","Presupuesto y tasa",["A"],false],["CTRL-10","Suspensión en inferencia",["A"],false],
+  ["CTRL-11","Evidencia de inferencia",["A"],false],
+  ["CTRL-12","Solo tools MCP aprobadas",["A","B"],true],["CTRL-13","Credenciales de tools en bóveda",["A","B"],false],
+  ["CTRL-14","Reglas sobre parámetros reales",["A","B"],true],["CTRL-15","PII en respuestas MCP",["A","B"],false],
+  ["CTRL-16","Aprobación humana de tools",["A","B"],true],["CTRL-17","Evidencia de ejecución MCP",["A","B"],false],
+  ["CTRL-18","Suspensión de acciones MCP",["A","B"],false],
+  ["CTRL-19","Principal humano en auditoría",["A","C"],false],["CTRL-20","Cuotas por usuario",["A","C"],false],
+  ["CTRL-21","Acceso a PII por rol",["A","C"],false],["CTRL-22","Intención de tool por rol",["A","C"],true],
+  ["CTRL-23","Ejecución real por rol",["A","B","C"],true],["CTRL-24","Separación de funciones",["A","B","C"],true],
+  ["CTRL-25","Restricción de red/IAM del agente",["fuera"],false],
+  ["CTRL-26","Login del usuario en aplicación del cliente",["fuera"],false],
+  ["CTRL-27","Aviso y reclamos de IA en interfaz cliente",["fuera"],false]
+ ];
+ const fullCatalog=catalog.map(([id,name,requires,shadow])=>{
+  const available=!requires.includes("fuera")&&(!requires.includes("B")||hasB)&&(!requires.includes("C")||hasC);
+  const state=!available?"No disponible":noData?"Sin evidencia":shadow&&agent.mode!=="Activo"?"En sombra":"Representado";
+  return {id,name,requires:requires.join("+"),state};
+ });
+
  const controls=[
   {name:"Autenticación del agente",state:noData?"Sin evidencia":"Activo",reason:"agent_token individual · canal A"},
   {name:"Guardrail y protección de datos",state:noData?"Sin evidencia":"Activo",reason:"Inferencia A"},
@@ -228,6 +254,17 @@ function Coverage(){
     {id:"reason",header:"Motivo / dependencia",cell:x=>x.reason}
    ]}/>
   </Panel>
+
+  <ExpandableSection headerText="Ver los 27 controles del catálogo" variant="footer">
+   <Table items={fullCatalog} trackBy="id" variant="embedded" columnDefinitions={[
+    {id:"id",header:"ID",cell:x=>x.id},
+    {id:"control",header:"Control",cell:x=>x.name},
+    {id:"needs",header:"Requiere",cell:x=>x.requires},
+    {id:"status",header:"Estado de muestra",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Representado"?"success":x.state==="Sin evidencia"?"error":"stopped"}>{x.state}</StatusIndicator>}
+   ]}/>
+   <Explanation>“Representado” significa que la interfaz muestra la capacidad, no que su cumplimiento AWS esté demostrado. CTRL-25 a CTRL-27 quedan fuera del perímetro.</Explanation>
+  </ExpandableSection>
+
   <Panel title="Agentes en el catálogo">
    <Table variant="embedded" items={simulation.agentRegistry} trackBy="id" columnDefinitions={[
     {id:"name",header:"Agente",cell:x=>x.name},
