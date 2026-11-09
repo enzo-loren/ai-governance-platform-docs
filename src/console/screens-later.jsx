@@ -121,15 +121,32 @@ function Policy(){
  </SpaceBetween>;
 }
 function Guide(){
- const {helpOn,showExplanations}=usePrototype();
+ const {helpOn,showExplanations,simulation}=usePrototype();
  const [tab,setTab]=useState("a");
+ const agent=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)||simulation.agentRegistry[0];
+ const placeholder="<AGENT_TOKEN_DE_"+agent.name.toUpperCase().replace(/[^A-Z0-9]+/g,"_")+">";
  const tabs=[
-  {id:"a",label:"A · Inferencia",content:<SpaceBetween size="m"><Explanation type="success">BASE_URL y agent_token en el SDK OpenAI. Es la conexión base.</Explanation><CopyToClipboard textToCopy={"BASE_URL={gateway}/inference/v1\nAPI_KEY=gov_demo_sin_validez"} copyButtonText="Copiar ejemplo A" copySuccessText="Copiado" copyErrorText="Error al copiar"/></SpaceBetween>},
-  {id:"b",label:"B · MCP",content:<SpaceBetween size="m"><Alert type="warning">La cobertura solo abarca tools ejecutadas por MCP, incluso si B es parcial.</Alert><CopyToClipboard textToCopy={"MCP_URL={gateway}/mcp\nAGENT_TOKEN=gov_demo_sin_validez"} copyButtonText="Copiar ejemplo B" copySuccessText="Copiado" copyErrorText="Error al copiar"/></SpaceBetween>},
-  {id:"c",label:"C · Usuario",content:<SpaceBetween size="m"><Explanation>JWT de usuario verificado por solicitud; B y C son independientes.</Explanation><CopyToClipboard textToCopy="X-Gov-User-Token: <JWT OIDC del cliente>" copyButtonText="Copiar cabecera C" copySuccessText="Copiado" copyErrorText="Error al copiar"/></SpaceBetween>}
+  {id:"a",label:"A · Inferencia",content:<SpaceBetween size="m">
+    <KeyValuePairs columns={2} items={[{label:"Agente",value:agent.name},{label:"Autenticación",value:"Bearer agent_token · uno por agente"}]}/>
+    <FormField label="BASE_URL"><Input readOnly value="{gateway}/inference/v1"/></FormField>
+    <FormField label="API key · agent_token"><Input readOnly value={placeholder}/></FormField>
+    <CopyToClipboard textToCopy={"BASE_URL={gateway}/inference/v1\nAPI_KEY="+placeholder} copyButtonText="Copiar configuración A" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
+    <Box color="text-body-secondary" fontSize="body-s">La clave se entrega una sola vez al crear o rotar este agente. No se puede consultar después. La key del SDK identifica al agente; no es una key de Bedrock.</Box>
+   </SpaceBetween>},
+  {id:"b",label:"B · MCP",content:<SpaceBetween size="m">
+    <Alert type="warning">Solo se controlan las tools registradas y ejecutadas por MCP; las locales quedan fuera de la puerta.</Alert>
+    <KeyValuePairs columns={2} items={[{label:"Agente",value:agent.name},{label:"Autenticación",value:"Mismo agent_token de A"}]}/>
+    <CopyToClipboard textToCopy={"MCP_URL={gateway}/mcp\nAGENT_TOKEN="+placeholder} copyButtonText="Copiar configuración B" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
+    <Box color="text-body-secondary" fontSize="body-s">Las credenciales hacia targets Lambda/OpenAPI se guardan en AgentCore Identity o Secrets Manager; nunca se entregan al agente.</Box>
+   </SpaceBetween>},
+  {id:"c",label:"C · Usuario",content:<SpaceBetween size="m">
+    <KeyValuePairs columns={2} items={[{label:"Identidad agente",value:agent.name+" · agent_token"},{label:"Identidad usuario",value:"JWT OIDC por solicitud"}]}/>
+    <CopyToClipboard textToCopy="X-Gov-User-Token: <JWT OIDC del usuario>" copyButtonText="Copiar cabecera C" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
+    <Box color="text-body-secondary" fontSize="body-s">El JWT de C no reemplaza la API key del agente. Sin JWT se usa solo_workload. Un token inválido se rechaza o degrada según configuración.</Box>
+   </SpaceBetween>}
  ];
  return <SpaceBetween size="l">
-  <Panel title="Conectar por partes" help="Conexión A obligatoria; B y C independientes. Conectar un servicio no garantiza automáticamente su cobertura efectiva.">
+  <Panel title="Conectar por partes" help="A usa una clave propia. B reutiliza esa clave para MCP. C agrega un JWT diferente, del usuario final.">
    <Tabs tabs={tabs} activeTabId={tab} onChange={({detail})=>setTab(detail.activeTabId)}/>
   </Panel>
   <Panel title="Cierre de brechas">
