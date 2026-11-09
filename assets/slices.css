@@ -116,8 +116,8 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:3px solid 
 .m-top-path{font-size:10px;color:#718093}
 .m-profile{display:flex;gap:8px;align-items:center;font-size:10px;color:#5a6b7e;font-weight:650}
 .m-avatar{width:21px;height:21px;display:grid;place-items:center;border-radius:50%;background:#e3edfa;color:#27568c;font-weight:900}
-.m-content{padding:19px 22px 10px;flex:1;overflow:hidden}
-.m-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
+.m-content{padding:14px 21px 5px;flex:1;overflow:hidden}
+.m-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}
 .m-heading h3{margin:0;font-size:21px;font-weight:800;letter-spacing:-.035em;line-height:1.2}
 .m-heading p{margin:4px 0 0;color:#687686;font-size:11px}
 .m-tools{display:flex;align-items:center;gap:7px}
@@ -131,21 +131,21 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:3px solid 
 .m-badge.red{background:#fdf0ef;border-color:#efd0ce;color:#ac3e3b}
 .m-badge.blue{background:#e9f1fc;border-color:#c9daf3;color:#2869ab}
 .m-badge.purple{background:#f4edfc;border-color:#e4d4f4;color:#6d4ca1}
-.m-panel{background:white;border:1px solid #dce4eb;border-radius:9px;padding:14px 16px;min-width:0}
-.m-panel h4{font-size:12px;font-weight:800;margin:0 0 10px;display:flex;align-items:center;gap:7px}
+.m-panel{background:white;border:1px solid #dce4eb;border-radius:9px;padding:11px 13px;min-width:0}
+.m-panel h4{font-size:12px;font-weight:800;margin:0 0 8px;display:flex;align-items:center;gap:7px}
 .m-panel-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px;font-size:12px;font-weight:850}
 .m-panel-title>span{display:flex;align-items:center;gap:6px}
-.m-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.m-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .m-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
 .m-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
 .m-stack{display:grid;gap:12px}
-.m-kpi{background:white;border:1px solid #dce4eb;border-radius:9px;padding:12px 13px;min-width:0}
+.m-kpi{background:white;border:1px solid #dce4eb;border-radius:9px;padding:9px 12px;min-width:0}
 .m-kpi label{font-size:10px;color:#667788;font-weight:680;display:block;margin-bottom:6px}
 .m-kpi strong{font-size:23px;letter-spacing:-.04em;color:#20364e;display:block;line-height:1.14}
 .m-kpi small{font-size:10px;color:#8594a2}
 .m-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:11px}
-.m-table th{color:#718195;background:#f6f8fb;font-size:10px;text-align:left;border-bottom:1px solid #e2e8f1;padding:8px 9px;font-weight:700;white-space:nowrap}
-.m-table td{padding:9px;border-bottom:1px solid #edf0f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#344357}
+.m-table th{color:#718195;background:#f6f8fb;font-size:10px;text-align:left;border-bottom:1px solid #e2e8f1;padding:7px 9px;font-weight:700;white-space:nowrap}
+ .m-table td{padding:7px 9px;border-bottom:1px solid #edf0f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#344357}
 .m-table tr:last-child td{border-bottom:0}
 .m-table td:first-child{font-weight:700;color:#1b3654}
 .m-field{display:flex;flex-direction:column;gap:5px;color:#526277;font-size:10px;font-weight:700;min-width:0}
