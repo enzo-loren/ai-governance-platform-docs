@@ -224,6 +224,8 @@ function Approvals(){
  const {simulation,setSimulation,notify}=usePrototype();
  const [selected,setSelected]=useState("APR42");
  const [confirm,setConfirm]=useState(null);
+ const [supervision,setSupervision]=useState({consultar_ficha:"autonoma",actualizar_precio:"notificar",cambiar_fondo:"requiere_aprobacion"});
+ const [supervisionTool,setSupervisionTool]=useState({label:"cambiar_fondo",value:"cambiar_fondo"});
  const actors=[
   {value:"elena",label:"Elena · aprobadora",role:"aprobador",name:"Elena"},
   {value:"diego",label:"Diego · operador (originador)",role:"operador",name:"Diego"},
@@ -245,6 +247,29 @@ function Approvals(){
   setConfirm(null);
  };
  return <SpaceBetween size="l">
+  <Container header={<Header variant="h2">Supervisión por herramienta</Header>}>
+   <SpaceBetween size="m">
+    <ColumnLayout columns={2}>
+     <FormField label="Tool">
+      <Select selectedOption={supervisionTool} options={Object.keys(supervision).map(value=>({value,label:value}))} onChange={({detail})=>setSupervisionTool(detail.selectedOption)}/>
+     </FormField>
+     <FormField label="Nivel de supervisión">
+      <Select selectedOption={[
+        {value:"autonoma",label:"Autónoma"},
+        {value:"notificar",label:"Notificar"},
+        {value:"requiere_aprobacion",label:"Requiere aprobación"}
+       ].find(option=>option.value===supervision[supervisionTool.value])}
+       options={[{value:"autonoma",label:"Autónoma"},{value:"notificar",label:"Notificar"},{value:"requiere_aprobacion",label:"Requiere aprobación"}]}
+       onChange={({detail})=>setSupervision(prev=>({...prev,[supervisionTool.value]:detail.selectedOption.value}))}/>
+     </FormField>
+    </ColumnLayout>
+    <StatusIndicator type={supervision[supervisionTool.value]==="requiere_aprobacion"?"warning":"info"}>
+     {supervision[supervisionTool.value]==="requiere_aprobacion"?"La ejecución espera autorización":
+      supervision[supervisionTool.value]==="notificar"?"La ejecución emite una alerta posterior":"Ejecución autónoma conforme a reglas"}
+    </StatusIndicator>
+    <Box color="text-body-secondary" fontSize="body-s">Configuración local de demostración. «Notificar» no bloquea; «Requiere aprobación» retiene la tool MCP hasta una decisión humana. Ningún cambio se aplica a AWS.</Box>
+   </SpaceBetween>
+  </Container>
   <Container header={<Header variant="h2">Sesión de aprobación</Header>}>
    <SpaceBetween size="s">
     <FormField label="Actor de la decisión · datos de demostración">
@@ -255,7 +280,8 @@ function Approvals(){
    </SpaceBetween>
   </Container>
   <ColumnLayout columns={2}>
-   <div className="desktop-table"><Table items={requests} trackBy="id" header={<Header variant="h2">Solicitudes</Header>}
+   <div className="approval-list-column">
+    <div className="desktop-table"><Table items={requests} trackBy="id" header={<Header variant="h2">Solicitudes</Header>}
     columnDefinitions={[
      {id:"name",header:"Operación",cell:x=><Button variant="link" onClick={()=>setSelected(x.id)}>{x.id} · {x.name}</Button>},
      {id:"state",header:"Estado",cell:x=><StatusIndicator type={status(x.id)==="Pendiente"?"pending":status(x.id)==="Vencida"?"warning":"success"}>{status(x.id)}</StatusIndicator>},
@@ -273,6 +299,7 @@ function Approvals(){
       </div>)}
      </SpaceBetween>
     </Container>
+   </div>
    </div>
    <Panel title={"Solicitud "+chosen.id} help="HITL-02/03: aprobación separada de funciones, no ejecución sin aprobación, caducidad y consulta por gov_aprobacion_estado.">
     <SpaceBetween size="m">
@@ -341,6 +368,7 @@ function Search(){
     <Button variant="primary" onClick={()=>setApplied({query,decision:decision.value,model:model.value,channel:channel.value,connections:connections.value,period})}>Buscar</Button>
    </SpaceBetween>
   </Panel>
+  <div className="desktop-table">
   <Table items={items} trackBy="id" header={<Header variant="h2" counter={"("+items.length+")"}>Resultados</Header>}
    columnDefinitions={[
     {id:"id",header:"Trace ID",cell:x=><Button variant="link" onClick={()=>show(x)}>{x.id}</Button>},
@@ -349,6 +377,23 @@ function Search(){
     {id:"action",header:"Detalle",cell:x=><Button variant="link" onClick={()=>show(x)}>Ver ruta forense</Button>}
    ]}
    empty={<Box textAlign="center" padding="l">No hay transacciones para estos filtros de demostración.</Box>}/>
+  </div>
+  <div className="mobile-cards">
+   <Container header={<Header variant="h2" counter={"("+items.length+")"}>Resultados</Header>}>
+    <SpaceBetween size="s">
+     {items.length?items.map(tx=><div key={tx.id} className="mobile-request">
+      <SpaceBetween size="s">
+       <div className="gov-mobile-card-heading">
+        <Box fontFamily="monospace">{tx.id}</Box>
+        <State value={tx.decision}/>
+       </div>
+       <KeyValuePairs columns={2} items={[{label:"Usuario",value:tx.who},{label:"Agente",value:tx.agent},{label:"Tool",value:tx.tool},{label:"Canal",value:tx.channel}]}/>
+       <Button onClick={()=>show(tx)} variant="link">Ver ruta forense</Button>
+      </SpaceBetween>
+     </div>):<Box textAlign="center" padding="m">Sin resultados para estos filtros.</Box>}
+    </SpaceBetween>
+   </Container>
+  </div>
  </SpaceBetween>;
 }
 function Forensic(){
