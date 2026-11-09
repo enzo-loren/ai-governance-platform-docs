@@ -1,4 +1,4 @@
-import React,{useState,useMemo} from "react";
+import React,{useState,useMemo,useEffect} from "react";
 import Box from "@cloudscape-design/components/box";
 import Button from "@cloudscape-design/components/button";
 import Badge from "@cloudscape-design/components/badge";
@@ -20,6 +20,7 @@ import Toggle from "@cloudscape-design/components/toggle";
 import Tabs from "@cloudscape-design/components/tabs";
 import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
 import {usePrototype,Explanation} from "./main.jsx";
+import {AgentEnrollment,AgentSelector,AgentCredentialControls,selectedFrom} from "./agent-credentials.jsx";
 
 const SIM="Simulación local: ningún dato fue guardado ni se invocó AWS.";
 const STATUS={
@@ -71,40 +72,9 @@ function SmallKpi({title,value,context}){
 const parseVal=x=>Number(String(x).replace(",","."));
 const selectOptions=(list)=>list.map(([value,label])=>({value,label}));
 function BasicAgents(){
- const {simulation,setSimulation,notify,helpOn,showExplanations}=usePrototype();
- const [agent,setAgent]=useState(simulation.agent);
- const [model,setModel]=useState({value:"bedrock-a",label:"Modelo del catálogo A"});
- const [created,setCreated]=useState(false);
- const models=selectOptions([["bedrock-a","Modelo del catálogo A"],["bedrock-b","Modelo del catálogo B"],["simulado","Modelo simulado (si se habilita)"]]);
- return <SpaceBetween size="l">
-  <Panel title="Nuevo agente" info="S0: registro, dueño y credencial. El agente nace en el modo inicial de la configuración.">
-   <ColumnLayout columns={2} variant="text-grid">
-    <SpaceBetween size="m">
-     <FormField label="Nombre del agente" description={showExplanations?"Identificador visible en la consola":undefined}>
-      <Input value={agent} onChange={({detail})=>setAgent(detail.value)} />
-     </FormField>
-     <FormField label="Modelo inicial" description={showExplanations?"Configurable desde el catálogo":undefined}>
-      <Select selectedOption={model} options={models} onChange={({detail})=>setModel(detail.selectedOption)}/>
-     </FormField>
-     <FormField label="Responsable"><Input readOnly value="Operador plataforma" /></FormField>
-     <SpaceBetween direction="horizontal" size="s">
-      <Button variant="primary" disabled={!agent.trim()} onClick={()=>{setSimulation(x=>({...x,agent:agent.trim()}));setCreated(true);notify("Agente creado en el prototipo. "+SIM);}}>Dar de alta</Button>
-      <Why title="Token del agente">El token real se muestra una sola vez, se almacena únicamente su hash y puede rotarse. Este prototipo usa una cadena ficticia sin validez.</Why>
-     </SpaceBetween>
-    </SpaceBetween>
-    <SpaceBetween size="m">
-     <Banner>Conexión A · Inferencia mediante OpenAI Chat Completions.</Banner>
-     <FormField label="BASE_URL"><Input readOnly value="{gateway}/inference/v1"/></FormField>
-     {created ? <>
-      <FormField label="agent_token (ficticio)"><Input readOnly value="gov_demo_sin_validez"/></FormField>
-      <CopyToClipboard textToCopy={'BASE_URL={gateway}/inference/v1\nAPI_KEY=gov_demo_sin_validez'} copyButtonText="Copiar ejemplo" copySuccessText="Ejemplo copiado" copyErrorText="No se pudo copiar"/>
-      <Alert type="success">Credencial de ejemplo creada. No se generó ni guardó un token real.</Alert>
-     </> : <Explanation>Al registrar el agente aparecerá una credencial de ejemplo. El token de producción se muestra una sola vez.</Explanation>}
-    </SpaceBetween>
-   </ColumnLayout>
-  </Panel>
- </SpaceBetween>;
+ return <AgentEnrollment/>;
 }
+
 function Live(){
  const {helpOn,navigate,slice}=usePrototype();
  const [paused,setPaused]=useState(false);
@@ -145,26 +115,32 @@ function Live(){
  </SpaceBetween>;
 }
 function Coverage(){
- const {navigate,slice}=usePrototype();
- const stage=Number(slice.slice(1));
+ const {simulation,showExplanations}=usePrototype();
+ const agent=selectedFrom(simulation);
  return <SpaceBetween size="l">
-  <ColumnLayout columns={3} variant="text-grid">
-   <Panel title="A · Inferencia"><StatusIndicator type="success">Conectada</StatusIndicator><Box fontSize="body-s">Solicitudes, respuestas e intenciones observadas.</Box></Panel>
-   <Panel title="B · Tools MCP"><StatusIndicator type="stopped">No conectada</StatusIndicator><Box fontSize="body-s">Sin control sobre ejecuciones locales.</Box></Panel>
-   <Panel title="C · Identidad"><StatusIndicator type="stopped">No conectada</StatusIndicator><Box fontSize="body-s">Principal: solo_workload.</Box></Panel>
-  </ColumnLayout>
-  <Panel title="Estado de los controles" info="La cobertura no es una puntuación absoluta de seguridad: depende del catálogo, la conexión real, el modo y las evidencias.">
+  <Container header={<Header variant="h2">Cobertura del catálogo · agente {agent.name}</Header>}>
+   <SpaceBetween size="m">
+    <ColumnLayout columns={3}>
+     <div><Box color="text-body-secondary">A · Inferencia</Box><StatusIndicator type="success">Conectada (demo)</StatusIndicator></div>
+     <div><Box color="text-body-secondary">B · Tools MCP</Box><StatusIndicator type="stopped">No conectada</StatusIndicator></div>
+     <div><Box color="text-body-secondary">C · Usuario</Box><StatusIndicator type="stopped">No conectada · solo_workload</StatusIndicator></div>
+    </ColumnLayout>
+    <ProgressBar value={41} label="Máximo alcanzable con A en modo activo" additionalInfo="41 % del catálogo actual · referencia, no medición" description="Conexión A sin B ni C, catálogo completo aplicable" />
+    <Box color="text-body-secondary" fontSize="body-s">En descubrimiento los controles preventivos configurados «en sombra» no suman. Los porcentajes dependen de las conexiones, el modo, los controles aplicables y la evidencia de la ventana.</Box>
+   </SpaceBetween>
+  </Container>
+  <Panel title="Estado de los controles" info="La cobertura no es un porcentaje de seguridad absoluta: solo cuenta controles del catálogo del producto con evidencia válida.">
    <Table variant="embedded" items={[
-    {c:"Autenticación del agente",state:"Activo",reason:"agent_token verificado"},
-    {c:"Evidencia y flujo",state:"Activo",reason:"Índice durable"},
-    {c:"Políticas de tools",state:"En sombra",reason:"Se evalúan sin bloquear por política"},
-    {c:"Ejecución fuera de MCP",state:"No disponible",reason:"El agente ejecuta localmente"}
-   ]} columnDefinitions={[
-    {id:"c",header:"Control",cell:x=>x.c},{id:"state",header:"Estado",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":"stopped"}>{x.state}</StatusIndicator>},
-    {id:"reason",header:"Por qué",cell:x=>x.reason}
-   ]}/>
+     {c:"Autenticación de "+agent.name,state:"Activo",reason:"agent_token propio por agente; no compartido"},
+     {c:"Evidencia y flujo",state:"Activo",reason:"Índice durable"},
+     {c:"Políticas de tools",state:"En sombra",reason:"Solo observadas, sin denegación por política"},
+     {c:"Ejecución fuera de MCP",state:"No disponible",reason:"El agente ejecuta tools locales"}
+    ]} columnDefinitions={[
+     {id:"c",header:"Control",cell:x=>x.c},{id:"state",header:"Estado",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":"stopped"}>{x.state}</StatusIndicator>},
+     {id:"reason",header:"Por qué",cell:x=>x.reason}
+    ]}/>
   </Panel>
-  <Explanation type="warning">Fuera del perímetro: red/IAM del agente, autenticación usuario→agente y aviso final de IA.</Explanation>
+  {showExplanations&&<Alert type="warning">Máximos referenciales para controles aplicables con cobertura completa en activo: A 41 %, A+C 56 %, A+B 67 %, A+B+C 89 %. El 11 % restante está fuera del perímetro. No son resultados de pruebas ni puntuaciones de seguridad.</Alert>}
  </SpaceBetween>;
 }
 function Inventory(){
@@ -214,82 +190,214 @@ function Shadow(){
 function ActiveAgent(){
  const {simulation,setSimulation,notify,showExplanations}=usePrototype();
  const [dialog,setDialog]=useState(null);
- const mode=simulation.mode;
+ const selected=selectedFrom(simulation);
+ const mode=selected.mode;
+ const [modelEdit,setModelEdit]=useState(null);
+ const [presetEdit,setPresetEdit]=useState(null);
+ const models=selectOptions([["bedrock-a","Modelo del catálogo A"],["bedrock-b","Modelo del catálogo B"],["simulado","Simulado, si está disponible"]]);
+ const presets=selectOptions([["1","1 · Caja Negra Segura"],["2","2 · Operación Supervisada"],["3","3 · Blindaje Estricto"]]);
+ const model=selected.model||"bedrock-a";
+ const preset=selected.preset||"1";
+ const updateSelected=change=>{
+  setSimulation(prev=>{
+   const updated=prev.agentRegistry.map(x=>x.id===selected.id?{...x,...change}:x);
+   const next=updated.find(x=>x.id===selected.id);
+   return {...prev,agentRegistry:updated,agent:next.name,mode:next.mode};
+  });
+ };
  const apply=()=>{
-  const next=dialog==="activate"?"Activo":"Suspendido";
-  setSimulation(s=>({...s,mode:next}));notify("Modo "+next.toLowerCase()+" aplicado únicamente al prototipo. "+SIM);
+  if(dialog==="activate"&&!selected.owner){notify("El agente necesita un responsable antes de activarse.","error");return}
+  if(dialog==="retire"){
+   updateSelected({mode:"Retirado",tokens:selected.tokens.map(key=>({...key,status:"Revocada"}))});
+   notify("Agente retirado solo en la demostración: todas sus claves dejan de valer.");
+  }else if(dialog==="suspend"){
+   updateSelected({mode:"Suspendido",priorMode:mode});
+   notify("Agente "+selected.name+" suspendido en la demostración. Otros agentes no cambian.");
+  }else if(dialog==="activate"){
+   updateSelected({mode:"Activo"});
+   notify("Agente "+selected.name+" pasa a activo en la demostración.");
+  }else if(dialog==="resume"){
+   updateSelected({mode:selected.priorMode||"Descubrimiento"});
+   notify("Agente "+selected.name+" reactivado al modo anterior en demostración.");
+  }
   setDialog(null);
  };
+ const saveSettings=()=>{
+  updateSelected({model:modelEdit?.value||model,preset:presetEdit?.value||preset});
+  setModelEdit(null);setPresetEdit(null);
+  notify("Modelos y Preset del agente "+selected.name+" cambiados en DEMO. No se aplicaron a AWS.");
+ };
+ const options=modelEdit||models.find(x=>x.value===model)||models[0];
+ const policyOption=presetEdit||presets.find(x=>x.value===preset)||presets[0];
  return <SpaceBetween size="l">
-  <Panel title={simulation.agent} actions={<SpaceBetween direction="horizontal" size="s">
-   <Button onClick={()=>setSimulation(x=>({...x,presentation:!x.presentation}))}>{simulation.presentation?"Salir de presentación":"Modo presentación"}</Button>
-   {mode==="Descubrimiento"?<Button variant="primary" onClick={()=>setDialog("activate")}>Pasar a activo</Button>:null}
-   {mode==="Activo"?<Button onClick={()=>setDialog("suspend")}>Suspender agente</Button>:null}
-   {mode==="Suspendido"?<Button onClick={()=>{setSimulation(x=>({...x,mode:"Activo"}));notify("Agente reactivado en simulación.")}}>Reactivar</Button>:null}
-  </SpaceBetween>}>
-   <ColumnLayout columns={3}><SmallKpi title="Modo" value={mode} context="Estado simulado"/><SmallKpi title="Modelo permitido" value="1" context="Catálogo configurado"/><SmallKpi title="Preset" value="1" context="Caja Negra Segura"/></ColumnLayout>
-  </Panel>
-  <ColumnLayout columns={showExplanations?2:1}>
-   <Panel title="Impacto antes de activar" info="REG-01: el operador recibe las denegaciones que habrían ocurrido y la lista de tools sin clasificar antes de confirmar el cambio.">
-    <SpaceBetween size="m"><SmallKpi title="Denegaciones en sombra" value="3" context="Ventana de prueba"/><StatusIndicator type="warning">2 tools pendientes de revisión</StatusIndicator></SpaceBetween>
-   </Panel>
-   {showExplanations&&<Panel title="Qué cambia en modo activo"><SpaceBetween size="m">
-    <Decision state="Denegado" reason="Tool destructiva no permitida · Preset 1"/>
-    <Decision state="Denegado" reason="Modelo no habilitado por el agente"/>
-    <StatusIndicator type="error">Falla cerrada si falla el motor de políticas</StatusIndicator>
-   </SpaceBetween></Panel>}
-  </ColumnLayout>
-  <Modal visible={!!dialog} header={dialog==="activate"?"Confirmar paso a activo":"Suspender agente"} onDismiss={()=>setDialog(null)}
-   footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setDialog(null)}>Cancelar</Button><Button variant="primary" onClick={apply}>Confirmar simulación</Button></SpaceBetween></Box>}>
-    {dialog==="activate"?<Alert type="warning">3 solicitudes se habrían denegado y 2 tools están pendientes. El cambio real exigiría responsable y quedaría auditado.</Alert>:
-    <Alert type="warning">El Kill Switch real rechaza las solicitudes del agente en ≤60 segundos. En este prototipo solo cambiará la etiqueta.</Alert>}
+  <Container header={<Header variant="h2">Agente y operación</Header>}>
+   <SpaceBetween size="m">
+    <div className="gov-agent-picker"><AgentSelector/></div>
+    <ColumnLayout columns={4}>
+     <SmallKpi title="Estado" value={mode} context="Solo este agente"/>
+     <SmallKpi title="API keys vigentes" value={selected.tokens.filter(x=>x.status==="Activa").length.toString()} context="A y B comparten agent_token"/>
+     <SmallKpi title="Preset" value={preset} context="Configuración individual"/>
+     <SmallKpi title="Responsable" value={selected.owner||"Sin asignar"} context={selected.id}/>
+    </ColumnLayout>
+    <SpaceBetween direction="horizontal" size="s">
+     {mode==="Descubrimiento"&&<Button variant="primary" onClick={()=>setDialog("activate")}>Pasar a activo</Button>}
+     {mode!=="Suspendido"&&mode!=="Retirado"&&<Button onClick={()=>setDialog("suspend")}>Suspender agente</Button>}
+     {mode==="Suspendido"&&<Button onClick={()=>setDialog("resume")}>Reactivar agente</Button>}
+     {mode!=="Retirado"&&<Button onClick={()=>setDialog("retire")}>Retirar agente</Button>}
+     <Button onClick={()=>setSimulation(x=>({...x,presentation:!x.presentation}))}>{simulation.presentation?"Salir de presentación":"Modo presentación"}</Button>
+    </SpaceBetween>
+    {mode==="Suspendido"&&<Alert type="warning">Este agente está suspendido. En producción, sus inferencias y ejecuciones MCP deben recibir 403 en un máximo de 60 segundos. Los demás agentes siguen operando.</Alert>}
+    {mode==="Retirado"&&<Alert type="error">Agente retirado. Sus credenciales deben devolver 401 y su evidencia se conserva.</Alert>}
+    {mode!=="Retirado"&&<ColumnLayout columns={2}>
+     <FormField label="Modelo permitido" description={showExplanations?"Cambio individual de catálogo; se aplica en ≤10 s en el producto real.":undefined}>
+      <Select selectedOption={options} options={models} onChange={({detail})=>setModelEdit(detail.selectedOption)}/>
+     </FormField>
+     <FormField label="Preset de políticas">
+      <Select selectedOption={policyOption} options={presets} onChange={({detail})=>setPresetEdit(detail.selectedOption)}/>
+     </FormField>
+    </ColumnLayout>}
+    {mode!=="Retirado"&&<SpaceBetween size="s">
+     {policyOption.value==="2"&&<Alert type="warning">Preset 2 exige identidad C para escrituras y conexión B para aprobar herramientas críticas. Lo que falte se deniega con motivo explícito.</Alert>}
+     {policyOption.value==="3"&&<Alert type="warning">Preset 3 deniega por defecto hasta contar con reglas nominales por rol y tool.</Alert>}
+     <Button disabled={!modelEdit&&!presetEdit} onClick={saveSettings}>Guardar configuración (demo)</Button>
+    </SpaceBetween>}
+   </SpaceBetween>
+  </Container>
+  <AgentCredentialControls/>
+  <Container header={<Header variant="h2">Impacto de activar · datos de ejemplo</Header>}>
+   <ColumnLayout columns={2}>
+    <SmallKpi title="Decisiones que pasarían a denegado" value="3" context="Evaluadas en sombra"/>
+    <SmallKpi title="Tools pendientes de revisión" value="2" context="Revisar antes de activar"/>
+   </ColumnLayout>
+   {showExplanations&&<Box margin={{top:"s"}} color="text-body-secondary">La confirmación debe registrar responsable, actor, versión de la configuración y reglas. Los datos de impacto aquí son sintéticos.</Box>}
+  </Container>
+  <Modal visible={!!dialog} header={{activate:"Confirmar paso a activo",suspend:"Suspender solo este agente",resume:"Reactivar agente",retire:"Retirar agente"}[dialog]||"Confirmar"}
+   onDismiss={()=>setDialog(null)}
+   footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setDialog(null)}>Cancelar</Button><Button variant="primary" onClick={apply}>Confirmar (demo)</Button></SpaceBetween></Box>}>
+   <Alert type={dialog==="retire"?"error":"warning"}>
+    {dialog==="activate"
+     ?"Se aplicarían 3 denegaciones observadas en sombra; hay 2 tools pendientes. Solo cambia "+selected.name+"."
+     :dialog==="suspend"
+      ?"Las inferencias A y ejecuciones MCP B de "+selected.name+" deben responder 403 en ≤60 s. Ningún otro agente se suspende."
+      :dialog==="retire"
+       ?"Todas las claves de "+selected.name+" dejarán de funcionar con 401; su evidencia no se borrará. Los demás agentes conservan sus claves."
+       :"Se recupera el modo anterior de "+selected.name+", sin cambiar a otros agentes."}
+   </Alert>
   </Modal>
  </SpaceBetween>;
 }
 function Limits({byUser=false}){
- const {simulation,setSimulation,notify}=usePrototype();
- const [budget,setBudget]=useState(String(simulation.budget));
- const [rate,setRate]=useState(String(simulation.rate));
- const [policy,setPolicy]=useState({label:"Bloqueo (403)",value:"block"});
+ const {simulation,setSimulation,notify,showExplanations}=usePrototype();
+ const selected=selectedFrom(simulation);
+ const config=selected.limits||{};
+ const [budget,setBudget]=useState(String(config.budget??50));
+ const [rate,setRate]=useState(String(config.rate??50));
+ const [tokens,setTokens]=useState(String(config.tokens??100000));
+ const [period,setPeriod]=useState({value:config.period||"day",label:config.period==="month"?"Mensual":"Diario"});
+ const actions=selectOptions([["alert","Solo alerta"],["throttle","Limitar (429)"],["block","Bloqueo (403)"]]);
+ const [policy,setPolicy]=useState(actions.find(x=>x.value===(config.action||"block"))||actions[2]);
  const [user,setUser]=useState(users[0]);
- const isValid=Number.isFinite(parseVal(budget))&&parseVal(budget)>0&&Number.isFinite(parseVal(rate))&&parseVal(rate)>0;
+ useEffect(()=>{
+  const c=selected.limits||{};
+  setBudget(String(c.budget??50));setRate(String(c.rate??50));setTokens(String(c.tokens??100000));
+  setPeriod({value:c.period||"day",label:c.period==="month"?"Mensual":"Diario"});
+  setPolicy(actions.find(x=>x.value===(c.action||"block"))||actions[2]);
+ },[selected.id]);
+ const parsed=x=>Number(String(x).replace(",","."));
+ const valid=[budget,rate,tokens].every(x=>Number.isFinite(parsed(x))&&parsed(x)>0);
+ const save=()=>{
+  if(!valid)return;
+  const saved={budget:parsed(budget),rate:parsed(rate),tokens:parsed(tokens),period:period.value,action:policy.value};
+  setSimulation(prev=>({...prev,agentRegistry:prev.agentRegistry.map(x=>x.id===selected.id?{...x,limits:saved}:x)}));
+  notify("Límites de "+selected.name+" modificados únicamente en la DEMO.");
+ };
  return <SpaceBetween size="l">
-  <ColumnLayout columns={3}><SmallKpi title={byUser?"Consumo del agente":"Costo del período"} value={"US$ "+simulation.spent.toFixed(2)} context="Cifras ilustrativas"/><SmallKpi title="Tokens" value="74.200" context="de 100.000"/><SmallKpi title="Solicitudes/min" value="28" context={"de "+simulation.rate}/></ColumnLayout>
+  <Container header={<Header variant="h2">Consumo del agente · {selected.name}</Header>}>
+   <SpaceBetween size="m">
+    <AgentSelector/>
+    <ColumnLayout columns={3}>
+     <SmallKpi title="Gasto de muestra" value={"US$ "+simulation.spent.toFixed(2)} context="No proviene de AWS"/>
+     <SmallKpi title="Tokens" value="74.200" context={"de "+tokens+" configurados"}/>
+     <SmallKpi title="Solicitudes/minuto" value="28" context={"de "+rate+" permitidas"}/>
+    </ColumnLayout>
+   </SpaceBetween>
+  </Container>
   {byUser&&<FormField label="Principal para analizar">
-   <Select options={users.map(x=>({label:x.label,value:x.value}))} selectedOption={{label:user.label,value:user.value}} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
-  </FormField>}
-  <Panel title={byUser?"Límites y gasto por principal":"Presupuesto por agente"}>
+    <Select options={users.map(x=>({label:x.label,value:x.value}))} selectedOption={{label:user.label,value:user.value}} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
+   </FormField>}
+  <Panel title={byUser?"Límites por agente y gasto por principal":"Límites por agente"} info="Los límites son individuales para cada agente, no una cuota global que suspende a todos.">
    <SpaceBetween size="m">
     {byUser&&<SmallKpi title={"Principal: "+user.name} value={"US$ "+user.spent.toFixed(2)} context={user.requests+" solicitudes sintéticas · "+user.role}/>}
-    <ProgressBar value={byUser?Math.round(user.spent/20*100):Math.min(100,Math.round(simulation.spent/simulation.budget*100))} additionalInfo={byUser?"Referente ilustrativo: US$ 20":"50/80/100 % · presupuesto de prueba"} description={byUser?"Costo del principal":"Presupuesto del agente"} />
+    <ProgressBar value={Math.min(100,Math.round(simulation.spent/parsed(budget)*100)||0)} additionalInfo={"Alertas 50 / 80 / 100 % · ejemplo"} description={"Presupuesto de "+selected.name}/>
     <ColumnLayout columns={3}>
-     <FormField label="Presupuesto (USD)" errorText={!Number.isFinite(parseVal(budget))||parseVal(budget)<=0?"Introduce un monto mayor que cero.":undefined}><Input value={budget} onChange={({detail})=>setBudget(detail.value)} type="number"/></FormField>
-     <FormField label="Solicitudes/minuto"><Input value={rate} onChange={({detail})=>setRate(detail.value)} type="number"/></FormField>
-     <FormField label="Al superar el límite"><Select selectedOption={policy} options={selectOptions([["alert","Solo alerta"],["throttle","Limitar (429)"],["block","Bloqueo (403)"]])} onChange={({detail})=>setPolicy(detail.selectedOption)} /></FormField>
+     <FormField label="Presupuesto (USD)" errorText={!Number.isFinite(parsed(budget))||parsed(budget)<=0?"Introduce un monto mayor que cero.":undefined}>
+      <Input value={budget} onChange={({detail})=>setBudget(detail.value)} type="number"/>
+     </FormField>
+     <FormField label="Período">
+      <Select selectedOption={period} options={[{value:"day",label:"Diario"},{value:"month",label:"Mensual"}]} onChange={({detail})=>setPeriod(detail.selectedOption)}/>
+     </FormField>
+     <FormField label="Solicitudes por minuto">
+      <Input value={rate} onChange={({detail})=>setRate(detail.value)} type="number"/>
+     </FormField>
+     <FormField label="Tokens por período" errorText={!Number.isFinite(parsed(tokens))||parsed(tokens)<=0?"Introduce un límite mayor que cero.":undefined}>
+      <Input value={tokens} onChange={({detail})=>setTokens(detail.value)} type="number"/>
+     </FormField>
+     <FormField label="Al superar el límite">
+      <Select selectedOption={policy} options={actions} onChange={({detail})=>setPolicy(detail.selectedOption)}/>
+     </FormField>
     </ColumnLayout>
-    <Button variant="primary" disabled={!isValid} onClick={()=>{setSimulation(x=>({...x,budget:parseVal(budget),rate:parseVal(rate)}));notify("Límites actualizados en el prototipo. "+SIM)}}>Guardar límites (simulación)</Button>
+    <Button variant="primary" disabled={!valid} onClick={save}>Guardar límites (simulación)</Button>
+    {showExplanations&&<Alert type="info">En el producto, cada cambio se aplica sin redesplegar; throttle produce 429 con Retry-After, bloqueo 403 y solo_alerta no detiene solicitudes. Los contadores y alertas se miden por agente y, con C, por usuario.</Alert>}
    </SpaceBetween>
   </Panel>
-  <Explanation>El sistema objetivo permite cambiar límites sin despliegue, con alertas y respuestas 429/403. Esta vista solo simula los valores.</Explanation>
  </SpaceBetween>;
 }
 function Identity(){
  const {showExplanations}=usePrototype();
  const [user,setUser]=useState(users[0]);
+ const verification=[
+  {value:"valid",label:"JWT válido"},
+  {value:"missing",label:"Sin token · solo_workload"},
+  {value:"reject",label:"Token inválido · rechazar"},
+  {value:"degrade",label:"Token inválido · degradar"}
+ ];
+ const [token,setToken]=useState(verification[0]);
+ const denied=token.value==="reject";
+ const effective=token.value==="valid"?user:users[2];
+ const authorized=!denied&&token.value==="valid"&&effective.pii;
+ const status=denied?"401 · gov_user_unauthorized":token.value==="degrade"?"Token degradado · solo_workload":token.value==="missing"?"Sin usuario · solo_workload":"Usuario verificado";
  return <SpaceBetween size="l">
-  <FormField label="Principal de la solicitud" description={showExplanations?"Conexión C valida el JWT: firma, emisor, vigencia y audiencia.":undefined}>
-   <Select selectedOption={{label:user.label,value:user.value}} options={users.map(x=>({label:x.label,value:x.value}))} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
-  </FormField>
+  <Container header={<Header variant="h2">Identidad por solicitud</Header>}>
+   <SpaceBetween size="m">
+    <ColumnLayout columns={2}>
+     <FormField label="Token del usuario · conexión C" description={showExplanations?"JWT de usuario, distinto del agent_token usado por A/B.":undefined}>
+      <Select selectedOption={token} options={verification} onChange={({detail})=>setToken(detail.selectedOption)}/>
+     </FormField>
+     <FormField label="Persona (datos ficticios)">
+      <Select selectedOption={{label:user.label,value:user.value}} options={users.map(x=>({label:x.label,value:x.value}))} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
+     </FormField>
+    </ColumnLayout>
+    <StatusIndicator type={denied?"error":token.value==="valid"?"success":"warning"}>{status}</StatusIndicator>
+    {token.value==="degrade"&&<Alert type="warning">El token inválido se trata como solo_workload y genera una alerta; no adquiere el rol elegido.</Alert>}
+    {denied&&<Alert type="error">Acceso rechazado: no se llama al modelo ni se atribuye esta solicitud al usuario seleccionado.</Alert>}
+   </SpaceBetween>
+  </Container>
   <ColumnLayout columns={2}>
-   <Panel title="Identidad verificada"><KeyValuePairs columns={1} items={[{label:"Usuario",value:user.name},{label:"Rol",value:user.role},{label:"Permiso de datos personales",value:user.pii?"pii_access":"No concedido"}]}/></Panel>
+   <Panel title="Principal efectivo">
+    <KeyValuePairs columns={1} items={[
+     {label:"Usuario",value:denied?"Sin acceso":effective.name},
+     {label:"Rol",value:denied?"Sin acceso":effective.role},
+     {label:"Permiso PII",value:denied?"No evaluado":authorized?"pii_access":"No concedido"}
+    ]}/>
+   </Panel>
    <Panel title="Respuesta del modelo">
-    <SpaceBetween size="s"><StatusIndicator type={user.pii?"success":"info"}>{user.pii?"Datos visibles con permiso":"Datos personales enmascarados"}</StatusIndicator>
-    <Box fontFamily="monospace">RUT: {user.pii?"12.345.678-5":"**.***.***-*"}<br/>Correo: {user.pii?"persona@ejemplo.cl":"***@***"}</Box>
+    <SpaceBetween size="s">
+     <StatusIndicator type={denied?"error":authorized?"success":"info"}>{denied?"Solicitud detenida":authorized?"Datos visibles por permiso":"Datos personales enmascarados"}</StatusIndicator>
+     {!denied&&<Box fontFamily="monospace">RUT: {authorized?"12.345.678-5":"**.***.***-*"}<br/>Correo: {authorized?"persona@ejemplo.cl":"***@***"}</Box>}
     </SpaceBetween>
    </Panel>
   </ColumnLayout>
-  <Explanation>Sin X-Gov-User-Token, se utiliza solo_workload. La puerta no autentica el tramo usuario → aplicación → agente.</Explanation>
+  <Box color="text-body-secondary" fontSize="body-s">La conexión C se mide como la proporción de solicitudes con JWT válido. Si falta, el agente conserva su autenticación A/B, pero las reglas no reciben identidad humana. La plataforma no autentica el salto usuario → agente.</Box>
  </SpaceBetween>;
 }
-
 export {BasicAgents,Live,Coverage,Inventory,Shadow,ActiveAgent,Limits,Identity};
