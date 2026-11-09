@@ -8,6 +8,7 @@ on:
     paths:
       - package.json
       - 'scripts/stamp-console-assets.mjs'
+      - 'tests/console-build-integrity.mjs'
       - vite.config.mjs
       - 'src/console/**'
       - 'assets/console-data.json'
