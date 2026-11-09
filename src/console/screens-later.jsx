@@ -79,7 +79,7 @@ function MCP(){
   notify("Target registrado en la demostración. No se creó ningún recurso AWS.");
  };
  return <SpaceBetween size="l">
-  <SpaceBetween direction="horizontal" size="s"><AgentSelector/><Button onClick={()=>navigate("s1-inventory")}>Volver al catálogo</Button></SpaceBetween>
+  <SpaceBetween direction="horizontal" size="s"><div className="gov-agent-picker"><AgentSelector/></div><Button onClick={()=>navigate("s1-inventory")}>Volver al catálogo</Button></SpaceBetween>
   <ColumnLayout columns={3}>
    <Panel title="Tools declaradas"><div className="kpi-value">4</div><Box color="text-body-secondary">En inferencia A</Box></Panel>
    <Panel title="Tools por MCP"><div className="kpi-value">{mcp.length} de 4</div><Box color="text-body-secondary">Cobertura B parcial</Box></Panel>
