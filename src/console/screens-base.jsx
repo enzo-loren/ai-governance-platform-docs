@@ -283,3 +283,5 @@ function Identity(){
   <Alert type="info">Sin X-Gov-User-Token, el agente opera como solo_workload. Esto no autentica la sesión entre usuario y aplicación cliente.</Alert>
  </SpaceBetween>;
 }
+
+export {BasicAgents,Live,Coverage,Inventory,Shadow,ActiveAgent,Limits,Identity};
