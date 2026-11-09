@@ -1,6 +1,6 @@
 # Auditoría editorial integral de las 15 versiones · S0–S6
 
-**Corte revisado:** 9 de noviembre de 2026 · **Objeto:** prototipo Cloudscape, 15 versiones agrupadas en 12 superficies. **Directiva:** Scientific Writing Editor, con separación REQUIRED / OPTIONAL / PROCESS_ONLY. La revisión no verifica el backend ni la aceptación de requisitos AWS.
+**Corte revisado:** 9 de noviembre de 2026 · **Objeto:** prototipo Cloudscape, 15 versiones agrupadas en 14 superficies. **Directiva:** Scientific Writing Editor, con separación REQUIRED / OPTIONAL / PROCESS_ONLY. La revisión no verifica el backend ni la aceptación de requisitos AWS.
 
 ## Regla de diseño
 
@@ -17,11 +17,11 @@ Los mensajes de denegación, aprobación pendiente, identidad inválida, herrami
 | S1 · Gobernanza | Efectos sobre solicitudes y herramientas, conexiones, siguiente acceso | 27 controles, porcentaje teórico, reglas de cálculo y justificación editorial | Retirar catálogo y techo del plano principal |
 | S1 · Tools | Herramienta, clasificación, versión, revisión y estado | Diferencia conceptual clasificación/aprobación/MCP | Mantener nota de consecuencia breve |
 | S1 · Sombra | Lo ocurrido y lo que se habría detenido | Semántica de Cedar y guardrail | Conservar: ya usa estados claros |
-| S2 · Activación | Activar, suspender, retirar, posibles bloqueos y herramientas pendientes | SLA, códigos HTTP, contratos de preset, identificación de agente interna | Expresar efectos operativos sin jerga gratuita |
+| S2 · Ficha individual | Activar, suspender, retirar, posibles bloqueos y herramientas pendientes | SLA, códigos HTTP, contratos de preset, identificación de agente interna | Expresar efectos operativos sin jerga gratuita |
 | S2 · Consumo | Gasto, presupuesto, solicitudes/minuto, medida y acciones al exceder | Números HTTP, Retry-After, umbrales técnicos | Mostrar consecuencias, no protocolo |
 | S3 · Identidad | Usuario efectivo, tratamiento de datos, rechazo/degradación | JWT/OIDC, operación interna A/C | Conservar señales necesarias de identidad |
 | S3 · Consumo por persona | Consumo por usuario, cuota y herencia sin identidad | Denominadores, cabeceras y códigos de respuesta | Mantener independencia de presupuestos visible |
-| S4 · MCP | Herramientas dentro/fuera de la puerta, destinos, autorizaciones | Bóveda, diferencias de infraestructura, target auth | Resumir destinos sin ocultar la exposición |
+| S4 · Ejecución MCP | Herramientas dentro/fuera de la puerta, destinos, autorizaciones | Bóveda, diferencias de infraestructura, target auth | Resumir destinos sin ocultar la exposición |
 | S4 · Reglas | Agente, rol, tool, condición, efecto e historial | Tipos de esquema, parser, matriz de pruebas | Simplificar nomenclatura, conservar editor voluntario |
 | S4 · Guía | Configuración copiable y acción siguiente por conexión | Techo de catálogo y justificación del potencial | Mostrar la ganancia en ejecuciones/identidad |
 | S5 · Aprobaciones | Quién puede autorizar, petición, monto, plazo, decisión | TTL, idempotencia, contrato de protocolo | Mensajes cortos, comprobaciones reales documentadas |
