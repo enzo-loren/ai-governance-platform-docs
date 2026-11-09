@@ -84,12 +84,15 @@ function MCP(){
   </ColumnLayout>
   <Container header={<Header variant="h2" actions={<Button onClick={()=>setTargetModal(true)}>Registrar target (demo)</Button>}>Targets MCP y credenciales de destino</Header>}>
    <SpaceBetween size="m">
-    <Table variant="embedded" items={targets} trackBy="id" columnDefinitions={[
+    <div className="desktop-table"><Table variant="embedded" items={targets} trackBy="id" columnDefinitions={[
      {id:"target",header:"Target",cell:x=>x.id},
      {id:"type",header:"Tipo",cell:x=>x.type},
      {id:"secret",header:"Autenticación hacia el target",cell:x=>x.secret},
      {id:"status",header:"Estado",cell:x=><StatusIndicator type="success">{x.status}</StatusIndicator>}
-    ]}/>
+    ]}/></div>
+    <div className="mobile-cards"><SpaceBetween size="s">{targets.map(item=><Container key={item.id} header={<Header variant="h3">{item.id}</Header>}>
+      <KeyValuePairs columns={1} items={[{label:"Tipo",value:item.type},{label:"Autenticación",value:item.secret},{label:"Estado",value:item.status}]}/>
+    </Container>)}</SpaceBetween></div>
     <Explanation>La clave del agente autentica A y B. Las claves propias de cada target se guardan en AgentCore Identity o Secrets Manager y no se entregan al agente.</Explanation>
    </SpaceBetween>
   </Container>
