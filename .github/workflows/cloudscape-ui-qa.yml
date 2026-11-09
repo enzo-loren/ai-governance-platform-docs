@@ -1,0 +1,54 @@
+name: Cloudscape prototype visual + navigation QA
+on:
+  push:
+    branches:
+      - feat/cloudscape-navegacion-slices
+    paths:
+      - 'assets/slices.js'
+      - 'assets/slices.css'
+      - 'assets/console.html'
+      - 'assets/console-build/**'
+      - 'assets/console-data.json'
+      - 'index.html'
+      - 'src/console/**'
+      - 'tests/cloudscape-ui-qa.mjs'
+      - '.github/workflows/cloudscape-ui-qa.yml'
+  pull_request:
+    paths:
+      - 'assets/slices.js'
+      - 'assets/slices.css'
+      - 'assets/console.html'
+      - 'assets/console-build/**'
+      - 'assets/console-data.json'
+      - 'index.html'
+      - 'src/console/**'
+      - 'tests/cloudscape-ui-qa.mjs'
+  workflow_dispatch:
+concurrency:
+  group: cloudscape-qa-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  visual-and-functional:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Browser QA dependencies
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify real Cloudscape UI and navigation
+        run: node tests/cloudscape-ui-qa.mjs
+      - name: Attach screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudscape-ui-qa
+          path: artifacts/cloudscape-qa/
+          retention-days: 14
