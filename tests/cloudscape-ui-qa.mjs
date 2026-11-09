@@ -43,6 +43,18 @@ try{
    check(data.cloudscape>10,vp.id+"/"+view+" no usa componentes reales Cloudscape: "+data.cloudscape);
    check(data.hasLayout,vp.id+"/"+view+" no tiene Layout");
    check(data.pageOverflow<6,vp.id+"/"+view+" overflow horizontal "+data.pageOverflow+"px");
+   if(vp.id==="mobile"&&["s0-live","s6-search"].includes(view)){
+     check(await page.locator(".mobile-cards .mobile-request").count()===3,
+       view+": los tres eventos/resultados deben leerse en tarjetas móviles, sin tabla horizontal");
+     check(!await page.locator(".desktop-table").isVisible(),
+       view+": la tabla de escritorio no debe presentarse en móvil");
+   }
+   if(vp.id==="mobile"&&view==="s1-inventory"){
+     check(await page.locator(".mobile-cards [class*='awsui_container']").count()>=4,
+       "S1 inventario: faltan tarjetas de tool legibles en móvil");
+     check(!await page.locator(".desktop-table").isVisible(),
+       "S1 inventario: tabla apretada sigue visible en móvil");
+   }
    if(vp.id==="mobile"&&view==="s5-approvals"){
      const mobile=await page.locator(".mobile-cards .mobile-request").count();
      check(mobile===3,"S5 móvil: deben existir tres tarjetas de aprobaciones en lugar de la tabla comprimida");
