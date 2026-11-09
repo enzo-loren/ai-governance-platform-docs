@@ -41,7 +41,7 @@ function measureScene(){
 }
 async function setStage(page,slice){
  await page.locator('[data-stage="'+slice+'"]').click();
- await page.waitForFunction(s=>document.querySelector('#stage-code').textContent.includes(s),slice);
+ await page.waitForFunction(s=>document.querySelector('[data-stage="'+s+'"]').getAttribute('aria-pressed')==='true',slice);
 }
 try{
  await start();
