@@ -52,10 +52,16 @@ try{
    if(vp.id==="desktop"||["s0-connect","s4-mcp","s5-approvals","s6-forensic"].includes(view)){
     await page.screenshot({path:out+"/"+vp.id+"-"+view+".png",fullPage:true});
    }
-   // Explicación emergente, con teclado y cierre real.
+   // Por defecto la UI debe parecerse al producto: sin guías abiertas.
+   check(await page.getByRole("button",{name:"¿Qué muestra?"}).count()===0,
+     vp.id+"/"+view+" muestra ayuda en modo limpio");
    if(vp.id==="desktop"){
+    const explanations=page.getByRole("checkbox",{name:"Mostrar explicaciones"});
+    check(!await explanations.isChecked(),vp.id+"/"+view+" inicia con explicaciones activadas");
+    await explanations.check();
     await page.getByRole("button",{name:"¿Qué muestra?"}).click();
-    check(await page.getByText("Prototipo informativo:",{exact:false}).count()>0,vp.id+"/"+view+" la ayuda no abre");
+    check(await page.getByText("Esta explicación describe el diseño previsto",{exact:false}).count()>0,
+      vp.id+"/"+view+" la ayuda no abre");
     await page.keyboard.press("Escape");
    }
   }
