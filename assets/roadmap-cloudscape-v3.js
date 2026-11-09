@@ -29,7 +29,10 @@
    return String(x).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
   }
   function route(slice,screen,preview=false){
-   return "assets/console.html?slice="+encodeURIComponent(slice)+"&screen="+encodeURIComponent(screen)+(preview?"&preview=1":(showExplanations?"&explain=1":""));
+   const version=document.querySelector('meta[name="console-build-version"]')?.content||"";
+   return "assets/console.html?slice="+encodeURIComponent(slice)+"&screen="+encodeURIComponent(screen)+
+    (preview?"&preview=1":(showExplanations?"&explain=1":""))+
+    (version?"&v="+encodeURIComponent(version):"");
   }
   function render(){
    const stage=stages.find(s=>s.id===selected),count=stats(selected),visible=items(selected,mode);
