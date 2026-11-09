@@ -78,7 +78,7 @@ export function AgentEnrollment(){
   if(!valid)return;
   const key=createDemoKey();
   const id="agt-"+crypto.randomUUID().slice(0,8);
-  const registered={id,name:agentName.trim(),owner:owner.trim(),mode:"Descubrimiento",model:model.value,tokens:[descriptor(key)]};
+  const registered={id,name:agentName.trim(),owner:owner.trim(),mode:"Descubrimiento",model:model.value,tokens:[descriptor(key)],discoveredTools:[],toolsMcp:[],toolReviews:{},toolSettings:{},mcpTargets:[]};
   setSimulation(prev=>({...prev,agent:registered.name,mode:registered.mode,selectedAgentId:id,agentRegistry:[...prev.agentRegistry,registered]}));
   setReveal({agentName:registered.name,secret:key.secret});
   notify("Agente "+registered.name+" registrado en la DEMO, aislado de los demás. No se creó una identidad AWS.");
