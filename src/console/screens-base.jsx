@@ -412,8 +412,8 @@ function ActiveAgent(){
      {mode==="Suspendido"&&<Button onClick={()=>setDialog("resume")}>Reactivar agente</Button>}
      {mode!=="Retirado"&&<Button onClick={()=>setDialog("retire")}>Retirar agente</Button>}
     </SpaceBetween>
-    {mode==="Suspendido"&&<Alert type="warning">Este agente está suspendido. En producción, sus inferencias y ejecuciones MCP deben recibir 403 en un máximo de 60 segundos. Los demás agentes siguen operando.</Alert>}
-    {mode==="Retirado"&&<Alert type="error">Agente retirado. Sus credenciales deben devolver 401 y su evidencia se conserva.</Alert>}
+    {mode==="Suspendido"&&<Alert type="warning">Agente suspendido: sus solicitudes A y MCP se rechazarían; los demás agentes siguen operando.</Alert>}
+    {mode==="Retirado"&&<Alert type="error">Agente retirado: sus credenciales dejan de dar acceso; su evidencia se conserva.</Alert>}
     {mode!=="Retirado"&&<ColumnLayout columns={2}>
      <FormField label="Modelo permitido" description={showExplanations?"Cambio individual de catálogo; se aplica en ≤10 s en el producto real.":undefined}>
       <Select selectedOption={options} options={models} onChange={({detail})=>setModelEdit(detail.selectedOption)}/>
@@ -432,7 +432,7 @@ function ActiveAgent(){
         {label:"Candidato",value:presetEdit.label},
         {label:"Solicitudes cuya decisión cambiaría",value:presetEdit.value==="3"?"3 de 12":presetEdit.value==="2"?"2 de 12":"1 de 12"}
        ]}/>
-       <Box color="text-body-secondary" fontSize="body-s">Muestra de la ventana: eliminar_registro · actualizar_precio. Cantidades ilustrativas, no obtenidas de evidencia. En el producto deben recalcularse sobre trazas reales (POL-05).</Box>
+
       </SpaceBetween>
      </Container>}
      <Button disabled={!modelEdit&&!presetEdit} onClick={saveSettings}>Guardar configuración (demo)</Button>
@@ -455,9 +455,9 @@ function ActiveAgent(){
     {dialog==="activate"
      ?"Se aplicarían 3 denegaciones observadas en sombra; siguen pendientes eliminar_registro y procesar_lote. Solo cambia "+selected.name+"."
      :dialog==="suspend"
-      ?"Las inferencias A y ejecuciones MCP B de "+selected.name+" deben responder 403 en ≤60 s. Ningún otro agente se suspende."
+      ?"Las solicitudes A y MCP de "+selected.name+" se rechazarían. Ningún otro agente se suspende."
       :dialog==="retire"
-       ?"Todas las claves de "+selected.name+" dejarán de funcionar con 401; su evidencia no se borrará. Los demás agentes conservan sus claves."
+       ?"Se desactivan las claves de "+selected.name+" y se conserva su evidencia. Los demás agentes no cambian."
        :"Se recupera el modo anterior de "+selected.name+", sin cambiar a otros agentes."}
    </Alert>
   </Modal>
