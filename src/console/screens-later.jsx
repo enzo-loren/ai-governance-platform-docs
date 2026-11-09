@@ -486,7 +486,8 @@ function Forensic(){
       <StatusIndicator type="success">Object Lock GOVERNANCE · contrato objetivo</StatusIndicator>
       <KeyValuePairs columns={1} items={[
        {label:"Objeto",value:"evidencia/"+record.id+".json (ejemplo)"},
-       {label:"Retención",value:"Configurada por despliegue; no medida en esta DEMO"},
+       {label:"Retención hasta",value:"2027-11-09 · ejemplo, no medido"},
+       {label:"Modo",value:"GOVERNANCE · bypass privilegiado posible"},
        {label:"Integridad",value:"No comprobada contra AWS"}
       ]}/>
       <Button onClick={()=>setSeal(true)}>Probar inmutabilidad (demo)</Button>
@@ -496,7 +497,15 @@ function Forensic(){
   </ColumnLayout>
   <Modal visible={seal} header="Prueba de inmutabilidad" onDismiss={()=>setSeal(false)}
    footer={<Box float="right"><Button variant="primary" onClick={()=>setSeal(false)}>Cerrar</Button></Box>}>
-   <Alert type="info">Resultado esperado: S3 rechaza el borrado sin permiso de bypass y el objeto persiste. El modo GOVERNANCE permite un bypass privilegiado expresamente autorizado; este prototipo no ejecuta ninguna llamada AWS.</Alert>
+   <SpaceBetween size="m">
+    <KeyValuePairs columns={2} items={[
+     {label:"Objeto",value:"evidencia/"+record.id+".json"},
+     {label:"Rol",value:"auditor_sin_bypass"},
+     {label:"Operación",value:"DeleteObject"},
+     {label:"Resultado esperado",value:"403 · AccessDenied"}
+    ]}/>
+    <Alert type="info">Esto NO se ejecutó contra AWS. Para verificar EVD-06, S3 debe rechazar el borrado con rol sin bypass, conservar el objeto y registrar el intento. GOVERNANCE admite bypass privilegiado autorizado.</Alert>
+   </SpaceBetween>
   </Modal>
  </SpaceBetween>;
 }
