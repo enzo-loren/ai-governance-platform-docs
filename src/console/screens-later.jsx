@@ -159,24 +159,42 @@ function Approvals(){
  const {simulation,setSimulation,notify}=usePrototype();
  const [selected,setSelected]=useState("APR42");
  const [confirm,setConfirm]=useState(null);
+ const actors=[
+  {value:"elena",label:"Elena · aprobadora",role:"aprobador",name:"Elena"},
+  {value:"diego",label:"Diego · operador (originador)",role:"operador",name:"Diego"},
+  {value:"ana",label:"Ana · consulta",role:"consulta",name:"Ana"},
+  {value:"agent",label:"agent_token · no es una persona",role:"agente",name:"agente"}
+ ];
+ const [actor,setActor]=useState(actors[0]);
  const status=id=>simulation.approvals[id]||"Pendiente";
  const chosen=requests.find(x=>x.id===selected)||requests[0];
+ const originator=chosen.from;
+ const ownRequest=originator.toLowerCase().includes(actor.name.toLowerCase());
+ const authorized=actor.role==="aprobador"&&!ownRequest;
+ const pending=status(chosen.id)==="Pendiente";
  const decide=()=>{
-  if(!confirm)return;
-  const result=confirm==="approve"?"Aprobada · ejecutada":"Rechazada · no ejecutada";
-  setSimulation(s=>({...s,approvals:{...s.approvals,[chosen.id]:result}}));
-  notify(chosen.id+": "+result+". Ninguna tool fue ejecutada.");
+  if(!confirm||!authorized||!pending){notify("La aprobación fue rechazada por separación de funciones o estado.","error");setConfirm(null);return}
+  const result=confirm==="approve"?"Aprobada · ejecución simulada":"Rechazada · no ejecutada";
+  setSimulation(prev=>({...prev,approvals:{...prev.approvals,[chosen.id]:result}}));
+  notify(chosen.id+": "+result+". Ninguna tool fue ejecutada en AWS.");
   setConfirm(null);
  };
  return <SpaceBetween size="l">
-  <Badge color="grey">Elena · aprobadora</Badge>
-  <Explanation>Solo la persona con rol aprobador puede decidir. agent_token no permite aprobar una tool.</Explanation>
+  <Container header={<Header variant="h2">Sesión de aprobación</Header>}>
+   <SpaceBetween size="s">
+    <FormField label="Actor de la decisión · datos de demostración">
+     <Select selectedOption={actor} options={actors} onChange={({detail})=>setActor(detail.selectedOption)}/>
+    </FormField>
+    <StatusIndicator type={authorized?"success":"error"}>{authorized?"Rol aprobador habilitado":"Sin permiso para aprobar esta solicitud"}</StatusIndicator>
+    {!authorized&&<Alert type="error">La misma persona que originó la operación, un usuario sin rol aprobador y una credencial de agente no pueden autorizarla. Esta comprobación también debe existir en la API.</Alert>}
+   </SpaceBetween>
+  </Container>
   <ColumnLayout columns={2}>
    <div className="desktop-table"><Table items={requests} trackBy="id" header={<Header variant="h2">Solicitudes</Header>}
     columnDefinitions={[
      {id:"name",header:"Operación",cell:x=><Button variant="link" onClick={()=>setSelected(x.id)}>{x.id} · {x.name}</Button>},
      {id:"state",header:"Estado",cell:x=><StatusIndicator type={status(x.id)==="Pendiente"?"pending":status(x.id)==="Vencida"?"warning":"success"}>{status(x.id)}</StatusIndicator>},
-     {id:"time",header:"Plazo",cell:x=>x.time}
+     {id:"time",header:"Plazo (demo)",cell:x=>x.time}
     ]}/></div>
    <div className="mobile-cards">
     <Container header={<Header variant="h2">Solicitudes</Header>}>
@@ -185,22 +203,26 @@ function Approvals(){
        <SpaceBetween size="xxs">
         <Button variant="link" onClick={()=>setSelected(item.id)}>{item.id} · {item.name}</Button>
         <StatusIndicator type={status(item.id)==="Pendiente"?"pending":status(item.id)==="Vencida"?"warning":"success"}>{status(item.id)}</StatusIndicator>
-        <Box fontSize="body-s" color="text-body-secondary">{item.time}</Box>
+        <Box fontSize="body-s" color="text-body-secondary">{item.time} · ejemplo de plazo</Box>
        </SpaceBetween>
       </div>)}
      </SpaceBetween>
     </Container>
    </div>
-   <Panel title={"Solicitud "+chosen.id} help="El sistema retiene la tool y devuelve PENDING_APPROVAL. Solo un humano autorizado puede aprobar; el originador no puede aprobar lo suyo.">
+   <Panel title={"Solicitud "+chosen.id} help="HITL-02/03: aprobación separada de funciones, no ejecución sin aprobación, caducidad y consulta por gov_aprobacion_estado.">
     <SpaceBetween size="m">
-     <KeyValuePairs columns={2} items={[{label:"Tool",value:chosen.name},{label:"Originador",value:chosen.from},{label:"Monto",value:chosen.amount},{label:"Estado",value:status(chosen.id)}]}/>
-     {status(chosen.id)==="Pendiente"?<SpaceBetween direction="horizontal" size="s"><Button variant="primary" onClick={()=>setConfirm("approve")}>Aprobar (demo)</Button><Button onClick={()=>setConfirm("reject")}>Rechazar (demo)</Button></SpaceBetween>:<Alert>Esta solicitud ya fue resuelta o venció.</Alert>}
+     <KeyValuePairs columns={2} items={[{label:"Tool",value:chosen.name},{label:"Originador",value:originator},{label:"Monto",value:chosen.amount},{label:"Estado",value:status(chosen.id)},{label:"Plazo restante",value:chosen.time},{label:"Actor conectado",value:actor.name+" · "+actor.role}]}/>
+     {pending?<SpaceBetween direction="horizontal" size="s">
+      <Button variant="primary" disabled={!authorized} onClick={()=>setConfirm("approve")}>Aprobar (demo)</Button>
+      <Button disabled={!authorized} onClick={()=>setConfirm("reject")}>Rechazar (demo)</Button>
+     </SpaceBetween>:<Alert>Esta solicitud ya fue resuelta o venció y no puede ejecutarse de nuevo.</Alert>}
+     <Box fontSize="body-s" color="text-body-secondary">El resultado MCP debe ser PENDING_APPROVAL con id y vencimiento; el agente consulta gov_aprobacion_estado. En esta maqueta no hay ejecución ni estado real de AWS.</Box>
     </SpaceBetween>
    </Panel>
   </ColumnLayout>
-  <Explanation type="warning">Si falla el servicio de aprobación, la ejecución se deniega. El agente consulta después gov_aprobacion_estado.</Explanation>
-  <Modal visible={!!confirm} header={confirm==="approve"?"Confirmar aprobación":"Confirmar rechazo"} onDismiss={()=>setConfirm(null)} footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setConfirm(null)}>Cancelar</Button><Button variant="primary" onClick={decide}>Confirmar (demo)</Button></SpaceBetween></Box>}>
-   <Alert type="warning">Esta acción modifica solo los datos de muestra en memoria; no ejecuta MCP.</Alert>
+  <Modal visible={!!confirm} header={confirm==="approve"?"Confirmar aprobación":"Confirmar rechazo"} onDismiss={()=>setConfirm(null)}
+   footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setConfirm(null)}>Cancelar</Button><Button variant="primary" disabled={!authorized} onClick={decide}>Confirmar (demo)</Button></SpaceBetween></Box>}>
+   <Alert type="warning">Decisión simulada: la plataforma real debe volver a validar rol, originador, plazo e idempotencia antes de ejecutar por la puerta.</Alert>
   </Modal>
  </SpaceBetween>;
 }
