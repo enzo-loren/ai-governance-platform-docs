@@ -250,7 +250,7 @@ function Guide(){
  const missingB=4-connectedB;
  const placeholder="<AGENT_TOKEN_DE_"+agent.name.toUpperCase().replace(/[^A-Z0-9]+/g,"_")+">";
  const currentMax=hasB?(hasC?89:67):(hasC?56:41);
- const next=!hasC?"C · identidad de usuario":!hasB?"B · tools MCP":missingB>0?"B · centralizar "+missingB+" tools":"Mantener cobertura y revisar evidencia";
+ const next=!hasC?"C · identidad de usuario":!hasB?"B · tools MCP":missingB>0?"B · centralizar "+missingB+(missingB===1?" herramienta":" herramientas"):"Mantener cobertura y revisar evidencia";
  const prospectiveB=hasB?0:hasC?9:7;
  const prospectiveC=hasC?0:hasB?6:4;
  const tabs=[
@@ -276,15 +276,15 @@ function Guide(){
  return <SpaceBetween size="l">
   <Container header={<Header variant="h2">Plan de conexión · {agent.name}</Header>}>
    <ColumnLayout columns={3}>
-    <div><Box color="text-body-secondary">Conexión A</Box><State value="Permitido"/></div>
+    <div><Box color="text-body-secondary">Conexión A</Box><StatusIndicator type="success">Conectada · demo</StatusIndicator></div>
     <div><Box color="text-body-secondary">Conexión B</Box><StatusIndicator type={hasB?"success":"stopped"}>{hasB?connectedB+" de 4 tools · demo":"Pendiente"}</StatusIndicator></div>
     <div><Box color="text-body-secondary">Conexión C</Box><StatusIndicator type={hasC?"success":"stopped"}>{hasC?"JWT · demo":"Pendiente"}</StatusIndicator></div>
    </ColumnLayout>
    <SpaceBetween size="s">
     <Box>Próximo paso: <strong>{next}</strong></Box>
     <KeyValuePairs columns={2} items={[
-     {label:"Añadir B",value:hasB?"Centralizar "+missingB+" tools restantes":"Revisar y detener ejecuciones de tools"},
-     {label:"Añadir C",value:hasC?"Atribución y permisos por persona":"Evaluar permisos y consumo por usuario"}
+     {label:hasB?"Completar B":"Añadir B",value:hasB?missingB===0?"Todas las herramientas de muestra usan MCP":missingB+(missingB===1?" herramienta sigue":" herramientas siguen")+" fuera de MCP":"Controlar la ejecución de herramientas"},
+     {label:hasC?"Identidad C":"Añadir C",value:hasC?"Permisos y gasto por usuario":"Identificar a cada usuario para aplicar permisos y límites"}
     ]}/>
     <Explanation>Techo teórico del catálogo para este corte: {currentMax} % si las conexiones están completas y hay evidencia. No es una medición del agente.</Explanation>
    </SpaceBetween>
