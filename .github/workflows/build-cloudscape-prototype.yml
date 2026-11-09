@@ -5,6 +5,7 @@ on:
       - feat/cloudscape-navegacion-slices
       - feature/vista-limpia-explicaciones-opcionales
       - fix/cloudscape-bundle-versionado-vista-limpia
+      - feat/selector-slices-por-pantalla-sin-lateral
     paths:
       - package.json
       - 'scripts/stamp-console-assets.mjs'
@@ -14,6 +15,9 @@ on:
       - 'assets/console-data.json'
       - '.github/workflows/build-cloudscape-prototype.yml'
   workflow_dispatch:
+concurrency:
+  group: cloudscape-static-build-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:
@@ -27,6 +31,10 @@ jobs:
           node-version: '22'
       - name: Instalar dependencias y fijar versiones
         run: npm ci --no-audit --no-fund
+      - name: Sincronizar cambios de fuente antes de compilar
+        run: |
+          git fetch origin "${GITHUB_REF_NAME}"
+          git merge --ff-only FETCH_HEAD
       - name: Crear bundle estático Cloudscape para GitHub Pages
         run: npm run build
       - name: Verificar coherencia entre bundle y HTML

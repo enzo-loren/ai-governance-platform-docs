@@ -3,7 +3,6 @@ import {createRoot} from "react-dom/client";
 import "@cloudscape-design/global-styles/index.css";
 import AppLayout from "@cloudscape-design/components/app-layout";
 import TopNavigation from "@cloudscape-design/components/top-navigation";
-import SideNavigation from "@cloudscape-design/components/side-navigation";
 import ContentLayout from "@cloudscape-design/components/content-layout";
 import Header from "@cloudscape-design/components/header";
 import SpaceBetween from "@cloudscape-design/components/space-between";
@@ -24,12 +23,24 @@ const PrototypeContext=createContext(null);
 export const usePrototype=()=>useContext(PrototypeContext);
 const sliceIndex=s=>data.stages.findIndex(x=>x.id===s);
 const findScreen=id=>data.screens.find(x=>x.id===id);
+// Cada superficie tiene una o más versiones, solo en slices donde se creó o cambió.
+// No se trata del producto acumulado: una vista sin cambios no debe repetirse.
+const screenVersions=surface=>data.screens
+ .filter(screen=>screen.surface===surface)
+ .sort((a,b)=>sliceIndex(a.slice)-sliceIndex(b.slice));
+const versionAt=(surface,stage)=>screenVersions(surface)
+ .filter(screen=>sliceIndex(screen.slice)<=sliceIndex(stage)).at(-1)||null;
 const fromLocation=()=>{
- const q=new URLSearchParams(location.search);
- const valid=data.stages.some(x=>x.id===q.get("slice"))?q.get("slice"):"S0";
- const wanted=findScreen(q.get("screen"));
- const current=latestScreens(valid).find(x=>x.id===wanted?.id)||null;
- return {slice:valid,screen:current?.id||data.screens.find(x=>x.slice===valid)?.id||"s0-connect"};
+ const query=new URLSearchParams(location.search);
+ const valid=data.stages.some(stage=>stage.id===query.get("slice"))?query.get("slice"):null;
+ const requested=findScreen(query.get("screen"));
+ if(requested){
+  const target=versionAt(requested.surface,valid||requested.slice)||requested;
+  return {slice:target.slice,screen:target.id};
+ }
+ const stage=valid||"S0";
+ const fallback=data.screens.find(screen=>screen.slice===stage)||data.screens[0];
+ return {slice:fallback.slice,screen:fallback.id};
 };
 function latestScreens(slice){
  const list=data.screens.filter(x=>sliceIndex(x.slice)<=sliceIndex(slice));
@@ -46,32 +57,40 @@ function Application(){
  const [help,setHelp]=useState(null);
  const [message,setMessage]=useState(null);
  const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"], approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},presentation:false});
- const [focusId,setFocusId]=useState(null);
  const slice=route.slice;
  const active=findScreen(route.screen)||data.screens[0];
  const visible=useMemo(()=>latestScreens(slice),[slice]);
+ const revisions=useMemo(()=>screenVersions(active.surface),[active.surface]);
  const navigate=useCallback((screenId,newSlice=slice,replace=false)=>{
   if(!data.stages.some(s=>s.id===newSlice))return;
-  const available=latestScreens(newSlice);
-  let target=available.find(x=>x.id===screenId)||available[0];
-  const next={slice:newSlice,screen:target.id};
+  const requested=findScreen(screenId);
+  if(!requested)return;
+  // Al cambiar versión, permanecer siempre en la misma superficie.
+  const target=versionAt(requested.surface,newSlice);
+  if(!target)return;
+  const next={slice:target.slice,screen:target.id};
   const q=new URLSearchParams(location.search);
-  q.set("slice",newSlice);q.set("screen",target.id);
+  q.set("slice",target.slice);q.set("screen",target.id);
   q.delete("preview");
   const url=location.pathname+"?"+q.toString();
   history[replace?"replaceState":"pushState"](null,"",url);
   setRoute(next);setHelp(null);setMessage(null);
-  const main=document.querySelector("#console-content");if(main)main.scrollTo({top:0});
+  const main=document.querySelector("#console-content");
+  if(main)main.scrollTo({top:0});
+  window.scrollTo({top:0});
  },[slice]);
  useEffect(()=>{
-  const listener=()=>setRoute(fromLocation());
+  const listener=()=>{
+   setRoute(fromLocation());
+   window.scrollTo({top:0});
+  };
   window.addEventListener("popstate",listener);
   return()=>window.removeEventListener("popstate",listener);
  },[]);
  const switchSlice=useCallback((id)=>{
-  const latest=latestScreens(id);
-  const same=latest.find(x=>x.surface===active.surface);
-  navigate((same||latest[0]).id,id);
+  // Solo se ofrecen slices donde esta pantalla fue introducida o modificada.
+  const target=screenVersions(active.surface).find(version=>version.slice===id);
+  if(target)navigate(target.id,id);
  },[navigate,active.surface]);
  const notify=(content,type="success")=>setMessage({id:String(Date.now()),content,type});
  const helpOn=(title,content)=>setHelp({title,content});
@@ -84,8 +103,6 @@ function Application(){
   history.replaceState(null,"",url.pathname+url.search+url.hash);
  },[]);
  const roadmapHref="../index.html"+(showExplanations?"?explain=1":"")+"#"+slice.toLowerCase();
- const navItems=visible.map(x=>({type:"link",text:x.title,href:"?slice="+slice+"&screen="+x.id}));
- const selectedHref="?slice="+slice+"&screen="+active.id;
  const ctx={slice,screen:active,visible,simulation,setSimulation,notify,helpOn,navigate,preview,showExplanations};
  return <PrototypeContext.Provider value={ctx}>
   {!preview&&<div id="console-top">
@@ -96,19 +113,11 @@ function Application(){
   </div>}
   <AppLayout
    headerSelector="#console-top"
-   navigationHide={preview||simulation.presentation}
+   navigationHide
+   navigationTriggerHide
+   navigation={null}
    toolsHide
-   navigationWidth={250}
    maxContentWidth={1220}
-   activeHref={selectedHref}
-   navigation={<SideNavigation header={{text:"Consola · Módulo A",href:roadmapHref}} activeHref={selectedHref}
-     items={navItems}
-     onFollow={event=>{
-       const url=new URL(event.detail.href,location.href);
-       const q=new URLSearchParams(url.search);
-       const screen=q.get("screen");
-       if(screen){event.preventDefault();navigate(screen)}
-     }} />}
    content={<div id="console-content" className={simulation.presentation?"presentation-mode":""}>
       <SpaceBetween size="l">
        {!preview&&<div className="prototype-controls">
@@ -116,11 +125,22 @@ function Application(){
          <Badge color="blue">DEMO · Sin conexión AWS</Badge>
         </div>
         <div className="prototype-actions">
-         <FormField label="Slice">
-          <Select selectedOption={{label:slice+" · "+data.stages[sliceIndex(slice)].name,value:slice}}
-           options={data.stages.map(x=>({label:x.id+" · "+x.name,value:x.id}))}
-           onChange={({detail})=>switchSlice(detail.selectedOption.value)} ariaLabel="Elegir slice"/>
-         </FormField>
+         {revisions.length>1?
+          <div data-testid="screen-version-selector">
+           <FormField label="Versión de esta pantalla">
+            <Select
+             selectedOption={{label:slice+" · "+data.stages[sliceIndex(slice)].name,value:slice}}
+             options={revisions.map(version=>({
+              label:version.slice+" · "+data.stages[sliceIndex(version.slice)].name,
+              value:version.slice
+             }))}
+             onChange={({detail})=>switchSlice(detail.selectedOption.value)}
+             ariaLabel="Elegir versión de esta pantalla"/>
+           </FormField>
+          </div>
+          :<div className="screen-version-single" data-testid="screen-version-static">
+            <Badge color="grey">{slice} · {data.stages[sliceIndex(slice)].name}</Badge>
+           </div>}
          <div className="explanations-switch">
           <Toggle checked={showExplanations} onChange={({detail})=>toggleExplanations(detail.checked)}>
            Mostrar explicaciones
@@ -130,7 +150,7 @@ function Application(){
        </div>}
        <ContentLayout header={<Header variant="h1" description={showExplanations?active.question:undefined}
         info={showExplanations?<Button variant="link" onClick={()=>helpOn(active.title,"Esta pantalla corresponde a "+active.slice+". "+active.question+" Los datos y acciones son simulados y están delimitados por los requisitos "+active.requirements.join(", ")+".")}>¿Qué muestra?</Button>:undefined}
-        actions={preview?null:<SpaceBetween direction="horizontal" size="xs"><Badge color="blue">{active.slice}</Badge><Button href={roadmapHref}>Ver roadmap</Button></SpaceBetween>}>
+        >
           {active.title}
        </Header>}>
          <SpaceBetween size="l">

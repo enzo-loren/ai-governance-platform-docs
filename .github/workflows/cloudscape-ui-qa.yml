@@ -6,6 +6,7 @@ on:
       - fix/roadmap-cloudscape-cache-navigation-ux
       - feature/vista-limpia-explicaciones-opcionales
       - fix/cloudscape-bundle-versionado-vista-limpia
+      - feat/selector-slices-por-pantalla-sin-lateral
     paths:
       - 'assets/slices.js'
       - 'assets/slices.css'
@@ -18,6 +19,7 @@ on:
       - 'assets/console.html'
       - 'scripts/stamp-console-assets.mjs'
       - 'tests/console-build-integrity.mjs'
+      - 'tests/screen-versions-qa.mjs'
       - 'assets/console-build/**'
       - 'assets/console-data.json'
       - 'index.html'
@@ -37,6 +39,7 @@ on:
       - 'assets/console.html'
       - 'scripts/stamp-console-assets.mjs'
       - 'tests/console-build-integrity.mjs'
+      - 'tests/screen-versions-qa.mjs'
       - 'assets/console-build/**'
       - 'assets/console-data.json'
       - 'index.html'
@@ -72,6 +75,8 @@ jobs:
         run: node tests/roadmap-v2-navigation-qa.mjs
       - name: Verificar modo limpio y ayuda opcional en portada y consola
         run: node tests/explanations-mode-qa.mjs
+      - name: Verificar que cada pantalla tenga solo sus slices y no muestre el explorador
+        run: node tests/screen-versions-qa.mjs
       - name: Attach screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
@@ -81,4 +86,5 @@ jobs:
             artifacts/cloudscape-qa/
             artifacts/roadmap-v2/
             artifacts/explanations-mode/
+            artifacts/screen-versions-qa/
           retention-days: 14
