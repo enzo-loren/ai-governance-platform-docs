@@ -103,9 +103,8 @@ try{
    "S2: presentación debe poder cerrarse");
  await enter("S3","s3-identity");
  const beforeIdentity=await interactive.locator("#console-content").innerText();
- const selectIdentity=interactive.getByRole("combobox",{name:"Principal de la solicitud"});
- await selectIdentity.click();
- await interactive.getByRole("option",{name:"Elena · aprobadora"}).click();
+ await interactive.getByText("Ana · consulta",{exact:true}).first().click();
+ await interactive.getByText("Elena · aprobadora",{exact:true}).last().click();
  const afterIdentity=await interactive.locator("#console-content").innerText();
  check(beforeIdentity!==afterIdentity&&afterIdentity.includes("12.345.678-5"),
    "S3: identidad debe cambiar realmente los campos visibles por pii_access");
