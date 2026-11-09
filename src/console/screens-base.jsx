@@ -181,109 +181,71 @@ function Live(){
 
 
 function Coverage(){
- const {simulation,slice,showExplanations}=usePrototype();
- const [evidence,setEvidence]=useState({value:"observado",label:"Eventos de ejemplo"});
+ const {simulation,slice,showExplanations,navigate}=usePrototype();
+ const [evidence,setEvidence]=useState({value:"observado",label:"Con actividad"});
  const agent=selectedFrom(simulation);
  const rank=Number(slice.slice(1));
- const hasC=rank>=3,hasB=rank>=4;
- const connected=hasB&&simulation.toolsMcp.length>0;
- const bCount=connected?simulation.toolsMcp.length:0;
+ const hasB=rank>=4,hasC=rank>=3;
+ const bCount=hasB?simulation.toolsMcp.length:0;
  const max=hasB?(hasC?89:67):(hasC?56:41);
  const noData=evidence.value!=="observado";
- const next=rank<2?"Revisar el catálogo de tools antes de activar en S2":!hasC?"Conectar identidad C para reglas y consumo por usuario":!hasB?"Centralizar la ejecución de tools por MCP B":bCount<4?"Mover las tools locales restantes a MCP":"Revisar las excepciones y mantener evidencia";
-
- const catalog=[
-  ["CTRL-01","Autenticación de agente",["A"],false],["CTRL-02","Inventario de modelos",["A"],false],
-  ["CTRL-03","Modelos permitidos",["A"],true],["CTRL-04","Inventario de tools",["A"],false],
-  ["CTRL-05","Guardrail semántico",["A"],false],["CTRL-06","PII de respuestas del modelo",["A"],false],
-  ["CTRL-07","Intenciones de tools bloqueadas",["A"],true],["CTRL-08","Costo y tokens por agente",["A"],false],
-  ["CTRL-09","Presupuesto y tasa",["A"],false],["CTRL-10","Suspensión en inferencia",["A"],false],
-  ["CTRL-11","Evidencia de inferencia",["A"],false],
-  ["CTRL-12","Solo tools MCP aprobadas",["A","B"],true],["CTRL-13","Credenciales de tools en bóveda",["A","B"],false],
-  ["CTRL-14","Reglas sobre parámetros reales",["A","B"],true],["CTRL-15","PII en respuestas MCP",["A","B"],false],
-  ["CTRL-16","Aprobación humana de tools",["A","B"],true],["CTRL-17","Evidencia de ejecución MCP",["A","B"],false],
-  ["CTRL-18","Suspensión de acciones MCP",["A","B"],false],
-  ["CTRL-19","Principal humano en auditoría",["A","C"],false],["CTRL-20","Cuotas por usuario",["A","C"],false],
-  ["CTRL-21","Acceso a PII por rol",["A","C"],false],["CTRL-22","Intención de tool por rol",["A","C"],true],
-  ["CTRL-23","Ejecución real por rol",["A","B","C"],true],["CTRL-24","Separación de funciones",["A","B","C"],true],
-  ["CTRL-25","Restricción de red/IAM del agente",["fuera"],false],
-  ["CTRL-26","Login del usuario en aplicación del cliente",["fuera"],false],
-  ["CTRL-27","Aviso y reclamos de IA en interfaz cliente",["fuera"],false]
+ const outcomes=[
+  {id:"infer",title:"Solicitudes",effect:rank>=2?"Se registran decisiones, consumo y bloqueos según el modo del agente.":"Se observan las solicitudes, el modelo utilizado y su consumo.",target:"s0-live",action:"Ver flujo"},
+  {id:"tools",title:"Herramientas",effect:hasB?bCount+" de 4 pasan por MCP; "+(4-bCount)+" siguen ejecutándose fuera de la puerta.":"Se descubren las herramientas solicitadas; su ejecución aún queda fuera de la puerta.",target:hasB?"s4-mcp":"s1-inventory",action:"Ver herramientas"},
+  ...(rank>=2?[{id:"limits",title:"Límites",effect:"Las solicitudes pueden detenerse o generar avisos al superar el presupuesto configurado.",target:rank>=3?"s3-user-spend":"s2-limits",action:"Ver consumo"}]:[]),
+  ...(hasC?[{id:"person",title:"Acceso por persona",effect:"Un usuario identificado puede tener límites y acceso a datos distintos de otro.",target:"s3-identity",action:"Ver acceso"}]:[]),
+  ...(rank>=5?[{id:"approval",title:"Operaciones críticas",effect:"Una operación retenida espera la decisión de un aprobador antes de ejecutarse.",target:"s5-approvals",action:"Ver pendientes"}]:[]),
+  ...(rank>=6?[{id:"audit",title:"Investigación",effect:"Cada solicitud permite reconstruir la decisión y consultar la regla aplicada.",target:"s6-forensic",action:"Ver ruta"}]:[])
  ];
- const fullCatalog=catalog.map(([id,name,requires,shadow])=>{
-  const available=!requires.includes("fuera")&&(!requires.includes("B")||hasB)&&(!requires.includes("C")||hasC);
-  const state=!available?"No disponible":noData?"Sin evidencia":shadow&&agent.mode!=="Activo"?"En sombra":"Representado";
-  return {id,name,requires:requires.join("+"),state};
- });
-
- const controls=[
-  {name:"Autenticación del agente",state:noData?"Sin evidencia":"Activo",reason:"agent_token individual · canal A"},
-  {name:"Guardrail y protección de datos",state:noData?"Sin evidencia":"Activo",reason:"Inferencia A"},
-  {name:"Políticas Cedar sobre intención",state:noData?"Sin evidencia":agent.mode==="Activo"?"Activo":"En sombra",reason:agent.mode==="Activo"?"Bloqueo preventivo":"Modo descubrimiento"},
-  {name:"Autorización de ejecución MCP",state:hasB?(noData?"Sin evidencia":"Activo"):"No disponible",reason:hasB?bCount+" de 4 tools por MCP":"Requiere conexión B"},
-  {name:"Identidad humana y límites por usuario",state:hasC?(noData?"Sin evidencia":"Activo"):"No disponible",reason:hasC?"JWT válido en 2 de 3 solicitudes de muestra":"Requiere conexión C"}
- ];
+ const modeText=agent.mode==="Descubrimiento"?"3 de 12 solicitudes de muestra se habrían detenido":agent.mode==="Activo"?"Las reglas pueden detener solicitudes":"El acceso está limitado por el modo actual";
+ const go=target=>navigate(target);
  return <SpaceBetween size="l">
   <Container header={<Header variant="h2">Gobernanza de {agent.name}</Header>}>
    <SpaceBetween size="m">
     <div className="gov-agent-picker"><AgentSelector/></div>
     <ColumnLayout columns={3}>
-     <div><Box color="text-body-secondary">A · Inferencia</Box><StatusIndicator type={noData?"warning":"success"}>{noData?"Sin datos en ventana":"Conectada · DEMO"}</StatusIndicator></div>
-     <div><Box color="text-body-secondary">B · Tools MCP</Box><StatusIndicator type={hasB?"success":"stopped"}>{hasB?bCount+" de 4 tools (demo)":"No conectada"}</StatusIndicator></div>
-     <div><Box color="text-body-secondary">C · Usuario</Box><StatusIndicator type={hasC?"success":"stopped"}>{hasC?"2 de 3 JWT válidos (demo)":"No conectada · solo_workload"}</StatusIndicator></div>
+     <div><Box color="text-body-secondary">Inferencia · A</Box><StatusIndicator type={noData?"warning":"success"}>{noData?"Sin actividad verificada":"Conectada en demo"}</StatusIndicator></div>
+     <div><Box color="text-body-secondary">Herramientas · B</Box><StatusIndicator type={hasB&&bCount>0?"success":"stopped"}>{hasB?bCount+" de 4 tools por MCP":"Sin conexión MCP"}</StatusIndicator></div>
+     <div><Box color="text-body-secondary">Personas · C</Box><StatusIndicator type={hasC?"success":"stopped"}>{hasC?"2 de 3 JWT válidos (demo)":"Sin identidad de usuario"}</StatusIndicator></div>
     </ColumnLayout>
-    <ColumnLayout columns={3}>
-     <SmallKpi title="Modo actual" value={agent.mode} context="3 días en este modo · DEMO"/>
-     <SmallKpi title="Decisiones en sombra" value={agent.mode==="Descubrimiento"?"3 de 12":"0"} context="Solicitudes ilustrativas"/>
-     <SmallKpi title="Índice calculado" value="Sin medición" context="No hay backend conectado"/>
+    <ColumnLayout columns={3} variant="text-grid">
+     <SmallKpi title="Modo" value={agent.mode} context={modeText}/>
+     <SmallKpi title="Cobertura medida" value="Sin datos" context={"Máximo posible: "+max+" % (referencia)"}/>
+     <SmallKpi title="Herramientas protegidas" value={hasB?bCount+" de 4":"0 de 4"} context={hasB?"Solo las que pasan por MCP":"Ejecución fuera de la puerta"}/>
     </ColumnLayout>
-    <ProgressBar value={max} label={"Máximo de catálogo: "+max+" %"} description="Referencia con conexiones completas y controles aplicables en activo, no índice medido"/>
-    <FormField label="Estado de la evidencia · ejemplo">
-     <Select selectedOption={evidence} onChange={({detail})=>setEvidence(detail.selectedOption)} options={[
-      {value:"observado",label:"Eventos de ejemplo"},{value:"sin_trafico",label:"Sin tráfico"},{value:"fallo",label:"Evaluación sin evidencia"}]}/>
-    </FormField>
-    {evidence.value==="sin_trafico"&&<Alert type="warning">Sin datos: no se calcula un índice si el agente no tuvo tráfico en la ventana.</Alert>}
-    {evidence.value==="fallo"&&<Alert type="error">Sin evidencia: un control sin evaluación válida no cuenta como cumplido.</Alert>}
-    <Alert type="info">Siguiente paso recomendado: {next}.</Alert>
+    {evidence.value==="sin_trafico"&&<Alert type="warning">Sin tráfico: no hay un índice de cobertura medido para esta ventana.</Alert>}
+    {evidence.value==="fallo"&&<Alert type="error">Sin evidencia: un control que no pudo evaluarse no cuenta como cumplido.</Alert>}
+    {showExplanations&&<SpaceBetween size="s">
+     <FormField label="Simular estado de la evidencia">
+      <Select selectedOption={evidence} onChange={({detail})=>setEvidence(detail.selectedOption)}
+       options={[{value:"observado",label:"Con actividad"},{value:"sin_trafico",label:"Sin tráfico"},{value:"fallo",label:"Evaluación sin evidencia"}]}/>
+     </FormField>
+     <Explanation>El porcentaje de referencia es el techo del catálogo con las conexiones del corte completas. No es una puntuación observada. Para un índice real deben existir tráfico, controles aplicables y evidencia válida.</Explanation>
+    </SpaceBetween>}
    </SpaceBetween>
   </Container>
-  <Panel title="Estado de los controles" info="El índice depende de evidencia, conexiones disponibles, aplicabilidad y modo. No mide seguridad absoluta.">
-   <div className="desktop-table"><Table variant="embedded" items={controls} columnDefinitions={[
-    {id:"name",header:"Control",cell:x=>x.name},
-    {id:"state",header:"Estado",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":x.state==="Sin evidencia"?"error":"stopped"}>{x.state}</StatusIndicator>},
-    {id:"reason",header:"Motivo / dependencia",cell:x=>x.reason}
-   ]}/></div>
-   <div className="mobile-cards"><SpaceBetween size="s">{controls.map(x=><Container key={x.name} header={<Header variant="h3">{x.name}</Header>}>
-    <SpaceBetween size="xs">{x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":x.state==="Sin evidencia"?"error":"stopped"}>{x.state}</StatusIndicator>}
-     <Box color="text-body-secondary">{x.reason}</Box></SpaceBetween>
-   </Container>)}</SpaceBetween></div>
+  <Panel title="Qué ocurre en la plataforma" info="Casos que ilustran la diferencia entre observar una solicitud, detenerla y gobernar la ejecución de una tool.">
+   <div className="desktop-table">
+    <Table variant="embedded" trackBy="id" items={outcomes} columnDefinitions={[
+     {id:"case",header:"Situación",cell:x=><strong>{x.title}</strong>},
+     {id:"effect",header:"Resultado",cell:x=>x.effect},
+     {id:"action",header:"Explorar",cell:x=><Button variant="link" onClick={()=>go(x.target)}>{x.action}</Button>}
+    ]}/>
+   </div>
+   <div className="mobile-cards"><SpaceBetween size="s">{outcomes.map(x=>
+    <Container key={x.id} header={<Header variant="h3">{x.title}</Header>}>
+     <SpaceBetween size="xs"><Box>{x.effect}</Box><Button variant="link" onClick={()=>go(x.target)}>{x.action}</Button></SpaceBetween>
+    </Container>
+   )}</SpaceBetween></div>
   </Panel>
-
-  <ExpandableSection headerText="Ver los 27 controles del catálogo" variant="footer">
-   <div className="desktop-table"><Table items={fullCatalog} trackBy="id" variant="embedded" columnDefinitions={[
-    {id:"id",header:"ID",cell:x=>x.id},
-    {id:"control",header:"Control",cell:x=>x.name},
-    {id:"needs",header:"Requiere",cell:x=>x.requires},
-    {id:"status",header:"Estado de muestra",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Representado"?"info":x.state==="Sin evidencia"?"error":"stopped"}>{x.state}</StatusIndicator>}
-   ]}/></div>
-   <div className="mobile-cards"><SpaceBetween size="s">{fullCatalog.map(x=><Container key={x.id} header={<Header variant="h3">{x.id} · {x.name}</Header>}>
-    <KeyValuePairs columns={1} items={[{label:"Requiere",value:x.requires},{label:"Estado de muestra",value:x.state}]}/>
-   </Container>)}</SpaceBetween></div>
-   <Explanation>“Representado” describe una capacidad de la interfaz, no una prueba de cumplimiento AWS. CTRL-25 a CTRL-27 están fuera del perímetro.</Explanation>
-  </ExpandableSection>
-
-  <Panel title="Agentes en el catálogo">
-   <div className="desktop-table"><Table variant="embedded" items={simulation.agentRegistry} trackBy="id" columnDefinitions={[
-    {id:"name",header:"Agente",cell:x=>x.name},
-    {id:"mode",header:"Modo",cell:x=>x.mode},
-    {id:"connections",header:"Conexiones en este corte",cell:()=>hasB?"A+B"+(hasC?"+C":""):hasC?"A+C":"A"},
-    {id:"score",header:"Índice de cobertura",cell:()=>"Sin medición"}
-   ]}/></div>
-   <div className="mobile-cards"><SpaceBetween size="s">{simulation.agentRegistry.map(x=><Container key={x.id} header={<Header variant="h3">{x.name}</Header>}>
-     <KeyValuePairs columns={2} items={[{label:"Modo",value:x.mode},{label:"Conexiones",value:hasB?"A+B"+(hasC?"+C":""):hasC?"A+C":"A"},{label:"Índice",value:"Sin medición"}]}/>
-   </Container>)}</SpaceBetween></div>
-  </Panel>
-  {showExplanations&&<Alert type="info">Referencias máximas del catálogo para A / A+C / A+B / A+B+C: 41 % / 56 % / 67 % / 89 %. No equivalen a una medición en este prototipo.</Alert>}
+  {simulation.agentRegistry.length>1&&<ExpandableSection headerText="Otros agentes" variant="footer">
+    <Table items={simulation.agentRegistry} trackBy="id" variant="embedded" columnDefinitions={[
+     {id:"agent",header:"Agente",cell:x=>x.name},
+     {id:"mode",header:"Modo",cell:x=>x.mode},
+     {id:"connections",header:"Conexiones",cell:()=>hasB?"A+B"+(hasC?"+C":""):hasC?"A+C":"A"},
+     {id:"coverage",header:"Índice",cell:()=>"Sin datos"}
+    ]}/>
+   </ExpandableSection>}
  </SpaceBetween>;
 }
 
@@ -450,8 +412,8 @@ function ActiveAgent(){
      {mode==="Suspendido"&&<Button onClick={()=>setDialog("resume")}>Reactivar agente</Button>}
      {mode!=="Retirado"&&<Button onClick={()=>setDialog("retire")}>Retirar agente</Button>}
     </SpaceBetween>
-    {mode==="Suspendido"&&<Alert type="warning">Este agente está suspendido. En producción, sus inferencias y ejecuciones MCP deben recibir 403 en un máximo de 60 segundos. Los demás agentes siguen operando.</Alert>}
-    {mode==="Retirado"&&<Alert type="error">Agente retirado. Sus credenciales deben devolver 401 y su evidencia se conserva.</Alert>}
+    {mode==="Suspendido"&&<Alert type="warning">Agente suspendido: sus solicitudes A y MCP se rechazarían; los demás agentes siguen operando.</Alert>}
+    {mode==="Retirado"&&<Alert type="error">Agente retirado: sus credenciales dejan de dar acceso; su evidencia se conserva.</Alert>}
     {mode!=="Retirado"&&<ColumnLayout columns={2}>
      <FormField label="Modelo permitido" description={showExplanations?"Cambio individual de catálogo; se aplica en ≤10 s en el producto real.":undefined}>
       <Select selectedOption={options} options={models} onChange={({detail})=>setModelEdit(detail.selectedOption)}/>
@@ -470,7 +432,7 @@ function ActiveAgent(){
         {label:"Candidato",value:presetEdit.label},
         {label:"Solicitudes cuya decisión cambiaría",value:presetEdit.value==="3"?"3 de 12":presetEdit.value==="2"?"2 de 12":"1 de 12"}
        ]}/>
-       <Box color="text-body-secondary" fontSize="body-s">Muestra de la ventana: eliminar_registro · actualizar_precio. Cantidades ilustrativas, no obtenidas de evidencia. En el producto deben recalcularse sobre trazas reales (POL-05).</Box>
+
       </SpaceBetween>
      </Container>}
      <Button disabled={!modelEdit&&!presetEdit} onClick={saveSettings}>Guardar configuración (demo)</Button>
@@ -493,9 +455,9 @@ function ActiveAgent(){
     {dialog==="activate"
      ?"Se aplicarían 3 denegaciones observadas en sombra; siguen pendientes eliminar_registro y procesar_lote. Solo cambia "+selected.name+"."
      :dialog==="suspend"
-      ?"Las inferencias A y ejecuciones MCP B de "+selected.name+" deben responder 403 en ≤60 s. Ningún otro agente se suspende."
+      ?"Las solicitudes A y MCP de "+selected.name+" se rechazarían. Ningún otro agente se suspende."
       :dialog==="retire"
-       ?"Todas las claves de "+selected.name+" dejarán de funcionar con 401; su evidencia no se borrará. Los demás agentes conservan sus claves."
+       ?"Se desactivan las claves de "+selected.name+" y se conserva su evidencia. Los demás agentes no cambian."
        :"Se recupera el modo anterior de "+selected.name+", sin cambiar a otros agentes."}
    </Alert>
   </Modal>

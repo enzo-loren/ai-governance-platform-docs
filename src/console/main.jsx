@@ -15,7 +15,9 @@ import Modal from "@cloudscape-design/components/modal";
 import Flashbar from "@cloudscape-design/components/flashbar";
 import Badge from "@cloudscape-design/components/badge";
 import Toggle from "@cloudscape-design/components/toggle";
+import ExpandableSection from "@cloudscape-design/components/expandable-section";
 import data from "../../assets/console-data.json";
+import editorialBoard from "./editorial-board.json";
 import {RenderScreen} from "./screens.jsx";
 import PresentationStage,{PRESENTATION_SCREEN_IDS} from "./presentation-stage.jsx";
 import "./presentation-stage.css";
@@ -63,6 +65,7 @@ function Application(){
  const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"],approvedTools:["consultar_ficha","actualizar_precio"],supervision:{consultar_ficha:"autonoma",actualizar_precio:"notificar",eliminar_registro:"requiere_aprobacion",cambiar_fondo:"requiere_aprobacion"},toolOverrides:{},toolSchemaVersions:{}, approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},selectedAgentId:"agt-demo",agentRegistry:[{id:"agt-demo",name:"agente-demo",owner:"Operador plataforma",mode:"Descubrimiento",model:"bedrock-a",tokens:[{id:"cred-demo-1",suffix:"D3MO",status:"Activa",created:"Demo inicial"}]}]});
  const slice=route.slice;
  const active=findScreen(route.screen)||data.screens[0];
+ const editorial=editorialBoard[active.surface];
  const canPresent=!preview&&PRESENTATION_SCREEN_IDS.includes(active.id);
  const visible=useMemo(()=>latestScreens(slice),[slice]);
  const revisions=useMemo(()=>screenVersions(active.surface),[active.surface]);
@@ -170,17 +173,28 @@ function Application(){
         </div>
        </div>}
        <ContentLayout header={<Header variant="h1" description={showExplanations?active.question:undefined}
-        info={showExplanations?<Button variant="link" onClick={()=>helpOn(active.title,"Esta pantalla corresponde a "+active.slice+". "+active.question+" Los datos y acciones son simulados y están delimitados por los requisitos "+active.requirements.join(", ")+".")}>¿Qué muestra?</Button>:undefined}
+        info={showExplanations?<Button variant="link" onClick={()=>helpOn(active.title,active.question+" Los datos son ilustrativos; la trazabilidad está disponible en la pizarra editorial al final de la pantalla.")}>¿Qué muestra?</Button>:undefined}
         >
           {active.title}
        </Header>}>
          <SpaceBetween size="l">
           {message&&<Flashbar items={[{...message,dismissible:true,onDismiss:()=>setMessage(null)}]}/>}
           <RenderScreen id={active.id}/>
-          {!preview&&showExplanations&&<div className="prototype-footer">
-            <Box color="text-body-secondary" fontSize="body-s">Requisitos: {active.requirements.join(" · ")}</Box>
-            <Box color="text-body-secondary" fontSize="body-s">Propuesta de interfaz basada en insumo/requisitos.yaml y contexto/04-ux.md.</Box>
-          </div>}
+          {!preview&&showExplanations&&editorial&&<div className="prototype-footer" data-testid="editorial-board">
+             <ExpandableSection headerText="Pizarra editorial y trazabilidad" variant="footer">
+               <SpaceBetween size="s">
+                 <Box><strong>Resultado que debe entenderse:</strong> {editorial.visible}</Box>
+                 <Box><strong>Condición que debe permanecer visible:</strong> {editorial.required}</Box>
+                 <Box><strong>Contexto técnico opcional:</strong> {editorial.optional}</Box>
+                 <Box><strong>Decisión editorial:</strong> {editorial.decision}</Box>
+                 <Box fontSize="body-s" color="text-body-secondary">
+                   Requisitos relacionados: {active.requirements.join(" · ")} ·
+                   {" "}<a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/requisitos.yaml" target="_blank" rel="noreferrer">Fuente normativa</a> ·
+                   {" "}<a href="https://github.com/enzo-loren/ai-governance-platform-docs/blob/e24d1d197ec15ce62e2ca6381152fd3d64b04751/src/console/editorial-board.json" target="_blank" rel="noreferrer">Pizarra completa</a>
+                 </Box>
+               </SpaceBetween>
+             </ExpandableSection>
+           </div>}
          </SpaceBetween>
        </ContentLayout>
       </SpaceBetween>

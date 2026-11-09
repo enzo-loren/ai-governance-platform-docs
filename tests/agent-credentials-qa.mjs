@@ -77,7 +77,7 @@ try{
   check((await page.locator("#console-content").innerText()).includes("1 de 2 durante rotación"),vp.name+" clave del primer agente fue revocada por accidente");
   await page.getByRole("button",{name:"Suspender agente"}).click();
   await page.getByRole("button",{name:"Confirmar (demo)"}).click();
-  check((await page.locator("#console-content").innerText()).includes("Este agente está suspendido"),vp.name+" suspensión no aplicada");
+  check((await page.locator("#console-content").innerText()).includes("Agente suspendido:"),vp.name+" suspensión no aplicada");
   await switcher.click();
   await page.getByRole("option",{name:"agente-soporte"}).click();
   check((await page.locator("#console-content").innerText()).includes("Descubrimiento"),vp.name+" suspender agente-ventas cambió el modo de soporte");

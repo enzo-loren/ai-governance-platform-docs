@@ -177,7 +177,7 @@ export function AgentCredentialControls(){
     </Container>)}</SpaceBetween></div>
     {active===2&&<Alert type="warning">Hay dos claves vigentes durante la rotación. Revoca la antigua antes de emitir otra.</Alert>}
     {active===0&&<Alert type="error">{agent.mode==="Retirado"?"Agente retirado: ninguna credencial puede volver a activarse.":"El agente no tiene API key vigente; sus llamadas deben fallar con 401 hasta emitir una nueva."}</Alert>}
-    <Box color="text-body-secondary" fontSize="body-s">Rotación sin corte: la nueva y la antigua funcionan hasta revocar la anterior. Solo se muestra la nueva clave una vez. Suspender este agente no suspende a los demás.</Box>
+    <Explanation>Durante una rotación, la clave antigua sigue vigente hasta su revocación. La nueva se revela una sola vez; cada agente mantiene sus propias credenciales.</Explanation>
    </SpaceBetween>
   </Container>
   <OneTimeCredential key={reveal?.secret||"none"} reveal={reveal} onClose={()=>setReveal(null)}/>
@@ -185,7 +185,7 @@ export function AgentCredentialControls(){
    footer={<Box float="right"><SpaceBetween size="s" direction="horizontal"><Button onClick={()=>setRevoke(null)}>Cancelar</Button><Button variant="primary" onClick={revokeKey}>Revocar clave (demo)</Button></SpaceBetween></Box>}>
    <SpaceBetween size="s">
     <Alert type="warning">Se revocará exclusivamente la credencial •••• {revoke?.suffix} del agente {agent.name}. Todas las llamadas que utilicen esta clave deberán recibir 401 en inferencia A y MCP B en menos de 60 segundos. Las credenciales de otros agentes no cambian.</Alert>
-    <Box color="text-body-secondary">{showExplanations?"La API key del SDK OpenAI es el agent_token opaco del agente; no es una key del proveedor Bedrock.":"Demostración local: no se modifica ninguna credencial real."}</Box>
+    <Explanation>El SDK usa como API key el agent_token del agente, no la clave de Bedrock. Ninguna acción de esta pantalla modifica AWS.</Explanation>
    </SpaceBetween>
   </Modal>
  </SpaceBetween>;

@@ -1,0 +1,74 @@
+{
+  "agentes": {
+    "visible": "Registrar un agente, obtener su clave individual y gestionar su acceso.",
+    "required": "La credencial se muestra una vez; rotación, revocación y suspensión afectan al agente seleccionado.",
+    "optional": "Detalles del token, hashes, tiempos de revocación y autenticación compartida entre A y B.",
+    "decision": "Conservar las acciones y las advertencias de impacto. Retirar del encabezado identificadores normativos y explicaciones sobre implementación."
+  },
+  "flujo": {
+    "visible": "Encontrar una solicitud, su resultado y la acción que la produjo.",
+    "required": "Una denegación, una pausa o la ausencia de evidencia no pueden parecer solicitudes permitidas.",
+    "optional": "Correlación por trace ID, política evaluada, formato de evidencia y límites del prototipo.",
+    "decision": "Mostrar una frase de resultado en cada fila y reservar las explicaciones del contrato para el detalle o la ayuda."
+  },
+  "gobernanza": {
+    "visible": "Saber qué solicitudes se observan, qué operaciones se detendrían y qué queda fuera.",
+    "required": "Sin tráfico o sin evidencia no existe índice medido; una herramienta fuera de MCP no tiene su ejecución protegida.",
+    "optional": "Catálogo CTRL-01–27, puntuaciones de referencia, estados de evaluación y criterios de cobertura.",
+    "decision": "Retirar el listado de 27 controles. Sustituirlo por consecuencias de escenarios observables y enlaces a vistas operativas."
+  },
+  "tools": {
+    "visible": "Identificar una herramienta nueva, comprobar si pasa por la puerta y decidir si se permite.",
+    "required": "Una clasificación sugerida no equivale a aprobación. MCP controla ejecución solo para tools integradas.",
+    "optional": "Orden de inferencia de clasificación, versiones de JSON Schema, anotaciones MCP y detalles del target.",
+    "decision": "Priorizar nombre, clase, aprobación, destino y acciones. Mantener el esquema en el detalle, no en una tabla enciclopédica."
+  },
+  "decision": {
+    "visible": "Comparar lo que ocurrió con lo que habría ocurrido al activar la política.",
+    "required": "La evaluación en sombra no equivale a un bloqueo efectivo.",
+    "optional": "Semántica de Cedar, guardrails y diferencias de instrumentación.",
+    "decision": "Representar antes/después mediante estados claros y una explicación técnica opcional."
+  },
+  "consumo": {
+    "visible": "Ver gasto, límites y quién consume el presupuesto.",
+    "required": "Una alerta no equivale a bloqueo; las cuotas personales requieren identidad verificada.",
+    "optional": "Códigos HTTP, periodicidad, ventana de contadores y propagación de ajustes.",
+    "decision": "Mantener valores, efectos y acciones. Trasladar la mecánica de implementación a ayuda."
+  },
+  "identidad": {
+    "visible": "Comprobar si una persona puede acceder a un dato sensible.",
+    "required": "El token inválido se rechaza o degrada según política; sin usuario válido la solicitud no adquiere su rol.",
+    "optional": "Formato JWT, emisor, JWKS y el salto usuario → agente fuera del perímetro.",
+    "decision": "Mostrar usuario efectivo y resultado de acceso. Ocultar el contrato del encabezado HTTP salvo en guía."
+  },
+  "reglas": {
+    "visible": "Crear una condición, observar su efecto y conservar versiones.",
+    "required": "Una regla no validada no puede presentarse como aplicada ni probada contra Cedar real.",
+    "optional": "Esquema tipado, parser Cedar, propagación en segundos y matriz de pruebas.",
+    "decision": "Priorizar formulario, resultado y guardar; conservar el editor técnico como pestaña elegible."
+  },
+  "guia": {
+    "visible": "Conectar A, B o C copiando la configuración que corresponde al agente.",
+    "required": "A autentica al agente; B solo protege tools integradas; C aporta la identidad por solicitud.",
+    "optional": "Contabilidad del catálogo de controles y detalles del cálculo del potencial.",
+    "decision": "Expresar el siguiente paso como efecto operativo, no como número de controles ganados."
+  },
+  "aprobaciones": {
+    "visible": "Reconocer operaciones pendientes, aprobarlas o rechazarlas.",
+    "required": "Una solicitud pendiente no se ejecuta hasta la aprobación; el aprobador debe ser distinto del originador cuando corresponde.",
+    "optional": "TTL, cifrado de argumentos, idempotencia y formato de gov_aprobacion_estado.",
+    "decision": "Mantener actor, operación, estado, plazo y decisión; reservar la maquinaria protocolar para ayuda."
+  },
+  "busqueda": {
+    "visible": "Encontrar una transacción con sus filtros y abrir su investigación.",
+    "required": "Sin resultados no equivale a evidencia ausente; hay que preservar el contexto del filtro.",
+    "optional": "Objetivo de latencia, indexación y campos exactos de consulta del backend.",
+    "decision": "Dejar criterios frecuentes visibles y filtros raros plegados."
+  },
+  "forense": {
+    "visible": "Reconstruir quién solicitó qué, por dónde pasó y cuál regla decidió.",
+    "required": "Una política histórica no puede sustituirse por su versión actual; un sello no verificado no es evidencia íntegra.",
+    "optional": "Texto Cedar histórico, identidad de la correlación, Object Lock y referencias normativas.",
+    "decision": "Mostrar secuencia y conclusión primero. Colocar el texto completo de la regla tras una apertura voluntaria."
+  }
+}

@@ -41,9 +41,11 @@ try{
 
   await open("S1","s1-coverage");
   let content=await text();
-  assert(content.includes("No conectada")&&content.includes("41 %"),vp.name+" S1 no diferencia A de B/C");
-  assert(content.includes("Sin medición"),vp.name+" S1 presenta cobertura simulada como medida");
-  if(vp.name==="mobile")assert((await page.locator(".mobile-cards").first().innerText()).includes("Requiere conexión B"),"S1 móvil oculta la razón del control");
+  assert(content.includes("Sin conexión MCP")&&content.includes("41 %"),vp.name+" S1 no diferencia A de B/C");
+  assert(content.includes("Cobertura medida")&&content.includes("Sin datos"),vp.name+" S1 presenta cobertura simulada como medida");
+  assert(!content.includes("Ver los 27 controles"),vp.name+" S1 muestra inventario técnico al usuario");
+  assert(await page.getByTestId("editorial-board").count()===0,vp.name+" la pizarra editorial aparece sin pedir explicaciones");
+  if(vp.name==="mobile")assert((await page.locator(".mobile-cards").first().innerText()).includes("ejecución aún queda fuera"),"S1 móvil oculta la diferencia entre intención y ejecución");
   await screenshot("s1-gobernanza");
 
   await open("S3","s1-coverage");
@@ -102,7 +104,7 @@ try{
 
   await open("S4","s4-guide");
   content=await text();
-  assert(content.includes("Próximo paso")&&content.includes("Añadir B"),vp.name+" guía no propone aumento de cobertura");
+  assert(content.includes("Próximo paso")&&content.includes("Completar B")&&content.includes("Identidad C"),vp.name+" guía no prioriza integración pendiente");
   await screenshot("s4-guia");
 
   await open("S5","s5-approvals");
@@ -112,7 +114,9 @@ try{
 
   await open("S6","s6-forensic");
   content=await text();
-  assert(content.includes("Texto histórico de la regla")&&content.includes("no verificado"),vp.name+" auditoría no distingue política histórica de prueba AWS");
+  assert(content.includes("Ver texto de la regla aplicada")&&content.includes("Integridad sin verificar"),vp.name+" auditoría no distingue política histórica de prueba AWS");
+  await page.getByText("Ver texto de la regla aplicada",{exact:true}).click();
+  assert((await text()).includes("context.parametros.descuento"),vp.name+" regla histórica no disponible tras la apertura");
   await screenshot("s6-forense");
   await overflow();
 
