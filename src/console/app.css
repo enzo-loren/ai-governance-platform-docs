@@ -81,3 +81,9 @@ body{background:#f8f9fc;scroll-behavior:smooth}
  .gov-reveal-row{grid-template-columns:minmax(0,1fr)}
  .gov-agent-picker{max-width:none}
 }
+
+/* Tarjetas móviles de transacciones y catálogo: lectura antes que compresión horizontal. */
+.gov-mobile-card-heading{display:flex;align-items:start;justify-content:space-between;gap:8px;flex-wrap:wrap;min-width:0}
+.gov-mobile-card-heading>*{min-width:0}
+.approval-list-column{min-width:0}
+#console-content .mobile-request{overflow-wrap:break-word}
