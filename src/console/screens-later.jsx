@@ -151,52 +151,93 @@ function MCP(){
   </Modal>
  </SpaceBetween>;
 }
+
 function Policy(){
- const {notify}=usePrototype();
+ const {notify,simulation}=usePrototype();
+ const agent=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)||simulation.agentRegistry[0];
  const [threshold,setThreshold]=useState("10");
  const [effect,setEffect]=useState({label:"Denegar",value:"DENY"});
+ const [principal,setPrincipal]=useState({label:"Cualquier rol",value:"*"});
+ const [target,setTarget]=useState({label:"actualizar_precio · escritura",value:"actualizar_precio"});
  const [version,setVersion]=useState(3);
  const [tab,setTab]=useState("builder");
- const [cedar,setCedar]=useState('forbid(principal, action == Gov::Action::"UsarTool::actualizar_precio", resource)\nwhen { context.parametros.descuento > 10 };');
- const [cedarStatus,setCedarStatus]=useState("Borrador · sin validación de esquema");
+ const [cedar,setCedar]=useState('forbid(principal, action == Gov::Action::"UsarTool::actualizar_precio", resource)\\nwhen { context.parametros.descuento > 10 };');
+ const [cedarStatus,setCedarStatus]=useState("Borrador · sin validar");
+ const [validation,setValidation]=useState("");
+ const [saved,setSaved]=useState([{version:3,author:"Operador plataforma · DEMO",when:"09 nov · 10:43"}]);
+ const roles=[{label:"Cualquier rol",value:"*"},{label:"solo_workload",value:"solo_workload"},{label:"Rol consulta",value:"consulta"},{label:"Rol aprobador",value:"aprobador"}];
+ const choices=[
+  {label:"actualizar_precio · escritura",value:"actualizar_precio"},
+  {label:"consultar_ficha · lectura",value:"consultar_ficha"},
+  {label:"Clase escritura",value:"clase:escritura"}
+ ];
+ const parameter=target.value==="consultar_ficha"?"id":"descuento";
+ const numeric=parameter==="descuento";
  const valid=threshold!==""&&Number.isFinite(Number(threshold))&&Number(threshold)>=0;
  const result=n=>valid&&effect.value==="DENY"&&n>Number(threshold)?"Denegado":"Permitido";
+ const validateCedar=()=>{
+  const syntax=/\\b(?:permit|forbid)\\s*\\([\\s\\S]+\\)\\s*when\\s*\\{[\\s\\S]+\\}\\s*;\\s*$/.test(cedar);
+  const parameterMatch=cedar.match(/context\\.parametros\\.([a-zA-Z_][\\w]*)/);
+  const validField=parameterMatch&&["descuento","id"].includes(parameterMatch[1]);
+  const error=!syntax?"Sintaxis de ejemplo inválida: se espera permit/forbid (...) when {...};":
+   !validField?"Parámetro inexistente en el esquema detectado.":"";
+  setValidation(error||"Validación ilustrativa correcta. No se ha usado el parser Cedar.");
+  setCedarStatus(error?"Error de validación (DEMO)":"Validación ilustrativa correcta");
+  return !error;
+ };
  const build=<SpaceBetween size="m">
   <ColumnLayout columns={2}>
-   <FormField label="Tool"><Input readOnly value="actualizar_precio"/></FormField>
+   <FormField label="Agente"><Input readOnly value={agent.name}/></FormField>
+   <FormField label="Usuario o rol"><Select selectedOption={principal} options={roles} onChange={({detail})=>setPrincipal(detail.selectedOption)}/></FormField>
+   <FormField label="Tool o clase"><Select selectedOption={target} options={choices} onChange={({detail})=>setTarget(detail.selectedOption)}/></FormField>
    <FormField label="Efecto"><Select selectedOption={effect} options={[{label:"Denegar",value:"DENY"},{label:"Permitir",value:"ALLOW"}]} onChange={({detail})=>setEffect(detail.selectedOption)}/></FormField>
-   <FormField label="Parámetro numérico"><Input readOnly value="descuento"/></FormField>
-   <FormField label="Condición: mayor que" errorText={!valid?"Introduce un umbral numérico no negativo.":undefined}><Input type="number" value={threshold} onChange={({detail})=>setThreshold(detail.value)}/></FormField>
+   <FormField label={"Parámetro del esquema · "+(numeric?"number":"string")}><Input readOnly value={parameter}/></FormField>
+   <FormField label={numeric?"Condición · mayor que":"Condición · identificador"} errorText={!numeric?undefined:!valid?"Introduce un umbral numérico no negativo.":undefined}>
+    <Input type={numeric?"number":"text"} value={threshold} onChange={({detail})=>setThreshold(detail.value)}/>
+   </FormField>
   </ColumnLayout>
-  <Box color={valid?"text-body-secondary":"text-status-error"} fontSize="body-s">{valid?(effect.value+" si descuento > "+threshold):"Borrador inválido"}</Box>
+  <Box color={valid?"text-body-secondary":"text-status-error"} fontSize="body-s">{effect.label+" cuando "+principal.label+" solicita "+target.label+" con "+parameter+" > "+threshold}</Box>
   <Button variant="primary" disabled={!valid} onClick={()=>{
-   setVersion(v=>v+1);
-   notify("Versión de muestra creada. No se ejecutó Cedar real.");
+   setVersion(v=>v+1);setSaved(v=>[{version:version+1,author:"Operador plataforma · DEMO",when:"En esta sesión"},...v]);
+   notify("Versión ilustrativa creada. No se aplicó ninguna política real.");
   }}>Guardar versión simulada</Button>
  </SpaceBetween>;
  const editor=<SpaceBetween size="m">
-  <FormField label="Política Cedar · borrador" description="El backend real debe validar sintaxis, esquema de tool, rol y parámetros antes de aplicarla.">
-   <Textarea rows={7} value={cedar} onChange={({detail})=>{setCedar(detail.value);setCedarStatus("Modificado · sin validar");}}/>
+  <FormField label="Política Cedar · borrador">
+   <Textarea rows={7} value={cedar} onChange={({detail})=>{setCedar(detail.value);setCedarStatus("Modificado · sin validar");setValidation("");}}/>
   </FormField>
-  <StatusIndicator type="warning">{cedarStatus}</StatusIndicator>
-  <Button disabled={!cedar.trim()} onClick={()=>{
-   setCedarStatus("Borrador guardado localmente · sin validar");
-   notify("Borrador Cedar conservado en la DEMO. No se publicó una política.");
-  }}>Guardar borrador (demo)</Button>
+  <StatusIndicator type={cedarStatus.startsWith("Error")?"error":"warning"}>{cedarStatus}</StatusIndicator>
+  {validation&&<Alert type={cedarStatus.startsWith("Error")?"error":"info"}>{validation}</Alert>}
+  <SpaceBetween direction="horizontal" size="s">
+   <Button onClick={validateCedar}>Validar ejemplo</Button>
+   <Button disabled={!cedar.trim()||cedarStatus!=="Validación ilustrativa correcta"} onClick={()=>{
+    setVersion(v=>v+1);setSaved(v=>[{version:version+1,author:"Operador plataforma · DEMO",when:"En esta sesión"},...v]);
+    setCedarStatus("Borrador guardado en memoria, NO publicado");
+    notify("Borrador Cedar registrado solo en la demostración.");
+   }}>Guardar borrador (demo)</Button>
+  </SpaceBetween>
+  <Explanation>La plataforma final debe validar sintaxis y tipos con Cedar y el esquema de la tool, guardar autor y texto, versionar y aplicar la regla en 10 segundos o menos. La validación de este prototipo es ilustrativa, no equivalente a Cedar.</Explanation>
  </SpaceBetween>;
  return <SpaceBetween size="l">
-  <Panel title="Políticas del agente" help="POL-04 requiere un constructor y un editor Cedar validado contra el esquema de cada tool.">
+  <Panel title="Políticas del agente" help="La regla opera sobre la intención observada en A y, cuando la tool pasa por MCP B, sobre sus argumentos en la ejecución.">
    <Tabs tabs={[{id:"builder",label:"Constructor visual",content:build},{id:"cedar",label:"Editor Cedar",content:editor}]} activeTabId={tab} onChange={({detail})=>setTab(detail.activeTabId)}/>
   </Panel>
-  <Panel title={"Matriz de la regla · v"+version}>
+  <Panel title={"Probar regla · v"+version}>
    <ColumnLayout columns={2}>
     <div><Box variant="h3">descuento = 8</Box><State value={result(8)}/></div>
     <div><Box variant="h3">descuento = 25</Box><State value={result(25)}/></div>
    </ColumnLayout>
-   <Box color="text-body-secondary" fontSize="body-s">Ejemplo determinista de un parámetro. La matriz automatizada de ≥30 escenarios y el parser Cedar real son requisitos de backend; no se ejecutan en esta maqueta.</Box>
+   <Explanation>Resultados de ejemplo. La matriz obligatoria de al menos 30 escenarios y el parser real de Cedar no se ejecutan aquí.</Explanation>
+  </Panel>
+  <Panel title="Versiones de ejemplo">
+   <Table variant="embedded" items={saved} columnDefinitions={[
+    {id:"v",header:"Versión",cell:x=>"v"+x.version},
+    {id:"actor",header:"Autor",cell:x=>x.author},
+    {id:"time",header:"Fecha",cell:x=>x.when}]}/>
   </Panel>
  </SpaceBetween>;
 }
+
 function Guide(){
  const {helpOn,showExplanations,simulation}=usePrototype();
  const [tab,setTab]=useState("a");
