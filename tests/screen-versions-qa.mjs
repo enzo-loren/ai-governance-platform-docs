@@ -103,6 +103,8 @@ try{
     }
    }
    if(vp.name==="desktop"||["s0-connect","s1-inventory","s2-activate","s3-user-spend","s4-mcp","s6-forensic"].includes(screen.id)){
+    await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
+    await page.waitForTimeout(80);
     await page.screenshot({path:output+"/"+vp.name+"-"+screen.id+".png",fullPage:true});
    }
    results.push({viewport:vp.name,screen:screen.id,slice:screen.slice,versions:siblings.map(x=>x.slice),hasSelector:siblings.length>1});
