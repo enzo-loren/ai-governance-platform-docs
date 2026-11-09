@@ -24,6 +24,9 @@ on:
       - 'src/console/**'
       - 'tests/cloudscape-ui-qa.mjs'
   workflow_dispatch:
+concurrency:
+  group: cloudscape-qa-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
