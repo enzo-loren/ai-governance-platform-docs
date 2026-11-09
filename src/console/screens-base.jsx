@@ -477,8 +477,10 @@ function Limits({byUser=false}){
  const {simulation,setSimulation,notify,showExplanations}=usePrototype();
  const selected=selectedFrom(simulation);
  const [user,setUser]=useState(users[0]);
- const workload=byUser&&user.value==="workload";
- const config=byUser&&!workload?(selected.userLimits?.[user.value]||{}):(selected.limits||{});
+ const [scope,setScope]=useState("agent");
+ const personView=byUser&&scope==="person";
+ const workload=personView&&user.value==="workload";
+ const config=personView&&!workload?(selected.userLimits?.[user.value]||{}):(selected.limits||{});
  const [budget,setBudget]=useState(String(config.budget??50));
  const [rate,setRate]=useState(String(config.rate??50));
  const [tokens,setTokens]=useState(String(config.tokens??100000));
@@ -486,20 +488,20 @@ function Limits({byUser=false}){
  const actions=selectOptions([["alert","Solo alerta"],["throttle","Reducir frecuencia"],["block","Bloquear"]]);
  const [policy,setPolicy]=useState(actions.find(x=>x.value===(config.action||"block"))||actions[2]);
  useEffect(()=>{
-  const c=byUser&&!workload?(selected.userLimits?.[user.value]||{}):(selected.limits||{});
+  const c=personView&&!workload?(selected.userLimits?.[user.value]||{}):(selected.limits||{});
   setBudget(String(c.budget??50));setRate(String(c.rate??50));setTokens(String(c.tokens??100000));
   setPeriod({value:c.period||"day",label:c.period==="month"?"Mensual":"Diario"});
   setPolicy(actions.find(x=>x.value===(c.action||"block"))||actions[2]);
- },[selected.id,user.value,byUser,workload]);
+ },[selected.id,user.value,personView,workload]);
  const parsed=x=>Number(String(x).replace(",","."));
  const valid=[budget,rate,tokens].every(x=>Number.isFinite(parsed(x))&&parsed(x)>0);
  const save=()=>{
-  if(!valid)return;
+  if(!valid||(personView&&workload))return;
   const saved={budget:parsed(budget),rate:parsed(rate),tokens:parsed(tokens),period:period.value,action:policy.value};
   setSimulation(prev=>({...prev,agentRegistry:prev.agentRegistry.map(x=>x.id===selected.id?
-    byUser&&!workload?{...x,userLimits:{...x.userLimits,[user.value]:saved}}:{...x,limits:saved}
+    personView&&!workload?{...x,userLimits:{...x.userLimits,[user.value]:saved}}:{...x,limits:saved}
     :x)}));
-  notify("Límites de "+(byUser&&!workload?user.name+" en ":"")+selected.name+" modificados únicamente en la DEMO.");
+  notify("Límites de "+(personView&&!workload?user.name+" en ":"")+selected.name+" modificados únicamente en la DEMO.");
  };
  return <SpaceBetween size="l">
   <Container header={<Header variant="h2">Consumo del agente · {selected.name}</Header>}>
@@ -512,14 +514,29 @@ function Limits({byUser=false}){
     </ColumnLayout>
    </SpaceBetween>
   </Container>
-  {byUser&&<FormField label="Principal para analizar">
-    <Select options={users.map(x=>({label:x.label,value:x.value}))} selectedOption={{label:user.label,value:user.value}} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
-   </FormField>}
-  <Panel title={byUser?"Límites de "+(workload?"solo_workload (hereda agente)":user.name):"Límites por agente"} info="FIN-03: límites por usuario verificado configurables dentro de cada agente, sin consumir la cuota de otro usuario.">
+  {byUser&&<Container header={<Header variant="h2">Consumo por persona</Header>}>
+    <SpaceBetween size="m">
+     <Table variant="embedded" items={users} trackBy="value" header={<Header variant="h3">Personas y consumo</Header>}
+      columnDefinitions={[
+       {id:"who",header:"Usuario",cell:x=>x.label},
+       {id:"requests",header:"Solicitudes",cell:x=>x.requests},
+       {id:"spent",header:"Gasto de muestra",cell:x=>"US$ "+x.spent.toFixed(2)},
+       {id:"action",header:"Límites",cell:x=><Button onClick={()=>{setUser(x);setScope(x.value==="workload"?"agent":"person");}}> {x.value==="workload"?"Ver límite heredado":"Configurar persona"}</Button>}
+      ]}/>
+     <SpaceBetween direction="horizontal" size="xs">
+      <Button variant={scope==="agent"?"primary":"normal"} onClick={()=>setScope("agent")}>Límites del agente</Button>
+      <Button variant={scope==="person"?"primary":"normal"} onClick={()=>setScope("person")}>Límites por persona</Button>
+     </SpaceBetween>
+     {personView&&<FormField label="Usuario para configurar">
+      <Select options={users.map(x=>({label:x.label,value:x.value}))} selectedOption={{label:user.label,value:user.value}} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
+     </FormField>}
+    </SpaceBetween>
+   </Container>}
+  <Panel title={personView?"Límites de "+(workload?"solo_workload (hereda agente)":user.name):"Límites por agente"} info="FIN-03: los límites por persona verificada se configuran dentro de cada agente. Sin identidad, solo_workload utiliza los límites del agente.">
    <SpaceBetween size="m">
-    {byUser&&<SmallKpi title={"Principal: "+user.name} value={"US$ "+user.spent.toFixed(2)} context={user.requests+" solicitudes sintéticas · "+user.role}/>}
-    {byUser&&<Alert type={workload?"info":"success"}>{workload?"Sin JWT válido: solo_workload consume los límites del agente.":"Los límites de "+user.name+" son independientes de los de las demás personas en "+selected.name+"."}</Alert>}
-    <ProgressBar value={Math.min(100,Math.round((byUser&&!workload?user.spent:simulation.spent)/parsed(budget)*100)||0)} description={"Presupuesto de "+(byUser&&!workload?user.name:selected.name)}/>
+    {personView&&<SmallKpi title={"Principal: "+user.name} value={"US$ "+user.spent.toFixed(2)} context={user.requests+" solicitudes sintéticas · "+user.role}/>}
+    {personView&&<Alert type={workload?"info":"success"}>{workload?"Sin JWT válido: solo_workload consume los límites del agente.":"Los límites de "+user.name+" son independientes de los de las demás personas en "+selected.name+"."}</Alert>}
+    <ProgressBar value={Math.min(100,Math.round((personView&&!workload?user.spent:simulation.spent)/parsed(budget)*100)||0)} description={"Presupuesto de "+(personView&&!workload?user.name:selected.name)}/>
     <ColumnLayout columns={3}>
      <FormField label="Presupuesto (USD)" errorText={!Number.isFinite(parsed(budget))||parsed(budget)<=0?"Introduce un monto mayor que cero.":undefined}>
       <Input value={budget} onChange={({detail})=>setBudget(detail.value)} type="number"/>
@@ -537,7 +554,8 @@ function Limits({byUser=false}){
       <Select selectedOption={policy} options={actions} onChange={({detail})=>setPolicy(detail.selectedOption)}/>
      </FormField>
     </ColumnLayout>
-    <Button variant="primary" disabled={!valid} onClick={save}>Guardar límites (simulación)</Button>
+    {personView&&workload&&<Alert type="info">Sin usuario identificado, se aplica el límite del agente. Para cambiarlo, selecciona «Límites del agente».</Alert>}
+    <Button variant="primary" disabled={!valid||(personView&&workload)} onClick={save}>Guardar límites (simulación)</Button>
     {showExplanations&&<Alert type="info">Los umbrales de alerta son 50, 80 y 100 % del presupuesto. En el producto, los cambios se aplican sin redesplegar: limitar responde 429 con Retry-After; bloquear responde 403; una alerta no detiene solicitudes. Los contadores se separan por agente y, con C, por usuario.</Alert>}
    </SpaceBetween>
   </Panel>
