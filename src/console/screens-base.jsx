@@ -19,6 +19,7 @@ import CopyToClipboard from "@cloudscape-design/components/copy-to-clipboard";
 import Toggle from "@cloudscape-design/components/toggle";
 import Tabs from "@cloudscape-design/components/tabs";
 import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
+import ExpandableSection from "@cloudscape-design/components/expandable-section";
 import {usePrototype,Explanation} from "./main.jsx";
 import {AgentEnrollment,AgentSelector,AgentCredentialControls,selectedFrom} from "./agent-credentials.jsx";
 
@@ -71,108 +72,230 @@ function SmallKpi({title,value,context}){
 }
 const parseVal=x=>Number(String(x).replace(",","."));
 const selectOptions=(list)=>list.map(([value,label])=>({value,label}));
+
 function BasicAgents(){
- return <AgentEnrollment/>;
+ return <SpaceBetween size="l"><AgentEnrollment/><AgentCredentialControls/></SpaceBetween>;
 }
 
+
 function Live(){
- const {helpOn,navigate,slice}=usePrototype();
+ const {slice,navigate}=usePrototype();
+ const rank=Number(slice.slice(1));
  const [paused,setPaused]=useState(false);
  const [filter,setFilter]=useState("");
  const [status,setStatus]=useState({value:"all",label:"Todos"});
+ const [channel,setChannel]=useState({value:"all",label:"Todos"});
+ const [principal,setPrincipal]=useState({value:"all",label:"Todos"});
+ const [extra,setExtra]=useState([]);
+ const [queued,setQueued]=useState([]);
  const [selection,setSelection]=useState(null);
- const filtered=demoCalls.filter(x=>(status.value==="all"||x.state===status.value)&&
-  (x.agent+" "+x.id+" "+x.reason).toLowerCase().includes(filter.toLowerCase()));
+ const base=demoCalls.map((call,i)=>({...call,principal:"solo_workload",connections:"A",medium:"Inferencia",target:call.model,policy:i===2?"auth-agent-v1":"inference-preset-1",context:i===2?"agent_token inválido":"model permitido · presupuesto disponible"}));
+ const incremental=[
+  {since:2,id:"TRC-0201",time:"10:44:15",agent:"agente-demo",principal:"solo_workload",medium:"Inferencia",target:"Bedrock modelo A",model:"Bedrock modelo A",state:"Denegado",reason:"Intención de eliminar_registro bloqueada",cost:"US$ 0,002",tokens:"920",latency:"112 ms",connections:"A",policy:"cedar-tool-deny-v2",context:"tool=eliminar_registro · modo activo"},
+  {since:3,id:"TRC-0301",time:"10:45:23",agent:"agente-demo",principal:"ana.consulta",medium:"Inferencia",target:"Bedrock modelo A",model:"Bedrock modelo A",state:"Permitido",reason:"Rol consulta: RUT enmascarado",cost:"US$ 0,003",tokens:"1100",latency:"121 ms",connections:"A+C",policy:"pii-role-v1",context:"JWT válido · role=consulta"},
+  {since:4,id:"TRC-0401",time:"10:46:32",agent:"agente-demo",principal:"ana.consulta",medium:"MCP",target:"actualizar_precio",model:"—",state:"Denegado",reason:"descuento 25 supera el máximo 10",cost:"—",tokens:"0",latency:"35 ms",connections:"A+B+C",policy:"cedar-mcp-v3",context:"tool=actualizar_precio · descuento=25"},
+  {since:5,id:"TRC-0501",time:"10:47:40",agent:"agente-demo",principal:"elena.aprobadora",medium:"MCP",target:"cambiar_fondo",model:"—",state:"Pendiente",reason:"Operación retenida hasta aprobación",cost:"—",tokens:"0",latency:"29 ms",connections:"A+B+C",policy:"hitl-v1",context:"requiere_aprobacion · APR42 · plazo 15 min"},
+  {since:6,id:"TRC-0601",time:"10:48:17",agent:"agente-demo",principal:"elena.aprobadora",medium:"MCP",target:"consultar_ficha",model:"—",state:"Permitido",reason:"Ejecución y evidencia correlacionadas",cost:"—",tokens:"0",latency:"47 ms",connections:"A+B+C",policy:"cedar-mcp-v3",context:"trace explícito · tool_call_id asociado"}
+ ].filter(x=>x.since<=rank);
+ const events=[...extra,...incremental,...base];
+ const principals=[...new Set(events.map(x=>x.principal))];
+ const filtered=events.filter(x=>(status.value==="all"||x.state===status.value)&&
+  (channel.value==="all"||x.medium===channel.value)&&
+  (principal.value==="all"||x.principal===principal.value)&&
+  [x.agent,x.id,x.reason,x.target,x.principal].join(" ").toLowerCase().includes(filter.toLowerCase()));
+ const addEvent=()=>{
+  const i=extra.length+queued.length+1;
+  const x={...base[0],id:"TRC-DEMO-"+String(i).padStart(3,"0"),time:new Date().toLocaleTimeString("es-CL",{hour12:false}),reason:"Nueva inferencia de demostración "+i};
+  if(paused)setQueued(old=>[x,...old]);else setExtra(old=>[x,...old]);
+ };
+ const togglePause=()=>{
+  if(paused){setExtra(old=>[...queued,...old]);setQueued([]);}
+  setPaused(x=>!x);
+ };
+ const choose=x=>setSelection(x);
  return <SpaceBetween size="l">
   <ColumnLayout columns={3} variant="text-grid">
-   <SmallKpi title="Solicitudes" value="3" context="Ejemplo del último minuto"/>
-   <SmallKpi title="Canal" value="A" context="Inferencia observada"/>
-   <SmallKpi title="Evidencia" value="3 de 3" context="Índice durable"/>
+   <SmallKpi title="Solicitudes visibles" value={String(events.length)} context={"Datos sintéticos del corte "+slice}/>
+   <SmallKpi title="Canales" value={rank>=4?"A + MCP":"A"} context={rank>=4?"Inferencia y ejecución":"Solo inferencia"}/>
+   <SmallKpi title={paused?"En espera":"Evidencia"} value={paused?String(queued.length):"DEMO"} context={paused?"Se incorporan al reanudar":"No es telemetría AWS"}/>
   </ColumnLayout>
-  <div className="desktop-table">
-  <Table items={filtered} trackBy="id"
-   header={<Header variant="h2" counter={"("+filtered.length+")"} actions={<Button onClick={()=>setPaused(v=>!v)} iconName={paused?"play":"pause"}>{paused?"Reanudar":"Pausar"}</Button>}>Flujo en vivo</Header>}
-   filter={<div className="filter-layout">
-    <TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Buscar agente, motivo o trace ID"/>
-    <FormField label="Estado"><Select selectedOption={status} options={selectOptions([["all","Todos"],["Permitido","Permitido"],["Denegado","Denegado"]])} onChange={({detail})=>setStatus(detail.selectedOption)}/></FormField>
-   </div>}
-   columnDefinitions={[
-    {id:"time",header:"Hora",cell:x=>x.time},
-    {id:"agent",header:"Agente",cell:x=>x.agent},
-    {id:"model",header:"Modelo",cell:x=>x.model},
-    {id:"state",header:"Decisión",cell:x=><Decision state={x.state} reason={x.reason}/>},
-    {id:"cost",header:"Costo",cell:x=>x.cost},
-    {id:"tokens",header:"Tokens",cell:x=>x.tokens},
-    {id:"latency",header:"Latencia gobierno (demo)",cell:x=>x.latency},
-    {id:"action",header:"Evidencia",cell:x=><Button variant="link" onClick={()=>setSelection(x)}>Ver registro</Button>}
-   ]}
-   empty={<Box textAlign="center" padding="l">No hay eventos con estos filtros.</Box>}/>
-  </div>
-  <div className="mobile-cards">
-   <Container header={<Header variant="h2" counter={"("+filtered.length+")"} actions={<Button onClick={()=>setPaused(v=>!v)} iconName={paused?"play":"pause"}>{paused?"Reanudar":"Pausar"}</Button>}>Flujo en vivo</Header>}>
-    <SpaceBetween size="s">
-     <TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Buscar agente o trace ID"/>
-     <FormField label="Estado">
-      <Select selectedOption={status} options={selectOptions([["all","Todos"],["Permitido","Permitido"],["Denegado","Denegado"]])} onChange={({detail})=>setStatus(detail.selectedOption)}/>
+  <Container header={<Header variant="h2" actions={<SpaceBetween direction="horizontal" size="xs">
+   <Button onClick={addEvent}>Simular solicitud</Button>
+   <Button onClick={togglePause} iconName={paused?"play":"pause"}>{paused?"Reanudar":"Pausar"}</Button>
+  </SpaceBetween>}>Flujo de solicitudes</Header>}>
+   <SpaceBetween size="m">
+    <ColumnLayout columns={2}>
+     <FormField label="Buscar agente, tool, motivo o trace ID">
+      <Input value={filter} onChange={({detail})=>setFilter(detail.value)} placeholder="Ej.: TRC-0401"/>
      </FormField>
-     {filtered.length?filtered.map(call=><div className="mobile-request" key={call.id}>
-      <SpaceBetween size="s">
-       <div className="gov-mobile-card-heading"><Box fontFamily="monospace">{call.id}</Box><Box color="text-body-secondary" fontSize="body-s">{call.time}</Box></div>
-       <Decision state={call.state} reason={call.reason}/>
-       <KeyValuePairs columns={2} items={[{label:"Agente",value:call.agent},{label:"Costo",value:call.cost},{label:"Tokens",value:call.tokens},{label:"Latencia demo",value:call.latency}]}/>
-       <Button variant="link" onClick={()=>setSelection(call)}>Ver registro</Button>
-      </SpaceBetween>
-     </div>):<Box textAlign="center" padding="m">Sin eventos para estos filtros.</Box>}
-    </SpaceBetween>
-   </Container>
-  </div>
-  {paused?<Alert type="warning">Vista pausada. El agente sigue funcionando.</Alert>:<Explanation>La evidencia se indexa antes de responder y se replica a S3 Object Lock GOVERNANCE.</Explanation>}
-  <Modal visible={!!selection} onDismiss={()=>setSelection(null)} header={"Registro "+(selection?.id||"")} footer={<Box float="right"><Button variant="primary" onClick={()=>setSelection(null)}>Cerrar</Button></Box>}>
-   <SpaceBetween size="s">
-    <Decision state={selection?.state||"Permitido"} reason={selection?.reason}/>
-    <KeyValuePairs columns={2} items={[{label:"Agente",value:selection?.agent||""},{label:"Costo",value:selection?.cost||""},{label:"Tokens",value:selection?.tokens||""},{label:"Latencia ilustrativa",value:selection?.latency||""},{label:"Evidencia",value:"Índice durable"},{label:"Conexiones",value:"A · B/C sin observar"}]}/>
-    {slice==="S6"&&<Button onClick={()=>navigate("s6-forensic")}>Abrir ruta forense</Button>}
+     <FormField label="Estado">
+      <Select selectedOption={status} onChange={({detail})=>setStatus(detail.selectedOption)}
+       options={selectOptions([["all","Todos"],["Permitido","Permitido"],["Denegado","Denegado"],["Pendiente","Pendiente"]])}/>
+     </FormField>
+     <FormField label="Usuario">
+      <Select selectedOption={principal} onChange={({detail})=>setPrincipal(detail.selectedOption)}
+       options={[{value:"all",label:"Todos"},...principals.map(x=>({value:x,label:x}))]}/>
+     </FormField>
+     <FormField label="Canal">
+      <Select selectedOption={channel} onChange={({detail})=>setChannel(detail.selectedOption)}
+       options={selectOptions([["all","Todos"],["Inferencia","Inferencia A"],["MCP","Tools MCP B"]])}/>
+     </FormField>
+    </ColumnLayout>
+    {paused&&<Alert type="warning">Vista pausada; el agente sigue operando. {queued.length} eventos de ejemplo esperan reanudación.</Alert>}
+    <div className="desktop-table">
+     <Table items={filtered} trackBy="id" header={<Header variant="h3" counter={"("+filtered.length+")"}>Solicitudes</Header>}
+      columnDefinitions={[
+       {id:"id",header:"Trace ID",width:104,cell:x=><Button variant="link" onClick={()=>choose(x)}>{x.id}</Button>},
+       {id:"agent",header:"Agente / usuario",cell:x=><span>{x.agent} · {x.principal}</span>},
+       {id:"medium",header:"Canal / destino",cell:x=><span>{x.medium} · {x.target}</span>},
+       {id:"connections",header:"Conexiones",cell:x=>x.connections},
+       {id:"state",header:"Decisión",cell:x=><Decision state={x.state} reason={x.reason}/>},
+       {id:"cost",header:"Costo",cell:x=>x.cost},
+       {id:"actions",header:"Detalle",width:70,cell:x=><Button variant="link" ariaLabel={"Ver decisión "+x.id} onClick={()=>choose(x)}>Ver</Button>}
+      ]} empty={<Box textAlign="center" padding="l">No hay eventos para estos filtros.</Box>}/>
+    </div>
+    <div className="mobile-cards">
+     <SpaceBetween size="s">{filtered.map(x=><div className="mobile-request" key={x.id}><Container header={<Header variant="h3" actions={<Button onClick={()=>choose(x)}>Detalle</Button>}>{x.id}</Header>}>
+      <SpaceBetween size="s"><Decision state={x.state} reason={x.reason}/><KeyValuePairs columns={2} items={[
+       {label:"Usuario",value:x.principal},{label:"Canal",value:x.medium},{label:"Conexiones",value:x.connections},{label:"Costo",value:x.cost}]}/></SpaceBetween>
+     </Container></div>)}</SpaceBetween>
+    </div>
    </SpaceBetween>
+  </Container>
+  <Explanation>Las filas ilustran cómo crece el flujo: inferencia A, bloqueos en S2, identidad C, MCP B, aprobaciones y auditoría. El índice real debe actualizarse en menos de 3 segundos.</Explanation>
+  <Modal visible={!!selection} onDismiss={()=>setSelection(null)} header={"Decisión "+(selection?.id||"")}
+   footer={<Box float="right"><Button variant="primary" onClick={()=>setSelection(null)}>Cerrar</Button></Box>}>
+   {selection&&<SpaceBetween size="m">
+    <Decision state={selection.state} reason={selection.reason}/>
+    <KeyValuePairs columns={2} items={[
+     {label:"Agente",value:selection.agent},{label:"Usuario",value:selection.principal},
+     {label:"Canal y destino",value:selection.medium+" · "+selection.target},{label:"Conexiones",value:selection.connections},
+     {label:"Regla",value:selection.policy},{label:"Contexto evaluado",value:selection.context},
+     {label:"Tokens",value:selection.tokens},{label:"Costo",value:selection.cost}]}/>
+    <Box fontFamily="monospace" fontSize="body-s">{JSON.stringify({trace_id:selection.id,decision:selection.state,policy_id:selection.policy,context:selection.context,channel:selection.medium},null,2)}</Box>
+    {rank>=6&&<Button onClick={()=>{setSelection(null);navigate("s6-forensic");}}>Abrir ruta forense</Button>}
+   </SpaceBetween>}
   </Modal>
  </SpaceBetween>;
 }
+
+
 function Coverage(){
- const {simulation,showExplanations}=usePrototype();
+ const {simulation,slice,showExplanations}=usePrototype();
+ const [evidence,setEvidence]=useState({value:"observado",label:"Eventos de ejemplo"});
  const agent=selectedFrom(simulation);
+ const rank=Number(slice.slice(1));
+ const hasC=rank>=3,hasB=rank>=4;
+ const connected=hasB&&simulation.toolsMcp.length>0;
+ const bCount=connected?simulation.toolsMcp.length:0;
+ const max=hasB?(hasC?89:67):(hasC?56:41);
+ const noData=evidence.value!=="observado";
+ const next=rank<2?"Revisar el catálogo de tools antes de activar en S2":!hasC?"Conectar identidad C para reglas y consumo por usuario":!hasB?"Centralizar la ejecución de tools por MCP B":bCount<4?"Mover las tools locales restantes a MCP":"Revisar las excepciones y mantener evidencia";
+
+ const catalog=[
+  ["CTRL-01","Autenticación de agente",["A"],false],["CTRL-02","Inventario de modelos",["A"],false],
+  ["CTRL-03","Modelos permitidos",["A"],true],["CTRL-04","Inventario de tools",["A"],false],
+  ["CTRL-05","Guardrail semántico",["A"],false],["CTRL-06","PII de respuestas del modelo",["A"],false],
+  ["CTRL-07","Intenciones de tools bloqueadas",["A"],true],["CTRL-08","Costo y tokens por agente",["A"],false],
+  ["CTRL-09","Presupuesto y tasa",["A"],false],["CTRL-10","Suspensión en inferencia",["A"],false],
+  ["CTRL-11","Evidencia de inferencia",["A"],false],
+  ["CTRL-12","Solo tools MCP aprobadas",["A","B"],true],["CTRL-13","Credenciales de tools en bóveda",["A","B"],false],
+  ["CTRL-14","Reglas sobre parámetros reales",["A","B"],true],["CTRL-15","PII en respuestas MCP",["A","B"],false],
+  ["CTRL-16","Aprobación humana de tools",["A","B"],true],["CTRL-17","Evidencia de ejecución MCP",["A","B"],false],
+  ["CTRL-18","Suspensión de acciones MCP",["A","B"],false],
+  ["CTRL-19","Principal humano en auditoría",["A","C"],false],["CTRL-20","Cuotas por usuario",["A","C"],false],
+  ["CTRL-21","Acceso a PII por rol",["A","C"],false],["CTRL-22","Intención de tool por rol",["A","C"],true],
+  ["CTRL-23","Ejecución real por rol",["A","B","C"],true],["CTRL-24","Separación de funciones",["A","B","C"],true],
+  ["CTRL-25","Restricción de red/IAM del agente",["fuera"],false],
+  ["CTRL-26","Login del usuario en aplicación del cliente",["fuera"],false],
+  ["CTRL-27","Aviso y reclamos de IA en interfaz cliente",["fuera"],false]
+ ];
+ const fullCatalog=catalog.map(([id,name,requires,shadow])=>{
+  const available=!requires.includes("fuera")&&(!requires.includes("B")||hasB)&&(!requires.includes("C")||hasC);
+  const state=!available?"No disponible":noData?"Sin evidencia":shadow&&agent.mode!=="Activo"?"En sombra":"Representado";
+  return {id,name,requires:requires.join("+"),state};
+ });
+
+ const controls=[
+  {name:"Autenticación del agente",state:noData?"Sin evidencia":"Activo",reason:"agent_token individual · canal A"},
+  {name:"Guardrail y protección de datos",state:noData?"Sin evidencia":"Activo",reason:"Inferencia A"},
+  {name:"Políticas Cedar sobre intención",state:noData?"Sin evidencia":agent.mode==="Activo"?"Activo":"En sombra",reason:agent.mode==="Activo"?"Bloqueo preventivo":"Modo descubrimiento"},
+  {name:"Autorización de ejecución MCP",state:hasB?(noData?"Sin evidencia":"Activo"):"No disponible",reason:hasB?bCount+" de 4 tools por MCP":"Requiere conexión B"},
+  {name:"Identidad humana y límites por usuario",state:hasC?(noData?"Sin evidencia":"Activo"):"No disponible",reason:hasC?"JWT válido en 2 de 3 solicitudes de muestra":"Requiere conexión C"}
+ ];
  return <SpaceBetween size="l">
-  <Container header={<Header variant="h2">Cobertura del catálogo · agente {agent.name}</Header>}>
+  <Container header={<Header variant="h2">Gobernanza de {agent.name}</Header>}>
    <SpaceBetween size="m">
+    <div className="gov-agent-picker"><AgentSelector/></div>
     <ColumnLayout columns={3}>
-     <div><Box color="text-body-secondary">A · Inferencia</Box><StatusIndicator type="success">Conectada (demo)</StatusIndicator></div>
-     <div><Box color="text-body-secondary">B · Tools MCP</Box><StatusIndicator type="stopped">No conectada</StatusIndicator></div>
-     <div><Box color="text-body-secondary">C · Usuario</Box><StatusIndicator type="stopped">No conectada · solo_workload</StatusIndicator></div>
+     <div><Box color="text-body-secondary">A · Inferencia</Box><StatusIndicator type={noData?"warning":"success"}>{noData?"Sin datos en ventana":"Conectada · DEMO"}</StatusIndicator></div>
+     <div><Box color="text-body-secondary">B · Tools MCP</Box><StatusIndicator type={hasB?"success":"stopped"}>{hasB?bCount+" de 4 tools (demo)":"No conectada"}</StatusIndicator></div>
+     <div><Box color="text-body-secondary">C · Usuario</Box><StatusIndicator type={hasC?"success":"stopped"}>{hasC?"2 de 3 JWT válidos (demo)":"No conectada · solo_workload"}</StatusIndicator></div>
     </ColumnLayout>
-    <ProgressBar value={41} label="Máximo alcanzable con A en modo activo" additionalInfo="41 % del catálogo actual · referencia, no medición" description="Conexión A sin B ni C, catálogo completo aplicable" />
-    <Box color="text-body-secondary" fontSize="body-s">En descubrimiento los controles preventivos configurados «en sombra» no suman. Los porcentajes dependen de las conexiones, el modo, los controles aplicables y la evidencia de la ventana.</Box>
+    <ColumnLayout columns={3}>
+     <SmallKpi title="Modo actual" value={agent.mode} context="3 días en este modo · DEMO"/>
+     <SmallKpi title="Decisiones en sombra" value={agent.mode==="Descubrimiento"?"3 de 12":"0"} context="Solicitudes ilustrativas"/>
+     <SmallKpi title="Índice calculado" value="Sin medición" context="No hay backend conectado"/>
+    </ColumnLayout>
+    <ProgressBar value={max} label={"Máximo de catálogo: "+max+" %"} description="Referencia con conexiones completas y controles aplicables en activo, no índice medido"/>
+    <FormField label="Estado de la evidencia · ejemplo">
+     <Select selectedOption={evidence} onChange={({detail})=>setEvidence(detail.selectedOption)} options={[
+      {value:"observado",label:"Eventos de ejemplo"},{value:"sin_trafico",label:"Sin tráfico"},{value:"fallo",label:"Evaluación sin evidencia"}]}/>
+    </FormField>
+    {evidence.value==="sin_trafico"&&<Alert type="warning">Sin datos: no se calcula un índice si el agente no tuvo tráfico en la ventana.</Alert>}
+    {evidence.value==="fallo"&&<Alert type="error">Sin evidencia: un control sin evaluación válida no cuenta como cumplido.</Alert>}
+    <Alert type="info">Siguiente paso recomendado: {next}.</Alert>
    </SpaceBetween>
   </Container>
-  <Panel title="Estado de los controles" info="La cobertura no es un porcentaje de seguridad absoluta: solo cuenta controles del catálogo del producto con evidencia válida.">
-   <Table variant="embedded" items={[
-     {c:"Autenticación de "+agent.name,state:"Activo",reason:"agent_token propio por agente; no compartido"},
-     {c:"Evidencia y flujo",state:"Activo",reason:"Índice durable"},
-     {c:"Políticas de tools",state:"En sombra",reason:"Solo observadas, sin denegación por política"},
-     {c:"Ejecución fuera de MCP",state:"No disponible",reason:"El agente ejecuta tools locales"}
-    ]} columnDefinitions={[
-     {id:"c",header:"Control",cell:x=>x.c},{id:"state",header:"Estado",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":"stopped"}>{x.state}</StatusIndicator>},
-     {id:"reason",header:"Por qué",cell:x=>x.reason}
-    ]}/>
+  <Panel title="Estado de los controles" info="El índice depende de evidencia, conexiones disponibles, aplicabilidad y modo. No mide seguridad absoluta.">
+   <div className="desktop-table"><Table variant="embedded" items={controls} columnDefinitions={[
+    {id:"name",header:"Control",cell:x=>x.name},
+    {id:"state",header:"Estado",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":x.state==="Sin evidencia"?"error":"stopped"}>{x.state}</StatusIndicator>},
+    {id:"reason",header:"Motivo / dependencia",cell:x=>x.reason}
+   ]}/></div>
+   <div className="mobile-cards"><SpaceBetween size="s">{controls.map(x=><Container key={x.name} header={<Header variant="h3">{x.name}</Header>}>
+    <SpaceBetween size="xs">{x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":x.state==="Sin evidencia"?"error":"stopped"}>{x.state}</StatusIndicator>}
+     <Box color="text-body-secondary">{x.reason}</Box></SpaceBetween>
+   </Container>)}</SpaceBetween></div>
   </Panel>
-  {showExplanations&&<Alert type="warning">Máximos referenciales para controles aplicables con cobertura completa en activo: A 41 %, A+C 56 %, A+B 67 %, A+B+C 89 %. El 11 % restante está fuera del perímetro. No son resultados de pruebas ni puntuaciones de seguridad.</Alert>}
+
+  <ExpandableSection headerText="Ver los 27 controles del catálogo" variant="footer">
+   <div className="desktop-table"><Table items={fullCatalog} trackBy="id" variant="embedded" columnDefinitions={[
+    {id:"id",header:"ID",cell:x=>x.id},
+    {id:"control",header:"Control",cell:x=>x.name},
+    {id:"needs",header:"Requiere",cell:x=>x.requires},
+    {id:"status",header:"Estado de muestra",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Representado"?"info":x.state==="Sin evidencia"?"error":"stopped"}>{x.state}</StatusIndicator>}
+   ]}/></div>
+   <div className="mobile-cards"><SpaceBetween size="s">{fullCatalog.map(x=><Container key={x.id} header={<Header variant="h3">{x.id} · {x.name}</Header>}>
+    <KeyValuePairs columns={1} items={[{label:"Requiere",value:x.requires},{label:"Estado de muestra",value:x.state}]}/>
+   </Container>)}</SpaceBetween></div>
+   <Explanation>“Representado” describe una capacidad de la interfaz, no una prueba de cumplimiento AWS. CTRL-25 a CTRL-27 están fuera del perímetro.</Explanation>
+  </ExpandableSection>
+
+  <Panel title="Agentes en el catálogo">
+   <div className="desktop-table"><Table variant="embedded" items={simulation.agentRegistry} trackBy="id" columnDefinitions={[
+    {id:"name",header:"Agente",cell:x=>x.name},
+    {id:"mode",header:"Modo",cell:x=>x.mode},
+    {id:"connections",header:"Conexiones en este corte",cell:()=>hasB?"A+B"+(hasC?"+C":""):hasC?"A+C":"A"},
+    {id:"score",header:"Índice de cobertura",cell:()=>"Sin medición"}
+   ]}/></div>
+   <div className="mobile-cards"><SpaceBetween size="s">{simulation.agentRegistry.map(x=><Container key={x.id} header={<Header variant="h3">{x.name}</Header>}>
+     <KeyValuePairs columns={2} items={[{label:"Modo",value:x.mode},{label:"Conexiones",value:hasB?"A+B"+(hasC?"+C":""):hasC?"A+C":"A"},{label:"Índice",value:"Sin medición"}]}/>
+   </Container>)}</SpaceBetween></div>
+  </Panel>
+  {showExplanations&&<Alert type="info">Referencias máximas del catálogo para A / A+C / A+B / A+B+C: 41 % / 56 % / 67 % / 89 %. No equivalen a una medición en este prototipo.</Alert>}
  </SpaceBetween>;
 }
+
 function Inventory(){
- const {notify}=usePrototype();
+ const {notify,simulation,setSimulation}=usePrototype();
+ const currentAgent=selectedFrom(simulation);
  const [filter,setFilter]=useState("");
  const [selected,setSelected]=useState(null);
- const [overrides,setOverrides]=useState({});
+ const toolKey=id=>currentAgent.id+":"+id;
  const classes=[{value:"Lectura",label:"Lectura"},{value:"Escritura",label:"Escritura"},{value:"Destructiva",label:"Destructiva o crítica"},{value:"Sin clasificar",label:"Sin clasificar"}];
  const [draftClass,setDraftClass]=useState(classes[0]);
- const items=dummyTools.map(tool=>({...tool,...overrides[tool.id]}))
+ const items=dummyTools.map(tool=>({...tool,...(simulation.toolOverrides?.[toolKey(tool.id)]||{}),schema:simulation.toolSchemaVersions?.[toolKey(tool.id)]||tool.schema}))
   .filter(tool=>tool.id.toLowerCase().includes(filter.toLowerCase()));
  const open=tool=>{
   setSelected(tool);
@@ -180,18 +303,27 @@ function Inventory(){
  };
  const reviewed=items.filter(tool=>tool.status==="Revisada").length;
  const unclassified=items.filter(tool=>tool.kind==="Sin clasificar").length;
+ const changedSchemas=items.filter(tool=>tool.schema!==dummyTools.find(t=>t.id===tool.id)?.schema).length;
+ const simulateSchemaChange=()=>{
+  if(!selected)return;
+  const previous=simulation.toolSchemaVersions?.[toolKey(selected.id)]||selected.schema;
+  const next="v"+(Number(previous.replace("v",""))+1);
+  setSimulation(prev=>({...prev,toolSchemaVersions:{...prev.toolSchemaVersions,[toolKey(selected.id)]:next},toolOverrides:{...prev.toolOverrides,[toolKey(selected.id)]:{kind:selected.kind,status:"Pendiente de revisión"}}}));
+  notify("Esquema de "+selected.id+" actualizado a "+next+" en DEMO; requiere nueva revisión.");setSelected(null);
+ };
  const confirm=()=>{
   if(!selected)return;
-  setOverrides(prev=>({...prev,[selected.id]:{kind:draftClass.value,status:"Revisada"}}));
+  setSimulation(prev=>({...prev,toolOverrides:{...prev.toolOverrides,[toolKey(selected.id)]:{kind:draftClass.value,status:"Revisada"}}}));
   notify("Clasificación de "+selected.id+" revisada solo en esta DEMO.");
   setSelected(null);
  };
  return <SpaceBetween size="l">
+  <AgentSelector/>
   <Panel title="Descubrimiento de herramientas" info="INF-02: cada declaración de tools se cataloga por agente y versión de esquema; la clase automática es sugerida, no una aprobación.">
    <ColumnLayout columns={3}>
     <SmallKpi title="Detectadas" value="4" context="Inferencias simuladas"/>
     <SmallKpi title="Sin clasificar" value={String(unclassified)} context="Requieren revisión"/>
-    <SmallKpi title="Revisadas" value={String(reviewed)} context="Confirmadas por operador (demo)"/>
+    <SmallKpi title="Revisadas" value={String(reviewed)} context={"Cambios de esquema: "+changedSchemas+" · demo"}/>
    </ColumnLayout>
   </Panel>
   <div className="desktop-table">
@@ -221,12 +353,14 @@ function Inventory(){
   <Modal visible={!!selected} header={selected?.id||"Revisar clasificación"} onDismiss={()=>setSelected(null)}
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s">
     <Button onClick={()=>setSelected(null)}>Cancelar</Button>
+    <Button onClick={simulateSchemaChange}>Simular cambio de esquema</Button>
     <Button variant="primary" onClick={confirm}>Confirmar clase (demo)</Button>
    </SpaceBetween></Box>}>
    <SpaceBetween size="m">
     <KeyValuePairs columns={2} items={[
      {label:"Clase inferida",value:dummyTools.find(tool=>tool.id===selected?.id)?.kind||""},
      {label:"Versión de esquema",value:selected?.schema||""},
+     {label:"Esquema anterior",value:dummyTools.find(tool=>tool.id===selected?.id)?.schema||""},
      {label:"Estado",value:selected?.status==="Revisada"?"Revisada":"Sugerida · sin validar"},
      {label:"Canal",value:"A · intención, no ejecución"}
     ]}/>
@@ -349,6 +483,7 @@ function ActiveAgent(){
     <SmallKpi title="Decisiones que pasarían a denegado" value="3" context="Evaluadas en sombra"/>
     <SmallKpi title="Tools pendientes de revisión" value="2" context="Revisar antes de activar"/>
    </ColumnLayout>
+   <Box color="text-body-secondary">Pendientes: eliminar_registro (destructiva), procesar_lote (sin clasificar).</Box>
    {showExplanations&&<Box margin={{top:"s"}} color="text-body-secondary">La confirmación debe registrar responsable, actor, versión de la configuración y reglas. Los datos de impacto aquí son sintéticos.</Box>}
   </Container>
   <Modal visible={!!dialog} header={{activate:"Confirmar paso a activo",suspend:"Suspender solo este agente",resume:"Reactivar agente",retire:"Retirar agente"}[dialog]||"Confirmar"}
@@ -356,7 +491,7 @@ function ActiveAgent(){
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setDialog(null)}>Cancelar</Button><Button variant="primary" onClick={apply}>Confirmar (demo)</Button></SpaceBetween></Box>}>
    <Alert type={dialog==="retire"?"error":"warning"}>
     {dialog==="activate"
-     ?"Se aplicarían 3 denegaciones observadas en sombra; hay 2 tools pendientes. Solo cambia "+selected.name+"."
+     ?"Se aplicarían 3 denegaciones observadas en sombra; siguen pendientes eliminar_registro y procesar_lote. Solo cambia "+selected.name+"."
      :dialog==="suspend"
       ?"Las inferencias A y ejecuciones MCP B de "+selected.name+" deben responder 403 en ≤60 s. Ningún otro agente se suspende."
       :dialog==="retire"
@@ -481,7 +616,7 @@ function Identity(){
     </SpaceBetween>
    </Panel>
   </ColumnLayout>
-  <Box color="text-body-secondary" fontSize="body-s">La conexión C se mide como la proporción de solicitudes con JWT válido. Si falta, el agente conserva su autenticación A/B, pero las reglas no reciben identidad humana. La plataforma no autentica el salto usuario → agente.</Box>
+  <Explanation>La conexión C se mide por solicitudes con JWT válido. Sin él, A/B conserva identidad del agente, no de la persona. La plataforma no autentica el salto usuario → agente.</Explanation>
  </SpaceBetween>;
 }
 export {BasicAgents,Live,Coverage,Inventory,Shadow,ActiveAgent,Limits,Identity};

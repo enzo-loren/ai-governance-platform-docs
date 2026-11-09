@@ -43,14 +43,17 @@ function Panel({title,children,actions,help}){
  return <Container header={<Header variant="h2" info={showExplanations&&help?<Button variant="link" onClick={()=>helpOn(title,help)}>¿Qué significa?</Button>:undefined} actions={actions}>{title}</Header>}>{children}</Container>;
 }
 function State({value}){
- const types={Permitido:"success",Denegado:"error",Pendiente:"pending",Vencida:"warning","Fuera de la puerta":"stopped"};
+ const types={Permitido:"success",Denegado:"error",Pendiente:"pending",Vencida:"warning","En sombra":"info","Fuera de la puerta":"stopped"};
  return <StatusIndicator type={types[value]||"info"}>{value}</StatusIndicator>;
 }
 function MCP(){
- const {simulation,setSimulation,notify,helpOn,showExplanations}=usePrototype();
+ const {simulation,setSimulation,notify,helpOn,showExplanations,slice}=usePrototype();
+ const rank=Number(slice.slice(1));
+ const agent=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)||simulation.agentRegistry[0];
  const [filter,setFilter]=useState("");
  const [row,setRow]=useState(null);
- const [approved,setApproved]=useState(["consultar_ficha","actualizar_precio"]);
+ const approved=simulation.approvedTools||[];
+ const supervision=simulation.supervision||{};
  const [targetName,setTargetName]=useState("");
  const [targetType,setTargetType]=useState({value:"lambda",label:"AWS Lambda"});
  const [targetModal,setTargetModal]=useState(false);
@@ -59,12 +62,13 @@ function MCP(){
   {id:"openapi-demo",type:"OpenAPI HTTPS",secret:"API key / Secrets Manager",status:"Registrado (demo)"}
  ]);
  const mcp=simulation.toolsMcp;
- const filtered=tools.filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
+ const filtered=tools.map(x=>({...x,...(simulation.toolOverrides?.[agent.id+":"+x.id]||{}),schema:simulation.toolSchemaVersions?.[agent.id+":"+x.id]||"v1"})).filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
  const toggle=(id,checked)=>{
   setSimulation(prev=>({...prev,toolsMcp:checked?[...new Set([...prev.toolsMcp,id])]:prev.toolsMcp.filter(name=>name!==id)}));
   notify("Cobertura MCP de la demostración actualizada.");
  };
- const decision=x=>!mcp.includes(x.id)?"Fuera de la puerta":approved.includes(x.id)?"Permitido":"Denegado";
+ const decision=x=>!mcp.includes(x.id)?"Fuera de la puerta":approved.includes(x.id)?"Permitido":agent.mode==="Descubrimiento"?"En sombra":"Denegado";
+ const changeSupervision=(id,value)=>setSimulation(prev=>({...prev,supervision:{...prev.supervision,[id]:value}}));
  const register=()=>{
   if(!targetName.trim())return;
   if(targets.some(x=>x.id.toLowerCase()===targetName.trim().toLowerCase())){notify("Ya existe un target con ese nombre.","error");return}
@@ -80,13 +84,16 @@ function MCP(){
   </ColumnLayout>
   <Container header={<Header variant="h2" actions={<Button onClick={()=>setTargetModal(true)}>Registrar target (demo)</Button>}>Targets MCP y credenciales de destino</Header>}>
    <SpaceBetween size="m">
-    <Table variant="embedded" items={targets} trackBy="id" columnDefinitions={[
+    <div className="desktop-table"><Table variant="embedded" items={targets} trackBy="id" columnDefinitions={[
      {id:"target",header:"Target",cell:x=>x.id},
      {id:"type",header:"Tipo",cell:x=>x.type},
      {id:"secret",header:"Autenticación hacia el target",cell:x=>x.secret},
      {id:"status",header:"Estado",cell:x=><StatusIndicator type="success">{x.status}</StatusIndicator>}
-    ]}/>
-    <Box color="text-body-secondary" fontSize="body-s">Una credencial de target no es el agent_token. El agente presenta su propia key para A y B; la puerta inyecta las credenciales de Lambda/OpenAPI sin exponerlas al agente.</Box>
+    ]}/></div>
+    <div className="mobile-cards"><SpaceBetween size="s">{targets.map(item=><Container key={item.id} header={<Header variant="h3">{item.id}</Header>}>
+      <KeyValuePairs columns={1} items={[{label:"Tipo",value:item.type},{label:"Autenticación",value:item.secret},{label:"Estado",value:item.status}]}/>
+    </Container>)}</SpaceBetween></div>
+    <Explanation>La clave del agente autentica A y B. Las claves propias de cada target se guardan en AgentCore Identity o Secrets Manager y no se entregan al agente.</Explanation>
    </SpaceBetween>
   </Container>
   <div className="desktop-table">
@@ -94,7 +101,7 @@ function MCP(){
     header={<Header variant="h2" info={showExplanations?<Button variant="link" onClick={()=>helpOn("Cobertura B","La ejecución solo se controla si la tool pasa por un target MCP registrado. El catálogo de inferencia por sí solo no controla una ejecución local.")}>¿Qué cubre B?</Button>:undefined}>Herramientas y destinos</Header>}
     filter={<TextFilter filteringText={filter} onChange={({detail})=>setFilter(detail.filteringText)} filteringPlaceholder="Filtrar tools"/>}
     columnDefinitions={[
-     {id:"name",header:"Tool",cell:x=><Button variant="link" onClick={()=>setRow(x)}>{x.id}</Button>},
+     {id:"name",header:"Tool",width:190,cell:x=><Button variant="link" onClick={()=>setRow(x)}>{x.id}</Button>},
      {id:"class",header:"Clase",cell:x=>x.kind},
      {id:"target",header:"Destino",cell:x=>mcp.includes(x.id)?x.target:"Local"},
      {id:"approved",header:"Aprobación",cell:x=><StatusIndicator type={approved.includes(x.id)?"success":"warning"}>{approved.includes(x.id)?"Aprobada":"Pendiente / no aprobada"}</StatusIndicator>},
@@ -109,7 +116,7 @@ function MCP(){
      <SpaceBetween size="s">
       <State value={decision(x)}/>
       <StatusIndicator type={approved.includes(x.id)?"success":"warning"}>{approved.includes(x.id)?"Aprobada":"Pendiente"}</StatusIndicator>
-      <KeyValuePairs columns={2} items={[{label:"Clase",value:x.kind},{label:"Destino",value:mcp.includes(x.id)?x.target:"Local"}]}/>
+      <KeyValuePairs columns={2} items={[{label:"Clase",value:x.kind},{label:"Esquema",value:x.schema},{label:"Destino",value:mcp.includes(x.id)?x.target:"Local"},{label:"Supervisión",value:rank>=5?supervision[x.id]:"Disponible en S5"}]}/>
       <Button variant="link" onClick={()=>setRow(x)}>Ver detalle de tool</Button>
      </SpaceBetween>
     </Container>)}
@@ -119,13 +126,18 @@ function MCP(){
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s">
     <Button onClick={()=>setRow(null)}>Cerrar</Button>
     {row&&<Button variant="primary" onClick={()=>{
-     setApproved(old=>old.includes(row.id)?old.filter(id=>id!==row.id):[...old,row.id]);
+     setSimulation(prev=>({...prev,approvedTools:approved.includes(row.id)?prev.approvedTools.filter(id=>id!==row.id):[...prev.approvedTools,row.id]}));
      notify("Aprobación de "+row.id+" modificada únicamente en DEMO.");
      setRow(null);
     }}>{approved.includes(row?.id)?"Quitar aprobación (demo)":"Aprobar tool (demo)"}</Button>}
    </SpaceBetween></Box>}>
    <SpaceBetween size="m">
-    <KeyValuePairs columns={2} items={[{label:"Clase",value:row?.kind||""},{label:"Destino",value:row?.target||""},{label:"Cobertura B",value:row&&mcp.includes(row.id)?"MCP":"Local"},{label:"Aprobación",value:row&&approved.includes(row.id)?"Aprobada":"Pendiente"}]}/>
+    <KeyValuePairs columns={2} items={[{label:"Clase",value:row?.kind||""},{label:"Esquema",value:row?.schema||""},{label:"Destino",value:row?.target||""},{label:"Cobertura B",value:row&&mcp.includes(row.id)?"MCP":"Local"},{label:"Aprobación",value:row&&approved.includes(row.id)?"Aprobada":"Pendiente"},{label:"Supervisión",value:rank>=5?({autonoma:"Autónoma",notificar:"Notificar",requiere_aprobacion:"Requiere aprobación"}[supervision[row?.id]]||"Autónoma"):"Disponible desde S5"},{label:"Último uso",value:row?.id==="procesar_lote"?"No observado":"Hace 12 min (demo)"}]}/>
+    {rank>=5&&row&&<FormField label="Nivel de supervisión">
+     <Select selectedOption={[{value:"autonoma",label:"Autónoma"},{value:"notificar",label:"Notificar"},{value:"requiere_aprobacion",label:"Requiere aprobación"}].find(x=>x.value===supervision[row.id])||{value:"autonoma",label:"Autónoma"}}
+      options={[{value:"autonoma",label:"Autónoma"},{value:"notificar",label:"Notificar"},{value:"requiere_aprobacion",label:"Requiere aprobación"}]}
+      onChange={({detail})=>changeSupervision(row.id,detail.selectedOption.value)}/>
+    </FormField>}
     <Alert type="info">En activo, una tool pendiente o no aprobada se deniega; en descubrimiento la evaluación de esa regla puede operar en sombra. Esta acción solo modifica una muestra.</Alert>
    </SpaceBetween>
   </Modal>
@@ -139,92 +151,156 @@ function MCP(){
   </Modal>
  </SpaceBetween>;
 }
+
 function Policy(){
- const {notify}=usePrototype();
+ const {notify,simulation}=usePrototype();
+ const agent=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)||simulation.agentRegistry[0];
  const [threshold,setThreshold]=useState("10");
  const [effect,setEffect]=useState({label:"Denegar",value:"DENY"});
+ const [principal,setPrincipal]=useState({label:"Cualquier rol",value:"*"});
+ const [target,setTarget]=useState({label:"actualizar_precio · escritura",value:"actualizar_precio"});
  const [version,setVersion]=useState(3);
  const [tab,setTab]=useState("builder");
- const [cedar,setCedar]=useState('forbid(principal, action == Gov::Action::"UsarTool::actualizar_precio", resource)\nwhen { context.parametros.descuento > 10 };');
- const [cedarStatus,setCedarStatus]=useState("Borrador · sin validación de esquema");
+ const [cedar,setCedar]=useState('forbid(principal, action == Gov::Action::"UsarTool::actualizar_precio", resource)\\nwhen { context.parametros.descuento > 10 };');
+ const [cedarStatus,setCedarStatus]=useState("Borrador · sin validar");
+ const [validation,setValidation]=useState("");
+ const [saved,setSaved]=useState([{version:3,author:"Operador plataforma · DEMO",when:"09 nov · 10:43"}]);
+ const roles=[{label:"Cualquier rol",value:"*"},{label:"solo_workload",value:"solo_workload"},{label:"Rol consulta",value:"consulta"},{label:"Rol aprobador",value:"aprobador"}];
+ const choices=[
+  {label:"actualizar_precio · escritura",value:"actualizar_precio"},
+  {label:"consultar_ficha · lectura",value:"consultar_ficha"},
+  {label:"Clase escritura",value:"clase:escritura"}
+ ];
+ const parameter=target.value==="consultar_ficha"?"id":"descuento";
+ const numeric=parameter==="descuento";
  const valid=threshold!==""&&Number.isFinite(Number(threshold))&&Number(threshold)>=0;
  const result=n=>valid&&effect.value==="DENY"&&n>Number(threshold)?"Denegado":"Permitido";
+ const validateCedar=()=>{
+  const syntax=/\\b(?:permit|forbid)\\s*\\([\\s\\S]+\\)\\s*when\\s*\\{[\\s\\S]+\\}\\s*;\\s*$/.test(cedar);
+  const parameterMatch=cedar.match(/context\\.parametros\\.([a-zA-Z_][\\w]*)/);
+  const validField=parameterMatch&&["descuento","id"].includes(parameterMatch[1]);
+  const error=!syntax?"Sintaxis de ejemplo inválida: se espera permit/forbid (...) when {...};":
+   !validField?"Parámetro inexistente en el esquema detectado.":"";
+  setValidation(error||"Validación ilustrativa correcta. No se ha usado el parser Cedar.");
+  setCedarStatus(error?"Error de validación (DEMO)":"Validación ilustrativa correcta");
+  return !error;
+ };
  const build=<SpaceBetween size="m">
   <ColumnLayout columns={2}>
-   <FormField label="Tool"><Input readOnly value="actualizar_precio"/></FormField>
+   <FormField label="Agente"><Input readOnly value={agent.name}/></FormField>
+   <FormField label="Usuario o rol"><Select selectedOption={principal} options={roles} onChange={({detail})=>setPrincipal(detail.selectedOption)}/></FormField>
+   <FormField label="Tool o clase"><Select selectedOption={target} options={choices} onChange={({detail})=>setTarget(detail.selectedOption)}/></FormField>
    <FormField label="Efecto"><Select selectedOption={effect} options={[{label:"Denegar",value:"DENY"},{label:"Permitir",value:"ALLOW"}]} onChange={({detail})=>setEffect(detail.selectedOption)}/></FormField>
-   <FormField label="Parámetro numérico"><Input readOnly value="descuento"/></FormField>
-   <FormField label="Condición: mayor que" errorText={!valid?"Introduce un umbral numérico no negativo.":undefined}><Input type="number" value={threshold} onChange={({detail})=>setThreshold(detail.value)}/></FormField>
+   <FormField label={"Parámetro del esquema · "+(numeric?"number":"string")}><Input readOnly value={parameter}/></FormField>
+   <FormField label={numeric?"Condición · mayor que":"Condición · identificador"} errorText={!numeric?undefined:!valid?"Introduce un umbral numérico no negativo.":undefined}>
+    <Input type={numeric?"number":"text"} value={threshold} onChange={({detail})=>setThreshold(detail.value)}/>
+   </FormField>
   </ColumnLayout>
-  <Box color={valid?"text-body-secondary":"text-status-error"} fontSize="body-s">{valid?(effect.value+" si descuento > "+threshold):"Borrador inválido"}</Box>
+  <Box color={valid?"text-body-secondary":"text-status-error"} fontSize="body-s">{effect.label+" cuando "+principal.label+" solicita "+target.label+" con "+parameter+" > "+threshold}</Box>
   <Button variant="primary" disabled={!valid} onClick={()=>{
-   setVersion(v=>v+1);
-   notify("Versión de muestra creada. No se ejecutó Cedar real.");
+   setVersion(v=>v+1);setSaved(v=>[{version:version+1,author:"Operador plataforma · DEMO",when:"En esta sesión"},...v]);
+   notify("Versión ilustrativa creada. No se aplicó ninguna política real.");
   }}>Guardar versión simulada</Button>
  </SpaceBetween>;
  const editor=<SpaceBetween size="m">
-  <FormField label="Política Cedar · borrador" description="El backend real debe validar sintaxis, esquema de tool, rol y parámetros antes de aplicarla.">
-   <Textarea rows={7} value={cedar} onChange={({detail})=>{setCedar(detail.value);setCedarStatus("Modificado · sin validar");}}/>
+  <FormField label="Política Cedar · borrador">
+   <Textarea rows={7} value={cedar} onChange={({detail})=>{setCedar(detail.value);setCedarStatus("Modificado · sin validar");setValidation("");}}/>
   </FormField>
-  <StatusIndicator type="warning">{cedarStatus}</StatusIndicator>
-  <Button disabled={!cedar.trim()} onClick={()=>{
-   setCedarStatus("Borrador guardado localmente · sin validar");
-   notify("Borrador Cedar conservado en la DEMO. No se publicó una política.");
-  }}>Guardar borrador (demo)</Button>
+  <StatusIndicator type={cedarStatus.startsWith("Error")?"error":"warning"}>{cedarStatus}</StatusIndicator>
+  {validation&&<Alert type={cedarStatus.startsWith("Error")?"error":"info"}>{validation}</Alert>}
+  <SpaceBetween direction="horizontal" size="s">
+   <Button onClick={validateCedar}>Validar ejemplo</Button>
+   <Button disabled={!cedar.trim()||cedarStatus!=="Validación ilustrativa correcta"} onClick={()=>{
+    setVersion(v=>v+1);setSaved(v=>[{version:version+1,author:"Operador plataforma · DEMO",when:"En esta sesión"},...v]);
+    setCedarStatus("Borrador guardado en memoria, NO publicado");
+    notify("Borrador Cedar registrado solo en la demostración.");
+   }}>Guardar borrador (demo)</Button>
+  </SpaceBetween>
+  <Explanation>La plataforma final debe validar sintaxis y tipos con Cedar y el esquema de la tool, guardar autor y texto, versionar y aplicar la regla en 10 segundos o menos. La validación de este prototipo es ilustrativa, no equivalente a Cedar.</Explanation>
  </SpaceBetween>;
  return <SpaceBetween size="l">
-  <Panel title="Políticas del agente" help="POL-04 requiere un constructor y un editor Cedar validado contra el esquema de cada tool.">
+  <Panel title="Políticas del agente" help="La regla opera sobre la intención observada en A y, cuando la tool pasa por MCP B, sobre sus argumentos en la ejecución.">
    <Tabs tabs={[{id:"builder",label:"Constructor visual",content:build},{id:"cedar",label:"Editor Cedar",content:editor}]} activeTabId={tab} onChange={({detail})=>setTab(detail.activeTabId)}/>
   </Panel>
-  <Panel title={"Matriz de la regla · v"+version}>
+  <Panel title={"Probar regla · v"+version}>
    <ColumnLayout columns={2}>
     <div><Box variant="h3">descuento = 8</Box><State value={result(8)}/></div>
     <div><Box variant="h3">descuento = 25</Box><State value={result(25)}/></div>
    </ColumnLayout>
-   <Box color="text-body-secondary" fontSize="body-s">Ejemplo determinista de un parámetro. La matriz automatizada de ≥30 escenarios y el parser Cedar real son requisitos de backend; no se ejecutan en esta maqueta.</Box>
+   <Explanation>Resultados de ejemplo. La matriz obligatoria de al menos 30 escenarios y el parser real de Cedar no se ejecutan aquí.</Explanation>
+  </Panel>
+  <Panel title="Versiones de ejemplo">
+   <Table variant="embedded" items={saved} columnDefinitions={[
+    {id:"v",header:"Versión",cell:x=>"v"+x.version},
+    {id:"actor",header:"Autor",cell:x=>x.author},
+    {id:"time",header:"Fecha",cell:x=>x.when}]}/>
   </Panel>
  </SpaceBetween>;
 }
+
+
 function Guide(){
- const {helpOn,showExplanations,simulation}=usePrototype();
+ const {helpOn,showExplanations,simulation,slice}=usePrototype();
  const [tab,setTab]=useState("a");
  const agent=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)||simulation.agentRegistry[0];
+ const hasC=Number(slice.slice(1))>=3;
+ const hasB=Number(slice.slice(1))>=4&&simulation.toolsMcp.length>0;
+ const connectedB=hasB?simulation.toolsMcp.length:0;
+ const missingB=4-connectedB;
  const placeholder="<AGENT_TOKEN_DE_"+agent.name.toUpperCase().replace(/[^A-Z0-9]+/g,"_")+">";
+ const currentMax=hasB?(hasC?89:67):(hasC?56:41);
+ const next=!hasC?"C · identidad de usuario":!hasB?"B · tools MCP":missingB>0?"B · centralizar "+missingB+" tools":"Mantener cobertura y revisar evidencia";
+ const prospectiveB=hasB?0:hasC?9:7;
+ const prospectiveC=hasC?0:hasB?6:4;
  const tabs=[
   {id:"a",label:"A · Inferencia",content:<SpaceBetween size="m">
-    <KeyValuePairs columns={2} items={[{label:"Agente",value:agent.name},{label:"Autenticación",value:"Bearer agent_token · uno por agente"}]}/>
-    <FormField label="BASE_URL"><Input readOnly value="{gateway}/inference/v1"/></FormField>
-    <FormField label="API key · agent_token"><Input readOnly value={placeholder}/></FormField>
-    <CopyToClipboard textToCopy={"BASE_URL={gateway}/inference/v1\nAPI_KEY="+placeholder} copyButtonText="Copiar configuración A" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
-    <Box color="text-body-secondary" fontSize="body-s">La clave se entrega una sola vez al crear o rotar este agente. No se puede consultar después. La key del SDK identifica al agente; no es una key de Bedrock.</Box>
-   </SpaceBetween>},
+   <KeyValuePairs columns={2} items={[{label:"Agente",value:agent.name},{label:"Autenticación",value:"Bearer agent_token · clave individual"}]}/>
+   <FormField label="BASE_URL"><Input readOnly value="{gateway}/inference/v1"/></FormField>
+   <FormField label="API key · agent_token"><Input readOnly value={placeholder}/></FormField>
+   <CopyToClipboard textToCopy={"BASE_URL={gateway}/inference/v1\\nAPI_KEY="+placeholder+"\\nX-Gov-Trace-Id: <TRACE_ID_OPCIONAL>"} copyButtonText="Copiar configuración A" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
+   <Explanation>La API key es un secreto opaco emitido una sola vez para este agente; no es la clave del proveedor de modelos.</Explanation>
+  </SpaceBetween>},
   {id:"b",label:"B · MCP",content:<SpaceBetween size="m">
-    <Alert type="warning">Solo se controlan las tools registradas y ejecutadas por MCP; las locales quedan fuera de la puerta.</Alert>
-    <KeyValuePairs columns={2} items={[{label:"Agente",value:agent.name},{label:"Autenticación",value:"Mismo agent_token de A"}]}/>
-    <CopyToClipboard textToCopy={"MCP_URL={gateway}/mcp\nAGENT_TOKEN="+placeholder} copyButtonText="Copiar configuración B" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
-    <Box color="text-body-secondary" fontSize="body-s">Las credenciales hacia targets Lambda/OpenAPI se guardan en AgentCore Identity o Secrets Manager; nunca se entregan al agente.</Box>
-   </SpaceBetween>},
+   <Alert type={missingB>0?"warning":"success"}>{missingB>0?missingB+" de 4 tools siguen fuera de ejecución gobernada por MCP.":"Las 4 tools de ejemplo pasan por MCP."}</Alert>
+   <KeyValuePairs columns={2} items={[{label:"Agente",value:agent.name},{label:"Autenticación",value:"Mismo agent_token de A"},{label:"Cobertura",value:connectedB+" de 4 tools en el corte"}]}/>
+   <CopyToClipboard textToCopy={"MCP_URL={gateway}/mcp\\nAGENT_TOKEN="+placeholder+"\\nX-Gov-Trace-Id: <TRACE_ID_OPCIONAL>"} copyButtonText="Copiar configuración B" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
+   <Explanation>Registra primero los targets Lambda o OpenAPI en la puerta. Las credenciales hacia el destino quedan en AgentCore Identity o Secrets Manager, no en el agente.</Explanation>
+  </SpaceBetween>},
   {id:"c",label:"C · Usuario",content:<SpaceBetween size="m">
-    <KeyValuePairs columns={2} items={[{label:"Identidad agente",value:agent.name+" · agent_token"},{label:"Identidad usuario",value:"JWT OIDC por solicitud"}]}/>
-    <CopyToClipboard textToCopy="X-Gov-User-Token: <JWT OIDC del usuario>" copyButtonText="Copiar cabecera C" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
-    <Box color="text-body-secondary" fontSize="body-s">El JWT de C no reemplaza la API key del agente. Sin JWT se usa solo_workload. Un token inválido se rechaza o degrada según configuración.</Box>
-   </SpaceBetween>}
+   <KeyValuePairs columns={2} items={[{label:"Identidad agente",value:agent.name+" · agent_token"},{label:"Identidad usuario",value:"JWT OIDC · uno por solicitud"},{label:"Cobertura ilustrativa",value:hasC?"2 de 3 solicitudes con JWT válido":"Conexión aún no incorporada"}]}/>
+   <CopyToClipboard textToCopy={"Authorization: Bearer "+placeholder+"\\nX-Gov-User-Token: <JWT_OIDC_DEL_USUARIO>\\nX-Gov-Trace-Id: <TRACE_ID_OPCIONAL>"} copyButtonText="Copiar cabeceras C" copySuccessText="Copiado" copyErrorText="Error al copiar"/>
+   <Explanation>C se reenvía en inferencia y MCP. El emisor debe estar configurado; sin JWT válido se utiliza solo_workload o se rechaza, según política. El token de usuario no reemplaza al del agente.</Explanation>
+  </SpaceBetween>}
  ];
  return <SpaceBetween size="l">
-  <Panel title="Conectar por partes" help="A usa una clave propia. B reutiliza esa clave para MCP. C agrega un JWT diferente, del usuario final.">
+  <Container header={<Header variant="h2">Plan de conexión · {agent.name}</Header>}>
+   <ColumnLayout columns={3}>
+    <div><Box color="text-body-secondary">Conexión A</Box><State value="Permitido"/></div>
+    <div><Box color="text-body-secondary">Conexión B</Box><StatusIndicator type={hasB?"success":"stopped"}>{hasB?connectedB+" de 4 tools · demo":"Pendiente"}</StatusIndicator></div>
+    <div><Box color="text-body-secondary">Conexión C</Box><StatusIndicator type={hasC?"success":"stopped"}>{hasC?"JWT · demo":"Pendiente"}</StatusIndicator></div>
+   </ColumnLayout>
+   <SpaceBetween size="s">
+    <Box>Próximo paso: <strong>{next}</strong></Box>
+    <Box color="text-body-secondary" fontSize="body-s">Máximo teórico del catálogo en este corte: {currentMax} % con conexiones completas y controles aplicables.</Box>
+    <KeyValuePairs columns={2} items={[
+     {label:"Añadir B",value:hasB?"Conectada parcialmente · completar "+missingB+" tools":"+"+prospectiveB+" controles · +"+(prospectiveB/27*100).toFixed(0)+" puntos teóricos"},
+     {label:"Añadir C",value:hasC?"Habilitada · cobertura por solicitud":"+"+prospectiveC+" controles · +"+(prospectiveC/27*100).toFixed(0)+" puntos teóricos"}
+    ]}/>
+   </SpaceBetween>
+  </Container>
+  <Panel title="Instrucciones por conexión" help="A es obligatoria; B puede ser parcial; C identifica al usuario mediante JWT sin sustituir la clave del agente.">
    <Tabs tabs={tabs} activeTabId={tab} onChange={({detail})=>setTab(detail.activeTabId)}/>
   </Panel>
-  <Panel title="Cierre de brechas">
-   <Alert type="warning">procesar_lote sigue local y no se gobierna su ejecución. Se debe registrar como target MCP, clasificar y aprobar.</Alert>
-   {showExplanations&&<Button onClick={()=>helpOn("Validación técnica","POL-02 exige una matriz versionada de al menos 30 escenarios ALLOW/DENY contra el proveedor simulado. No es otra pantalla de gerencia.")}>Validaciones exigidas</Button>}
-  </Panel>
+  {showExplanations&&<Button onClick={()=>helpOn("Pruebas exigidas","POL-02 requiere una matriz versionada de al menos 30 escenarios ALLOW/DENY con el proveedor simulado. La guía no sustituye esos tests.")}>Ver validaciones técnicas</Button>}
  </SpaceBetween>;
 }
+
 function Approvals(){
  const {simulation,setSimulation,notify}=usePrototype();
  const [selected,setSelected]=useState("APR42");
  const [confirm,setConfirm]=useState(null);
- const [supervision,setSupervision]=useState({consultar_ficha:"autonoma",actualizar_precio:"notificar",cambiar_fondo:"requiere_aprobacion"});
+ const supervision=simulation.supervision||{};
+ const setSupervision=update=>setSimulation(prev=>({...prev,supervision:typeof update==="function"?update(prev.supervision||{}):update}));
  const [supervisionTool,setSupervisionTool]=useState({label:"cambiar_fondo",value:"cambiar_fondo"});
  const actors=[
   {value:"elena",label:"Elena · aprobadora",role:"aprobador",name:"Elena"},
@@ -267,7 +343,7 @@ function Approvals(){
      {supervision[supervisionTool.value]==="requiere_aprobacion"?"La ejecución espera autorización":
       supervision[supervisionTool.value]==="notificar"?"La ejecución emite una alerta posterior":"Ejecución autónoma conforme a reglas"}
     </StatusIndicator>
-    <Box color="text-body-secondary" fontSize="body-s">Configuración local de demostración. «Notificar» no bloquea; «Requiere aprobación» retiene la tool MCP hasta una decisión humana. Ningún cambio se aplica a AWS.</Box>
+    <Explanation>Configuración sintética: «Notificar» deja ejecutar y alerta después; «Requiere aprobación» retiene la ejecución MCP. Ningún cambio se aplica en AWS.</Explanation>
    </SpaceBetween>
   </Container>
   <Container header={<Header variant="h2">Sesión de aprobación</Header>}>
@@ -303,12 +379,12 @@ function Approvals(){
    </div>
    <Panel title={"Solicitud "+chosen.id} help="HITL-02/03: aprobación separada de funciones, no ejecución sin aprobación, caducidad y consulta por gov_aprobacion_estado.">
     <SpaceBetween size="m">
-     <KeyValuePairs columns={2} items={[{label:"Tool",value:chosen.name},{label:"Originador",value:originator},{label:"Monto",value:chosen.amount},{label:"Estado",value:status(chosen.id)},{label:"Plazo restante",value:chosen.time},{label:"Actor conectado",value:actor.name+" · "+actor.role}]}/>
+     <KeyValuePairs columns={2} items={[{label:"Tool",value:chosen.name},{label:"Originador",value:originator},{label:"Monto",value:chosen.amount},{label:"Estado",value:status(chosen.id)},{label:"Plazo restante",value:chosen.time},{label:"Actor conectado",value:actor.name+" · "+actor.role},{label:"Trace ID",value:"TRC-APR-"+chosen.id},{label:"Argumentos",value:chosen.amount!=="—"?"monto: **** · cuenta: ****":"Parámetros sensibles ocultos"}]}/>
      {pending?<SpaceBetween direction="horizontal" size="s">
       <Button variant="primary" disabled={!authorized} onClick={()=>setConfirm("approve")}>Aprobar (demo)</Button>
       <Button disabled={!authorized} onClick={()=>setConfirm("reject")}>Rechazar (demo)</Button>
      </SpaceBetween>:<Alert>Esta solicitud ya fue resuelta o venció y no puede ejecutarse de nuevo.</Alert>}
-     <Box fontSize="body-s" color="text-body-secondary">El resultado MCP debe ser PENDING_APPROVAL con id y vencimiento; el agente consulta gov_aprobacion_estado. En esta maqueta no hay ejecución ni estado real de AWS.</Box>
+     <Explanation>La respuesta MCP prevista es PENDING_APPROVAL con ID y plazo; el agente consulta gov_aprobacion_estado. El resultado no acredita ejecución real ni idempotencia.</Explanation>
     </SpaceBetween>
    </Panel>
   </ColumnLayout>
@@ -402,6 +478,11 @@ function Forensic(){
  const [seal,setSeal]=useState(false);
  const record=audit.find(x=>x.id===simulation.selectedTraceId)||audit[0];
  const blocked=record.decision==="Denegado";
+ const originalPolicies={
+  "descuento_máximo · v3":'forbid(principal, action == Gov::Action::"UsarTool::actualizar_precio", resource) when { context.parametros.descuento > 10 };',
+  "Preset 1 · v1":'forbid(principal, action == Gov::Action::"UsarTool::eliminar_registro", resource);',
+  "Preset 2 · v2":'forbid(principal, action == Gov::Action::"UsarTool::cambiar_fondo", resource) unless { context.aprobado == true };'
+ };
  const events=[
   {id:1,name:"Solicitud",reason:record.who+" · "+record.agent+" · "+record.channel},
   {id:2,name:record.channel==="mcp"?"Invocación MCP":"Inferencia del modelo",reason:record.tool+" · "+record.model+" · "+record.connections},
@@ -416,7 +497,7 @@ function Forensic(){
     {label:"Canal y conexiones",value:record.channel+" · "+record.connections},
     {label:"Decisión",value:<State value={record.decision}/>},
     {label:"Modelo",value:record.model},
-    {label:"Correlación",value:"tool_call_id / inferida (demo)"}
+    {label:"Correlación",value:record.channel==="mcp"?"tool_call_id / MCP (demo)":"tool_call_id / intención (demo)"}
    ]}/>
   </Container>
   <ColumnLayout columns={2}>
@@ -434,10 +515,13 @@ function Forensic(){
       {label:"Autor del último cambio",value:record.author},
       {label:"Detalle seleccionado",value:events.find(x=>x.id===step)?.reason||""}
      ]}/>
+     <Box variant="h3">Texto histórico de la regla · versión de esta transacción</Box>
+     <Box fontFamily="monospace" fontSize="body-s">{originalPolicies[record.policy]||"Texto histórico no disponible"}</Box>
+     <Explanation>Al editar una política, el producto debe conservar el texto original asociado con cada decisión, no sustituirlo por la versión actual.</Explanation>
     </Panel>
     <Panel title="Sello de evidencia">
      <SpaceBetween size="m">
-      <StatusIndicator type="success">Object Lock GOVERNANCE · contrato objetivo</StatusIndicator>
+      <StatusIndicator type="warning">Object Lock GOVERNANCE · no verificado</StatusIndicator>
       <KeyValuePairs columns={1} items={[
        {label:"Objeto",value:"evidencia/"+record.id+".json (ejemplo)"},
        {label:"Retención",value:"Configurada por despliegue; no medida en esta DEMO"},

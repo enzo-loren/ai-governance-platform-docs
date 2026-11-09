@@ -267,6 +267,11 @@ function relevant(tag){
  return false;
 }
 function refresh(){
+ const cedar=nodes.find(n=>n.id==='cedar');
+ // El mismo motor Cedar existe desde A, pero la ejecución real requiere B.
+ cedar.lines[2]=state.b?'Intención y ejecución':'Solo intención (con A)';
+ const subtitle=svg.querySelector('#nodes .node[data-id="cedar"] [data-line-index="2"]');
+ if(subtitle)subtitle.textContent=cedar.lines[2];
  svg.querySelectorAll('[data-tag]').forEach(g=>{
   const t=g.getAttribute('data-tag');g.style.display=visible(t)?'':'none';
   g.classList.toggle('group-focus-dim',!relevant(t));

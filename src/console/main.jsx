@@ -38,7 +38,8 @@ const fromLocation=()=>{
  const requested=findScreen(query.get("screen"));
  if(requested){
   const target=versionAt(requested.surface,valid||requested.slice)||requested;
-  return {slice:target.slice,screen:target.id};
+  // Retener el corte desde el que se abrió la pantalla acumulada.
+  return {slice:valid||target.slice,screen:target.id};
  }
  const stage=valid||"S0";
  const fallback=data.screens.find(screen=>screen.slice===stage)||data.screens[0];
@@ -59,7 +60,7 @@ function Application(){
  const [help,setHelp]=useState(null);
  const [presenting,setPresenting]=useState(false);
  const [message,setMessage]=useState(null);
- const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"], approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},selectedAgentId:"agt-demo",agentRegistry:[{id:"agt-demo",name:"agente-demo",owner:"Operador plataforma",mode:"Descubrimiento",model:"bedrock-a",tokens:[{id:"cred-demo-1",suffix:"D3MO",status:"Activa",created:"Demo inicial"}]}]});
+ const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"],approvedTools:["consultar_ficha","actualizar_precio"],supervision:{consultar_ficha:"autonoma",actualizar_precio:"notificar",eliminar_registro:"requiere_aprobacion",cambiar_fondo:"requiere_aprobacion"},toolOverrides:{},toolSchemaVersions:{}, approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},selectedAgentId:"agt-demo",agentRegistry:[{id:"agt-demo",name:"agente-demo",owner:"Operador plataforma",mode:"Descubrimiento",model:"bedrock-a",tokens:[{id:"cred-demo-1",suffix:"D3MO",status:"Activa",created:"Demo inicial"}]}]});
  const slice=route.slice;
  const active=findScreen(route.screen)||data.screens[0];
  const canPresent=!preview&&PRESENTATION_SCREEN_IDS.includes(active.id);
@@ -72,9 +73,9 @@ function Application(){
   // Al cambiar versión, permanecer siempre en la misma superficie.
   const target=versionAt(requested.surface,newSlice);
   if(!target)return;
-  const next={slice:target.slice,screen:target.id};
+  const next={slice:newSlice,screen:target.id};
   const q=new URLSearchParams(location.search);
-  q.set("slice",target.slice);q.set("screen",target.id);
+  q.set("slice",newSlice);q.set("screen",target.id);
   q.delete("preview");
   const url=location.pathname+"?"+q.toString();
   history[replace?"replaceState":"pushState"](null,"",url);
@@ -157,8 +158,9 @@ function Application(){
            </FormField>
           </div>
           :<div className="screen-version-single" data-testid="screen-version-static">
-            <Badge color="grey">{slice} · {data.stages[sliceIndex(slice)].name}</Badge>
+            <Badge color="grey">{active.slice} · {data.stages[sliceIndex(active.slice)].name}</Badge>
            </div>}
+         {slice!==active.slice&&<Box color="text-body-secondary" fontSize="body-s">Acumulado hasta {slice}</Box>}
          {canPresent&&<Button id="presentation-launch" iconName="view-full" onClick={()=>{setHelp(null);setPresenting(true)}}>Modo presentación</Button>}
          <div className="explanations-switch">
           <Toggle checked={showExplanations} onChange={({detail})=>toggleExplanations(detail.checked)}>

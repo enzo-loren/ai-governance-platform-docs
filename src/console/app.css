@@ -83,5 +83,6 @@ body{background:#f8f9fc;scroll-behavior:smooth}
 .gov-mobile-card-heading>*{min-width:0}
 .approval-list-column{min-width:0}
 #console-content .mobile-request{overflow-wrap:break-word}
-\n/* La opción de presentación se encuentra junto al slice, nunca dentro del formulario S2. */
-.prototype-actions [id="presentation-launch"]{white-space:nowrap}\n
+
+/* La opción de presentación se encuentra junto al slice, nunca dentro del formulario S2. */
+.prototype-actions [id="presentation-launch"]{white-space:nowrap}
