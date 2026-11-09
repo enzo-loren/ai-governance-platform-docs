@@ -1,7 +1,6 @@
 import React,{useEffect,useRef,useState} from "react";
 import Button from "@cloudscape-design/components/button";
 import Badge from "@cloudscape-design/components/badge";
-import StatusIndicator from "@cloudscape-design/components/status-indicator";
 
 /**
  * CON-08 · Proyección ejecutable de una pantalla, no zoom del formulario.
@@ -215,7 +214,7 @@ export default function PresentationStage({screen,simulation,onExit}) {
       <p className="gov-present-side-title">Efecto esperado en la puerta</p>
       <div className="gov-present-signal">{current.signal}</div>
       <div className="gov-present-scope">
-       <StatusIndicator type="info">Contrato objetivo · no ejecutado en AWS</StatusIndicator>
+       <div className="gov-present-contract" role="note">Contrato objetivo · no ejecutado en AWS</div>
       </div>
      </aside>
     </div>
