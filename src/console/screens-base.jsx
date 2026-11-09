@@ -241,13 +241,14 @@ function Coverage(){
 }
 
 function Inventory(){
- const {notify}=usePrototype();
+ const {notify,simulation,setSimulation}=usePrototype();
+ const currentAgent=selectedFrom(simulation);
  const [filter,setFilter]=useState("");
  const [selected,setSelected]=useState(null);
- const [overrides,setOverrides]=useState({});
+ const toolKey=id=>currentAgent.id+":"+id;
  const classes=[{value:"Lectura",label:"Lectura"},{value:"Escritura",label:"Escritura"},{value:"Destructiva",label:"Destructiva o crítica"},{value:"Sin clasificar",label:"Sin clasificar"}];
  const [draftClass,setDraftClass]=useState(classes[0]);
- const items=dummyTools.map(tool=>({...tool,...overrides[tool.id]}))
+ const items=dummyTools.map(tool=>({...tool,...(simulation.toolOverrides?.[toolKey(tool.id)]||{}),schema:simulation.toolSchemaVersions?.[toolKey(tool.id)]||tool.schema}))
   .filter(tool=>tool.id.toLowerCase().includes(filter.toLowerCase()));
  const open=tool=>{
   setSelected(tool);
@@ -255,18 +256,27 @@ function Inventory(){
  };
  const reviewed=items.filter(tool=>tool.status==="Revisada").length;
  const unclassified=items.filter(tool=>tool.kind==="Sin clasificar").length;
+ const changedSchemas=items.filter(tool=>tool.schema!==dummyTools.find(t=>t.id===tool.id)?.schema).length;
+ const simulateSchemaChange=()=>{
+  if(!selected)return;
+  const previous=simulation.toolSchemaVersions?.[toolKey(selected.id)]||selected.schema;
+  const next="v"+(Number(previous.replace("v",""))+1);
+  setSimulation(prev=>({...prev,toolSchemaVersions:{...prev.toolSchemaVersions,[toolKey(selected.id)]:next},toolOverrides:{...prev.toolOverrides,[toolKey(selected.id)]:{kind:selected.kind,status:"Pendiente de revisión"}}}));
+  notify("Esquema de "+selected.id+" actualizado a "+next+" en DEMO; requiere nueva revisión.");setSelected(null);
+ };
  const confirm=()=>{
   if(!selected)return;
-  setOverrides(prev=>({...prev,[selected.id]:{kind:draftClass.value,status:"Revisada"}}));
+  setSimulation(prev=>({...prev,toolOverrides:{...prev.toolOverrides,[toolKey(selected.id)]:{kind:draftClass.value,status:"Revisada"}}}));
   notify("Clasificación de "+selected.id+" revisada solo en esta DEMO.");
   setSelected(null);
  };
  return <SpaceBetween size="l">
+  <AgentSelector/>
   <Panel title="Descubrimiento de herramientas" info="INF-02: cada declaración de tools se cataloga por agente y versión de esquema; la clase automática es sugerida, no una aprobación.">
    <ColumnLayout columns={3}>
     <SmallKpi title="Detectadas" value="4" context="Inferencias simuladas"/>
     <SmallKpi title="Sin clasificar" value={String(unclassified)} context="Requieren revisión"/>
-    <SmallKpi title="Revisadas" value={String(reviewed)} context="Confirmadas por operador (demo)"/>
+    <SmallKpi title="Revisadas" value={String(reviewed)} context={"Cambios de esquema: "+changedSchemas+" · demo"}/>
    </ColumnLayout>
   </Panel>
   <div className="desktop-table">
@@ -296,12 +306,14 @@ function Inventory(){
   <Modal visible={!!selected} header={selected?.id||"Revisar clasificación"} onDismiss={()=>setSelected(null)}
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s">
     <Button onClick={()=>setSelected(null)}>Cancelar</Button>
+    <Button onClick={simulateSchemaChange}>Simular cambio de esquema</Button>
     <Button variant="primary" onClick={confirm}>Confirmar clase (demo)</Button>
    </SpaceBetween></Box>}>
    <SpaceBetween size="m">
     <KeyValuePairs columns={2} items={[
      {label:"Clase inferida",value:dummyTools.find(tool=>tool.id===selected?.id)?.kind||""},
      {label:"Versión de esquema",value:selected?.schema||""},
+     {label:"Esquema anterior",value:dummyTools.find(tool=>tool.id===selected?.id)?.schema||""},
      {label:"Estado",value:selected?.status==="Revisada"?"Revisada":"Sugerida · sin validar"},
      {label:"Canal",value:"A · intención, no ejecución"}
     ]}/>
@@ -424,6 +436,7 @@ function ActiveAgent(){
     <SmallKpi title="Decisiones que pasarían a denegado" value="3" context="Evaluadas en sombra"/>
     <SmallKpi title="Tools pendientes de revisión" value="2" context="Revisar antes de activar"/>
    </ColumnLayout>
+   <Box color="text-body-secondary">Pendientes: eliminar_registro (destructiva), procesar_lote (sin clasificar).</Box>
    {showExplanations&&<Box margin={{top:"s"}} color="text-body-secondary">La confirmación debe registrar responsable, actor, versión de la configuración y reglas. Los datos de impacto aquí son sintéticos.</Box>}
   </Container>
   <Modal visible={!!dialog} header={{activate:"Confirmar paso a activo",suspend:"Suspender solo este agente",resume:"Reactivar agente",retire:"Retirar agente"}[dialog]||"Confirmar"}
@@ -431,7 +444,7 @@ function ActiveAgent(){
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s"><Button onClick={()=>setDialog(null)}>Cancelar</Button><Button variant="primary" onClick={apply}>Confirmar (demo)</Button></SpaceBetween></Box>}>
    <Alert type={dialog==="retire"?"error":"warning"}>
     {dialog==="activate"
-     ?"Se aplicarían 3 denegaciones observadas en sombra; hay 2 tools pendientes. Solo cambia "+selected.name+"."
+     ?"Se aplicarían 3 denegaciones observadas en sombra; siguen pendientes eliminar_registro y procesar_lote. Solo cambia "+selected.name+"."
      :dialog==="suspend"
       ?"Las inferencias A y ejecuciones MCP B de "+selected.name+" deben responder 403 en ≤60 s. Ningún otro agente se suspende."
       :dialog==="retire"
@@ -556,7 +569,7 @@ function Identity(){
     </SpaceBetween>
    </Panel>
   </ColumnLayout>
-  <Box color="text-body-secondary" fontSize="body-s">La conexión C se mide como la proporción de solicitudes con JWT válido. Si falta, el agente conserva su autenticación A/B, pero las reglas no reciben identidad humana. La plataforma no autentica el salto usuario → agente.</Box>
+  <Explanation>La conexión C se mide por solicitudes con JWT válido. Sin él, A/B conserva identidad del agente, no de la persona. La plataforma no autentica el salto usuario → agente.</Explanation>
  </SpaceBetween>;
 }
 export {BasicAgents,Live,Coverage,Inventory,Shadow,ActiveAgent,Limits,Identity};
