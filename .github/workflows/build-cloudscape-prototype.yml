@@ -5,6 +5,7 @@ on:
       - feat/cloudscape-navegacion-slices
       - feature/vista-limpia-explicaciones-opcionales
       - fix/cloudscape-bundle-versionado-vista-limpia
+      - feat/selector-slices-por-pantalla-sin-lateral
     paths:
       - package.json
       - 'scripts/stamp-console-assets.mjs'
