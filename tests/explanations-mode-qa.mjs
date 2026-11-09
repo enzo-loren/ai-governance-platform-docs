@@ -95,7 +95,7 @@ try{
   const pending=await page.getByRole("button",{name:"Aprobar (demo)"}).count();
   check(pending>0,viewport.name+" desaparece acción esencial de aprobación");
   await page.getByRole("button",{name:"Aprobar (demo)"}).click();
-  check(await page.getByText("Esta acción modifica solo los datos de muestra",{exact:false}).count()>0,
+  check(await page.getByText("Decisión simulada: la plataforma real debe volver a validar",{exact:false}).count()>0,
     viewport.name+" el modo limpio oculta una confirmación de seguridad");
 
   // Regresión reportada por el usuario: al abrir directamente Ruta forense S6
