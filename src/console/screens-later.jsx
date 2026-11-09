@@ -229,7 +229,7 @@ function Policy(){
    </ColumnLayout>
    <Explanation>Resultados de ejemplo. La matriz obligatoria de al menos 30 escenarios y el parser real de Cedar no se ejecutan aquí.</Explanation>
   </Panel>
-  <Panel title="Versiones de ejemplo">
+  <Panel title="Historial de reglas">
    <Table variant="embedded" items={saved} columnDefinitions={[
     {id:"v",header:"Versión",cell:x=>"v"+x.version},
     {id:"actor",header:"Autor",cell:x=>x.author},
@@ -281,11 +281,11 @@ function Guide(){
    </ColumnLayout>
    <SpaceBetween size="s">
     <Box>Próximo paso: <strong>{next}</strong></Box>
-    <Box color="text-body-secondary" fontSize="body-s">Máximo teórico del catálogo en este corte: {currentMax} % con conexiones completas y controles aplicables.</Box>
     <KeyValuePairs columns={2} items={[
-     {label:"Añadir B",value:hasB?"Conectada parcialmente · completar "+missingB+" tools":"+"+prospectiveB+" controles · +"+(prospectiveB/27*100).toFixed(0)+" puntos teóricos"},
-     {label:"Añadir C",value:hasC?"Habilitada · cobertura por solicitud":"+"+prospectiveC+" controles · +"+(prospectiveC/27*100).toFixed(0)+" puntos teóricos"}
+     {label:"Añadir B",value:hasB?"Centralizar "+missingB+" tools restantes":"Revisar y detener ejecuciones de tools"},
+     {label:"Añadir C",value:hasC?"Atribución y permisos por persona":"Evaluar permisos y consumo por usuario"}
     ]}/>
+    <Explanation>Techo teórico del catálogo para este corte: {currentMax} % si las conexiones están completas y hay evidencia. No es una medición del agente.</Explanation>
    </SpaceBetween>
   </Container>
   <Panel title="Instrucciones por conexión" help="A es obligatoria; B puede ser parcial; C identifica al usuario mediante JWT sin sustituir la clave del agente.">
@@ -515,19 +515,16 @@ function Forensic(){
       {label:"Autor del último cambio",value:record.author},
       {label:"Detalle seleccionado",value:events.find(x=>x.id===step)?.reason||""}
      ]}/>
-     <Box variant="h3">Texto histórico de la regla · versión de esta transacción</Box>
-     <Box fontFamily="monospace" fontSize="body-s">{originalPolicies[record.policy]||"Texto histórico no disponible"}</Box>
+     <ExpandableSection headerText="Ver texto de la regla aplicada" variant="footer">
+      <Box fontFamily="monospace" fontSize="body-s">{originalPolicies[record.policy]||"Texto histórico no disponible"}</Box>
+     </ExpandableSection>
      <Explanation>Al editar una política, el producto debe conservar el texto original asociado con cada decisión, no sustituirlo por la versión actual.</Explanation>
     </Panel>
     <Panel title="Sello de evidencia">
      <SpaceBetween size="m">
       <StatusIndicator type="warning">Object Lock GOVERNANCE · no verificado</StatusIndicator>
-      <KeyValuePairs columns={1} items={[
-       {label:"Objeto",value:"evidencia/"+record.id+".json (ejemplo)"},
-       {label:"Retención",value:"Configurada por despliegue; no medida en esta DEMO"},
-       {label:"Integridad",value:"No comprobada contra AWS"}
-      ]}/>
       <Button onClick={()=>setSeal(true)}>Probar inmutabilidad (demo)</Button>
+      <Explanation>Objeto ilustrativo: evidencia/{record.id}.json. La retención depende del despliegue y no se ha comprobado contra AWS.</Explanation>
      </SpaceBetween>
     </Panel>
    </SpaceBetween>
