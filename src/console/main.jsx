@@ -37,12 +37,15 @@ function latestScreens(slice){
  return [...bySurface.values()].sort((a,b)=>sliceIndex(a.slice)-sliceIndex(b.slice));
 }
 function Application(){
+ const preview=new URLSearchParams(location.search).get("preview")==="1";
+ const [showExplanations,setShowExplanations]=useState(
+  ()=>!preview&&new URLSearchParams(location.search).get("explain")==="1"
+ );
  const [route,setRoute]=useState(fromLocation);
  const [help,setHelp]=useState(null);
  const [message,setMessage]=useState(null);
  const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"], approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},presentation:false});
  const [focusId,setFocusId]=useState(null);
- const preview=new URLSearchParams(location.search).get("preview")==="1";
  const slice=route.slice;
  const active=findScreen(route.screen)||data.screens[0];
  const visible=useMemo(()=>latestScreens(slice),[slice]);
@@ -71,14 +74,23 @@ function Application(){
  },[navigate,active.surface]);
  const notify=(content,type="success")=>setMessage({id:String(Date.now()),content,type});
  const helpOn=(title,content)=>setHelp({title,content});
+ const toggleExplanations=useCallback(checked=>{
+  setShowExplanations(checked);
+  if(!checked)setHelp(null);
+  const url=new URL(location.href);
+  if(checked)url.searchParams.set("explain","1");
+  else url.searchParams.delete("explain");
+  history.replaceState(null,"",url.pathname+url.search+url.hash);
+ },[]);
+ const roadmapHref="../index.html"+(showExplanations?"?explain=1":"")+"#"+slice.toLowerCase();
  const navItems=visible.map(x=>({type:"link",text:x.title,href:"?slice="+slice+"&screen="+x.id}));
  const selectedHref="?slice="+slice+"&screen="+active.id;
- const ctx={slice,screen:active,visible,simulation,setSimulation,notify,helpOn,navigate,preview};
+ const ctx={slice,screen:active,visible,simulation,setSimulation,notify,helpOn,navigate,preview,showExplanations};
  return <PrototypeContext.Provider value={ctx}>
   {!preview&&<div id="console-top">
    <TopNavigation
-     identity={{href:"../index.html",title:"AI Governance · prototipo"}}
-     utilities={[{type:"button",text:"Volver a slices",href:"../index.html"}]}
+     identity={{href:roadmapHref,title:"AI Governance"}}
+     utilities={[{type:"button",text:"Volver a slices",href:roadmapHref}]}
    />
   </div>}
   <AppLayout
@@ -88,7 +100,7 @@ function Application(){
    navigationWidth={250}
    maxContentWidth={1220}
    activeHref={selectedHref}
-   navigation={<SideNavigation header={{text:"Módulo A · pantallas",href:"../index.html"}} activeHref={selectedHref}
+   navigation={<SideNavigation header={{text:"Consola · Módulo A",href:roadmapHref}} activeHref={selectedHref}
      items={navItems}
      onFollow={event=>{
        const url=new URL(event.detail.href,location.href);
@@ -99,23 +111,33 @@ function Application(){
    content={<div id="console-content" className={simulation.presentation?"presentation-mode":""}>
       <SpaceBetween size="l">
        {!preview&&<div className="prototype-controls">
-        <div className="prototype-description"><span className="prototype-tag">PROTOTIPO INTERACTIVO · DATOS SINTÉTICOS</span>
-        <Box variant="small" color="text-body-secondary">No conectado a AWS. Las acciones se simulan localmente.</Box></div>
-        <FormField label="Corte del producto">
-         <Select selectedOption={{label:slice+" · "+data.stages[sliceIndex(slice)].name,value:slice}}
-          options={data.stages.map(x=>({label:x.id+" · "+x.name,value:x.id}))}
-          onChange={({detail})=>switchSlice(detail.selectedOption.value)} ariaLabel="Elegir slice"/>
-        </FormField>
+        <div className="prototype-status" aria-label="Entorno de demostración">
+         <Badge color="blue">DEMO · Sin conexión AWS</Badge>
+        </div>
+        <div className="prototype-actions">
+         <FormField label="Slice">
+          <Select selectedOption={{label:slice+" · "+data.stages[sliceIndex(slice)].name,value:slice}}
+           options={data.stages.map(x=>({label:x.id+" · "+x.name,value:x.id}))}
+           onChange={({detail})=>switchSlice(detail.selectedOption.value)} ariaLabel="Elegir slice"/>
+         </FormField>
+         <label className="explanations-switch">
+          <input type="checkbox" checked={showExplanations}
+           onChange={event=>toggleExplanations(event.target.checked)}
+           aria-label="Mostrar explicaciones" />
+          <span className="explanations-switch-track" aria-hidden="true"><span/></span>
+          <span className="explanations-switch-label">Explicaciones</span>
+         </label>
+        </div>
        </div>}
-       <ContentLayout header={<Header variant="h1" description={active.title}
-        info={<Button variant="link" onClick={()=>helpOn(active.title,"Esta pantalla corresponde a "+active.slice+". "+active.question+" Los datos y acciones son simulados y están delimitados por los requisitos "+active.requirements.join(", ")+".")}>¿Qué muestra?</Button>}
-        actions={preview?null:<SpaceBetween direction="horizontal" size="xs"><Badge color="blue">{active.slice}</Badge><Button href={"../index.html#"+slice.toLowerCase()}>Ver roadmap</Button></SpaceBetween>}>
-          {active.question}
+       <ContentLayout header={<Header variant="h1" description={showExplanations?active.question:undefined}
+        info={showExplanations?<Button variant="link" onClick={()=>helpOn(active.title,"Esta pantalla corresponde a "+active.slice+". "+active.question+" Los datos y acciones son simulados y están delimitados por los requisitos "+active.requirements.join(", ")+".")}>¿Qué muestra?</Button>:undefined}
+        actions={preview?null:<SpaceBetween direction="horizontal" size="xs"><Badge color="blue">{active.slice}</Badge><Button href={roadmapHref}>Ver roadmap</Button></SpaceBetween>}>
+          {active.title}
        </Header>}>
          <SpaceBetween size="l">
           {message&&<Flashbar items={[{...message,dismissible:true,onDismiss:()=>setMessage(null)}]}/>}
           <RenderScreen id={active.id}/>
-          {!preview&&<div className="prototype-footer">
+          {!preview&&showExplanations&&<div className="prototype-footer">
             <Box color="text-body-secondary" fontSize="body-s">Requisitos: {active.requirements.join(" · ")}</Box>
             <Box color="text-body-secondary" fontSize="body-s">Propuesta de interfaz basada en insumo/requisitos.yaml y contexto/04-ux.md.</Box>
           </div>}
@@ -126,8 +148,12 @@ function Application(){
   />
   <Modal visible={!!help} header={help?.title||"Ayuda"} onDismiss={()=>setHelp(null)}
    footer={<Box float="right"><Button variant="primary" onClick={()=>setHelp(null)}>Entendido</Button></Box>}>
-    <SpaceBetween size="s"><Box>{help?.content}</Box><Alert type="info">Prototipo informativo: esta explicación no implica que el control esté desplegado.</Alert></SpaceBetween>
+    <SpaceBetween size="s"><Box>{help?.content}</Box><Alert type="info">Esta explicación describe el diseño previsto; la funcionalidad del prototipo sigue siendo simulada.</Alert></SpaceBetween>
   </Modal>
  </PrototypeContext.Provider>;
+}
+export function Explanation({children,type="info"}){
+ const {showExplanations}=usePrototype();
+ return showExplanations?<Alert type={type}>{children}</Alert>:null;
 }
 createRoot(document.getElementById("governance-root")).render(<Application/>);
