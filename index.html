@@ -14,15 +14,15 @@
 <header class="topbar">
  <div class="container topbar-inner">
   <a class="wordmark" href="./" aria-label="AI Governance · Inicio"><span class="mark" aria-hidden="true">G<span>·</span></span><span>AI Governance <small>PLATAFORMA · PROPUESTA</small></span></a>
-  <nav class="header-nav" aria-label="Otros recursos"><a href="assets/arquitectura.html">Arquitectura AWS <span aria-hidden="true">↗</span></a><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/tree/main/insumo" target="_blank" rel="noopener">Requisitos <span aria-hidden="true">↗</span></a></nav>
+  <nav class="header-nav" aria-label="Otros recursos"><a href="assets/console.html?slice=S0&amp;screen=s0-connect">Consola navegable ↗</a><a href="assets/arquitectura.html">Arquitectura AWS <span aria-hidden="true">↗</span></a><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/tree/main/insumo" target="_blank" rel="noopener">Requisitos <span aria-hidden="true">↗</span></a></nav>
  </div>
 </header>
 <main>
  <section class="hero container" aria-labelledby="hero-title">
   <div class="kicker"><span class="pin"></span> EVOLUCIÓN DEL MVP · MÓDULO A</div>
   <h1 id="hero-title">Qué cambia en cada slice.</h1>
-  <p>Una entrega a la vez. Solo las pantallas nuevas o modificadas, como se verían en el producto.</p>
-  <div class="hero-note"><span class="note-symbol" aria-hidden="true">◇</span> <span>Prototipos de interfaz con <b>datos sintéticos</b>. No representan funcionalidad desplegada ni resultados medidos.</span></div>
+  <p>Una entrega a la vez. Explora las pantallas nuevas o modificadas en una consola HTML con componentes Cloudscape.</p>
+  <div class="hero-note"><span class="note-symbol" aria-hidden="true">◇</span> <span>Prototipos <b>HTML navegables, con datos sintéticos</b>. Los controles simulan su comportamiento; no hay operaciones reales en AWS.</span></div>
  </section>
 
  <section class="timeline container" aria-label="Seleccionar slice">
@@ -57,14 +57,6 @@
 </main>
 <footer class="site-footer"><div class="container footer-content"><span>Propuesta visual basada en <code>insumo/requisitos.yaml</code> · Sin datos productivos</span><div><a href="plan-anterior.html">Ver presentación anterior</a><a href="assets/arquitectura.html">Ver arquitectura AWS</a></div></div></footer>
 
-<dialog id="screen-dialog" class="screen-dialog" aria-labelledby="dialog-title">
- <div class="dialog-header"><div><span class="dialog-kicker" id="dialog-slice"></span><h2 id="dialog-title"></h2><p id="dialog-hint"></p></div><button type="button" class="close-dialog" id="close-dialog" aria-label="Cerrar vista">×</button></div>
- <div id="dialog-stage" class="dialog-stage"><div id="dialog-render" class="screen-canvas"></div></div>
- <div class="dialog-bottom">
-   <span class="dialog-guide">Selecciona <b>ⓘ</b> en la pantalla para ver qué resuelve cada elemento.</span>
-   <div class="dialog-reqs" id="dialog-reqs"></div>
- </div>
- <section id="explain" class="explain" aria-live="polite" hidden><button type="button" id="explain-close" aria-label="Cerrar explicación">×</button><span id="explain-kicker">EN LENGUAJE SIMPLE</span><h3 id="explain-title"></h3><p id="explain-body"></p></section>
-</dialog>
+
 </body>
 </html>
