@@ -78,6 +78,17 @@ try{
   assert((await text()).includes("Pendientes: eliminar_registro"),vp.name+" S2 no identifica tools pendientes");
   await screenshot("s2-activacion");
 
+  await open("S4","s4-mcp");
+  content=await text();
+  assert(content.includes("3 de 4")&&content.includes("Fuera de la puerta"),vp.name+" S4 no muestra cobertura MCP parcial");
+  if(vp.name==="desktop"){
+   const firstColumn=page.locator(".desktop-table table tbody tr td").first();
+   const box=await firstColumn.boundingBox();
+   assert(Boolean(box)&&box.width>=125,vp.name+" S4 comprime verticalmente los nombres de tools (ancho "+box?.width+")");
+  }
+  await screenshot("s4-mcp");
+  await overflow();
+
   await open("S4","s4-policy");
   content=await text();
   assert(content.includes("Usuario o rol")&&content.includes("Tool o clase"),vp.name+" POL-04 sin constructor completo");
@@ -102,7 +113,7 @@ try{
   await overflow();
 
   assert(!pageErrors.length,vp.name+" errores JavaScript: "+JSON.stringify(pageErrors));
-  results.push({viewport:vp.name,screenshots:11,jsErrors:pageErrors});
+  results.push({viewport:vp.name,screenshots:12,jsErrors:pageErrors});
   await page.close();
  }
 } catch(e){failures.push("Falló ejecución: "+(e?.stack||e));}
