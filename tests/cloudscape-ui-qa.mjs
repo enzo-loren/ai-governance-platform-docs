@@ -26,7 +26,13 @@ try{
   for(const [slice,view] of views){
    console.log("Testing",vp.id,slice,view); await page.goto(route(slice,view),{waitUntil:"domcontentloaded",timeout:15000});
    try {await page.locator("#governance-root h1").first().waitFor({timeout:6500})}
-   catch(e){failures.push(vp.id+"/"+view+" no se renderiza h1 · "+e.message.slice(0,180));throw e}
+   catch(e){
+    const details=await page.evaluate(()=>({body:document.body.innerText.slice(0,1500),root:document.getElementById("governance-root")?.innerHTML.slice(0,1100)}));
+    console.error("DEBUG_RENDER",JSON.stringify({details,errors:errs}));
+    await page.screenshot({path:out+"/debug-"+vp.id+"-"+view+".png"});
+    failures.push(vp.id+"/"+view+" no se renderiza h1 · "+e.message.slice(0,180));
+    throw e
+   }
    const data=await page.evaluate(()=>{
     const root=document.querySelector("#governance-root"), h=document.querySelector("h1");
     const content=document.querySelector("#console-content");
