@@ -248,30 +248,40 @@ function Coverage(){
    </SpaceBetween>
   </Container>
   <Panel title="Estado de los controles" info="El índice depende de evidencia, conexiones disponibles, aplicabilidad y modo. No mide seguridad absoluta.">
-   <Table variant="embedded" items={controls} columnDefinitions={[
+   <div className="desktop-table"><Table variant="embedded" items={controls} columnDefinitions={[
     {id:"name",header:"Control",cell:x=>x.name},
     {id:"state",header:"Estado",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":x.state==="Sin evidencia"?"error":"stopped"}>{x.state}</StatusIndicator>},
     {id:"reason",header:"Motivo / dependencia",cell:x=>x.reason}
-   ]}/>
+   ]}/></div>
+   <div className="mobile-cards"><SpaceBetween size="s">{controls.map(x=><Container key={x.name} header={<Header variant="h3">{x.name}</Header>}>
+    <SpaceBetween size="xs">{x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Activo"?"success":x.state==="Sin evidencia"?"error":"stopped"}>{x.state}</StatusIndicator>}
+     <Box color="text-body-secondary">{x.reason}</Box></SpaceBetween>
+   </Container>)}</SpaceBetween></div>
   </Panel>
 
   <ExpandableSection headerText="Ver los 27 controles del catálogo" variant="footer">
-   <Table items={fullCatalog} trackBy="id" variant="embedded" columnDefinitions={[
+   <div className="desktop-table"><Table items={fullCatalog} trackBy="id" variant="embedded" columnDefinitions={[
     {id:"id",header:"ID",cell:x=>x.id},
     {id:"control",header:"Control",cell:x=>x.name},
     {id:"needs",header:"Requiere",cell:x=>x.requires},
-    {id:"status",header:"Estado de muestra",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Representado"?"success":x.state==="Sin evidencia"?"error":"stopped"}>{x.state}</StatusIndicator>}
-   ]}/>
-   <Explanation>“Representado” significa que la interfaz muestra la capacidad, no que su cumplimiento AWS esté demostrado. CTRL-25 a CTRL-27 quedan fuera del perímetro.</Explanation>
+    {id:"status",header:"Estado de muestra",cell:x=>x.state==="En sombra"?<ShadowLabel/>:<StatusIndicator type={x.state==="Representado"?"info":x.state==="Sin evidencia"?"error":"stopped"}>{x.state}</StatusIndicator>}
+   ]}/></div>
+   <div className="mobile-cards"><SpaceBetween size="s">{fullCatalog.map(x=><Container key={x.id} header={<Header variant="h3">{x.id} · {x.name}</Header>}>
+    <KeyValuePairs columns={1} items={[{label:"Requiere",value:x.requires},{label:"Estado de muestra",value:x.state}]}/>
+   </Container>)}</SpaceBetween></div>
+   <Explanation>“Representado” describe una capacidad de la interfaz, no una prueba de cumplimiento AWS. CTRL-25 a CTRL-27 están fuera del perímetro.</Explanation>
   </ExpandableSection>
 
   <Panel title="Agentes en el catálogo">
-   <Table variant="embedded" items={simulation.agentRegistry} trackBy="id" columnDefinitions={[
+   <div className="desktop-table"><Table variant="embedded" items={simulation.agentRegistry} trackBy="id" columnDefinitions={[
     {id:"name",header:"Agente",cell:x=>x.name},
     {id:"mode",header:"Modo",cell:x=>x.mode},
     {id:"connections",header:"Conexiones en este corte",cell:()=>hasB?"A+B"+(hasC?"+C":""):hasC?"A+C":"A"},
     {id:"score",header:"Índice de cobertura",cell:()=>"Sin medición"}
-   ]}/>
+   ]}/></div>
+   <div className="mobile-cards"><SpaceBetween size="s">{simulation.agentRegistry.map(x=><Container key={x.id} header={<Header variant="h3">{x.name}</Header>}>
+     <KeyValuePairs columns={2} items={[{label:"Modo",value:x.mode},{label:"Conexiones",value:hasB?"A+B"+(hasC?"+C":""):hasC?"A+C":"A"},{label:"Índice",value:"Sin medición"}]}/>
+   </Container>)}</SpaceBetween></div>
   </Panel>
   {showExplanations&&<Alert type="info">Referencias máximas del catálogo para A / A+C / A+B / A+B+C: 41 % / 56 % / 67 % / 89 %. No equivalen a una medición en este prototipo.</Alert>}
  </SpaceBetween>;
