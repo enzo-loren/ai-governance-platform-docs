@@ -15,6 +15,7 @@ import FormField from "@cloudscape-design/components/form-field";
 import Modal from "@cloudscape-design/components/modal";
 import Flashbar from "@cloudscape-design/components/flashbar";
 import Badge from "@cloudscape-design/components/badge";
+import Toggle from "@cloudscape-design/components/toggle";
 import data from "../../assets/console-data.json";
 import {RenderScreen} from "./screens.jsx";
 import "./app.css";
@@ -120,13 +121,11 @@ function Application(){
            options={data.stages.map(x=>({label:x.id+" · "+x.name,value:x.id}))}
            onChange={({detail})=>switchSlice(detail.selectedOption.value)} ariaLabel="Elegir slice"/>
          </FormField>
-         <label className="explanations-switch">
-          <input type="checkbox" checked={showExplanations}
-           onChange={event=>toggleExplanations(event.target.checked)}
-           aria-label="Mostrar explicaciones" />
-          <span className="explanations-switch-track" aria-hidden="true"><span/></span>
-          <span className="explanations-switch-label">Explicaciones</span>
-         </label>
+         <div className="explanations-switch">
+          <Toggle checked={showExplanations} onChange={({detail})=>toggleExplanations(detail.checked)}>
+           Mostrar explicaciones
+          </Toggle>
+         </div>
         </div>
        </div>}
        <ContentLayout header={<Header variant="h1" description={showExplanations?active.question:undefined}
