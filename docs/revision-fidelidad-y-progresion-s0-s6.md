@@ -14,14 +14,14 @@ La revisión de interfaz no certifica el cumplimiento completo de ningún requis
 
 ## Modelo de evolución
 
-- La portada ofrece **Solo cambios** (15 versiones) y **Producto acumulado** (12 superficies al terminar S6).
+- La portada ofrece **Solo cambios** (15 versiones) y **Producto acumulado** (14 superficies al terminar S6).
 - Una superficie introducida antes puede mostrar datos, decisiones o canales que solo están disponibles cuando se abre desde un corte posterior. Esto no crea otra pantalla ni otra versión nominal. El parámetro `slice` conserva el **corte del producto**, mientras `screen` identifica la **superficie/version de la vista**.
 - Ejemplo: `?slice=S6&screen=s1-coverage` conserva S6 y presenta A+B+C; `?slice=S1&screen=s1-coverage` muestra solamente A.
-- El selector de versiones solo aparece cuando realmente existe una revisión de la misma superficie: Agentes S0/S2; Consumo S2/S3; Tools S1/S4.
+- El selector de versiones solo aparece en Consumo S2/S3: mantiene los límites por agente y agrega el desglose por persona. Agentes S0 y Control del agente S2 coexisten; Catálogo S1 y Ejecución MCP S4 también.
 
 | Superficie | Entrega inicial | Progresión visible / acción |
 |---|---|---|
-| Agentes | S0 | Credencial individual emitida una vez y gestión de rotación/revocación en S0; S2 añade activación, impacto, suspensión y retiro |
+| Agentes | S0 | En S0 se registran, listan y administran credenciales; desde S2 el listado ofrece acceso a una ficha individual de activación, impacto, suspensión y retiro, sin sustituirse |
 | Flujo de solicitudes | S0 | S2 bloqueo de intención, S3 principal humano, S4 ejecución MCP, S5 aprobación, S6 correlación; filtros por canal, usuario, decisión y búsqueda |
 | Tarjeta de gobernanza | S1 | Refleja B y C al agregarse; distingue máximo teórico, índice sin medir, evidencia ausente y controles en sombra; sugiere siguiente paso |
 | Inventario de tools | S1 | Clase sugerida/revisada, cambio de esquema con nueva revisión pendiente |
