@@ -31,3 +31,6 @@ body{background:#f8f9fc;scroll-behavior:smooth}
 .presentation-mode .kpi-value{font-size:clamp(36px,4vw,50px)}
 .presentation-mode .prototype-footer{display:none}
 .presentation-mode .step-entry{font-size:18px}
+
+.governance-shadow{display:inline-flex;align-items:center;gap:7px;color:#6840a5;font-size:14px;font-weight:700;line-height:1.45;white-space:nowrap}
+.governance-shadow svg{flex-shrink:0}
