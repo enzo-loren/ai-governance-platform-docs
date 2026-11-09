@@ -516,13 +516,18 @@ function Limits({byUser=false}){
   </Container>
   {byUser&&<Container header={<Header variant="h2">Consumo por persona</Header>}>
     <SpaceBetween size="m">
+     <div className="desktop-table">
      <Table variant="embedded" items={users} trackBy="value" header={<Header variant="h3">Personas y consumo</Header>}
       columnDefinitions={[
        {id:"who",header:"Usuario",cell:x=>x.label},
        {id:"requests",header:"Solicitudes",cell:x=>x.requests},
        {id:"spent",header:"Gasto de muestra",cell:x=>"US$ "+x.spent.toFixed(2)},
-       {id:"action",header:"Límites",cell:x=><Button onClick={()=>{setUser(x);setScope(x.value==="workload"?"agent":"person");}}> {x.value==="workload"?"Ver límite heredado":"Configurar persona"}</Button>}
+       {id:"action",header:"Límites",cell:x=><Button onClick={()=>{setUser(x);setScope(x.value==="workload"?"agent":"person");}}>{x.value==="workload"?"Ver límite heredado":"Configurar persona"}</Button>}
       ]}/>
+     </div>
+     <div className="mobile-cards"><SpaceBetween size="s">{users.map(x=><Container key={x.value} header={<Header variant="h3">{x.label}</Header>}>
+      <SpaceBetween size="xs"><KeyValuePairs columns={2} items={[{label:"Solicitudes",value:String(x.requests)},{label:"Gasto de muestra",value:"US$ "+x.spent.toFixed(2)}]}/><Button onClick={()=>{setUser(x);setScope(x.value==="workload"?"agent":"person");}}>{x.value==="workload"?"Ver límite heredado":"Configurar persona"}</Button></SpaceBetween>
+     </Container>)}</SpaceBetween></div>
      <SpaceBetween direction="horizontal" size="xs">
       <Button variant={scope==="agent"?"primary":"normal"} onClick={()=>setScope("agent")}>Límites del agente</Button>
       <Button variant={scope==="person"?"primary":"normal"} onClick={()=>setScope("person")}>Límites por persona</Button>
