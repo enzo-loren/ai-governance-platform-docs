@@ -18,6 +18,8 @@ import CopyToClipboard from "@cloudscape-design/components/copy-to-clipboard";
 import Toggle from "@cloudscape-design/components/toggle";
 import Tabs from "@cloudscape-design/components/tabs";
 import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
+import Textarea from "@cloudscape-design/components/textarea";
+import ExpandableSection from "@cloudscape-design/components/expandable-section";
 import {usePrototype,Explanation} from "./main.jsx";
 
 const tools=[
@@ -32,9 +34,9 @@ const requests=[
  {id:"APR41",name:"transferir_fondos",from:"Bruno · operador",time:"Vencida",amount:"USD 890"}
 ];
 const audit=[
- {id:"TRC-0137",who:"ana.consulta",agent:"agente-demo",tool:"actualizar_precio",decision:"Denegado",reason:"descuento 25 > 10"},
- {id:"TRC-0122",who:"solo_workload",agent:"agente-demo",tool:"eliminar_registro",decision:"Denegado",reason:"tool destructiva"},
- {id:"TRC-0104",who:"diego.operador",agent:"agente-demo",tool:"cambiar_fondo",decision:"Pendiente",reason:"aprobación humana"}
+ {id:"TRC-0137",who:"ana.consulta",agent:"agente-demo",tool:"actualizar_precio",decision:"Denegado",reason:"descuento 25 > 10",model:"Bedrock modelo A",channel:"inferencia",connections:"A+B+C",date:"2026-11-09",policy:"descuento_máximo · v3",config:"cfg-agente v2",author:"operador plataforma"},
+ {id:"TRC-0122",who:"solo_workload",agent:"agente-demo",tool:"eliminar_registro",decision:"Denegado",reason:"tool destructiva",model:"Simulado",channel:"inferencia",connections:"A",date:"2026-11-09",policy:"Preset 1 · v1",config:"cfg-agente v1",author:"sistema inicial"},
+ {id:"TRC-0104",who:"diego.operador",agent:"agente-demo",tool:"cambiar_fondo",decision:"Pendiente",reason:"aprobación humana",model:"Bedrock modelo A",channel:"mcp",connections:"A+B+C",date:"2026-11-09",policy:"Preset 2 · v2",config:"cfg-agente v2",author:"operador plataforma"}
 ];
 function Panel({title,children,actions,help}){
  const {helpOn,showExplanations}=usePrototype();
@@ -227,61 +229,120 @@ function Approvals(){
  </SpaceBetween>;
 }
 function Search(){
- const {navigate}=usePrototype();
+ const {navigate,setSimulation}=usePrototype();
  const [query,setQuery]=useState("");
  const [decision,setDecision]=useState({label:"Todas",value:"all"});
- const [applied,setApplied]=useState({query:"",decision:"all"});
- const items=audit.filter(x=>(applied.decision==="all"||x.decision===applied.decision)&&[x.id,x.who,x.agent,x.tool].join(" ").toLowerCase().includes(applied.query.toLowerCase()));
+ const [model,setModel]=useState({label:"Todos",value:"all"});
+ const [channel,setChannel]=useState({label:"Todos",value:"all"});
+ const [connections,setConnections]=useState({label:"Todas",value:"all"});
+ const [period,setPeriod]=useState("");
+ const [applied,setApplied]=useState({query:"",decision:"all",model:"all",channel:"all",connections:"all",period:""});
+ const items=audit.filter(x=>
+   (applied.decision==="all"||x.decision===applied.decision)&&
+   (applied.model==="all"||x.model===applied.model)&&
+   (applied.channel==="all"||x.channel===applied.channel)&&
+   (applied.connections==="all"||x.connections===applied.connections)&&
+   (!applied.period||x.date===applied.period)&&
+   [x.id,x.who,x.agent,x.tool].join(" ").toLowerCase().includes(applied.query.toLowerCase()));
+ const show=x=>{
+  setSimulation(prev=>({...prev,selectedTraceId:x.id}));
+  navigate("s6-forensic");
+ };
  return <SpaceBetween size="l">
-  <Panel title="Buscar transacciones" help="La búsqueda real combina trace ID, usuario, agente, período, modelo, tool, decisión, canal y conexiones. Meta: menos de 5 segundos.">
-   <SpaceBetween direction="horizontal" size="m">
-    <FormField label="ID, usuario, agente o tool"><Input value={query} onChange={({detail})=>setQuery(detail.value)} placeholder="Ej.: actualizar_precio"/></FormField>
-    <FormField label="Decisión"><Select selectedOption={decision} options={[{label:"Todas",value:"all"},{label:"Denegado",value:"Denegado"},{label:"Pendiente",value:"Pendiente"}]} onChange={({detail})=>setDecision(detail.selectedOption)}/></FormField>
-    <Button variant="primary" onClick={()=>setApplied({query,decision:decision.value})}>Buscar</Button>
+  <Panel title="Buscar transacciones" help="EVD-02: filtros combinables de trace ID, usuario, agente, modelo, tool, decisión, período, canal y conexiones. La búsqueda real debe responder en menos de cinco segundos.">
+   <SpaceBetween size="m">
+    <ColumnLayout columns={2}>
+     <FormField label="Trace ID, usuario, agente o tool">
+      <Input value={query} onChange={({detail})=>setQuery(detail.value)} placeholder="Ej.: actualizar_precio"/>
+     </FormField>
+     <FormField label="Decisión">
+      <Select selectedOption={decision} options={[{label:"Todas",value:"all"},{label:"Denegado",value:"Denegado"},{label:"Pendiente",value:"Pendiente"}]} onChange={({detail})=>setDecision(detail.selectedOption)}/>
+     </FormField>
+    </ColumnLayout>
+    <ExpandableSection headerText="Filtros avanzados" variant="footer">
+     <ColumnLayout columns={2}>
+      <FormField label="Modelo">
+       <Select selectedOption={model} options={[{label:"Todos",value:"all"},{label:"Bedrock modelo A",value:"Bedrock modelo A"},{label:"Simulado",value:"Simulado"}]} onChange={({detail})=>setModel(detail.selectedOption)}/>
+      </FormField>
+      <FormField label="Canal">
+       <Select selectedOption={channel} options={[{label:"Todos",value:"all"},{label:"Inferencia",value:"inferencia"},{label:"MCP",value:"mcp"}]} onChange={({detail})=>setChannel(detail.selectedOption)}/>
+      </FormField>
+      <FormField label="Conexiones">
+       <Select selectedOption={connections} options={[{label:"Todas",value:"all"},{label:"A",value:"A"},{label:"A+B+C",value:"A+B+C"}]} onChange={({detail})=>setConnections(detail.selectedOption)}/>
+      </FormField>
+      <FormField label="Fecha · AAAA-MM-DD">
+       <Input value={period} onChange={({detail})=>setPeriod(detail.value)} placeholder="2026-11-09"/>
+      </FormField>
+     </ColumnLayout>
+    </ExpandableSection>
+    <Button variant="primary" onClick={()=>setApplied({query,decision:decision.value,model:model.value,channel:channel.value,connections:connections.value,period})}>Buscar</Button>
    </SpaceBetween>
   </Panel>
   <Table items={items} trackBy="id" header={<Header variant="h2" counter={"("+items.length+")"}>Resultados</Header>}
    columnDefinitions={[
-    {id:"id",header:"Trace ID",cell:x=><Button variant="link" onClick={()=>navigate("s6-forensic")}>{x.id}</Button>},
-    {id:"who",header:"Usuario",cell:x=>x.who},{id:"agent",header:"Agente",cell:x=>x.agent},
+    {id:"id",header:"Trace ID",cell:x=><Button variant="link" onClick={()=>show(x)}>{x.id}</Button>},
+    {id:"who",header:"Principal",cell:x=>x.who},{id:"agent",header:"Agente",cell:x=>x.agent},
     {id:"tool",header:"Tool",cell:x=>x.tool},{id:"state",header:"Decisión",cell:x=><State value={x.decision}/>},
-    {id:"action",header:"Detalle",cell:()=><Button variant="link" onClick={()=>navigate("s6-forensic")}>Ver ruta forense</Button>}
+    {id:"action",header:"Detalle",cell:x=><Button variant="link" onClick={()=>show(x)}>Ver ruta forense</Button>}
    ]}
-   empty={<Box textAlign="center" padding="l">No hay transacciones para estos filtros. Cambia los criterios.</Box>}/>
+   empty={<Box textAlign="center" padding="l">No hay transacciones para estos filtros de demostración.</Box>}/>
  </SpaceBetween>;
 }
 function Forensic(){
+ const {simulation}=usePrototype();
  const [step,setStep]=useState(3);
  const [seal,setSeal]=useState(false);
+ const record=audit.find(x=>x.id===simulation.selectedTraceId)||audit[0];
+ const blocked=record.decision==="Denegado";
  const events=[
-  {id:1,name:"Solicitud de usuario",reason:"ana.consulta · identidad verificada"},
-  {id:2,name:"Inferencia del modelo",reason:"tool_call actualizar_precio · descuento 25"},
-  {id:3,name:"Decisión Cedar",reason:"Denegado: descuento 25 > máximo 10 · regla v3"},
-  {id:4,name:"Respuesta gobernada",reason:"Tool no ejecutada; evidencia sellada"}
+  {id:1,name:"Solicitud",reason:record.who+" · "+record.agent+" · "+record.channel},
+  {id:2,name:record.channel==="mcp"?"Invocación MCP":"Inferencia del modelo",reason:record.tool+" · "+record.model+" · "+record.connections},
+  {id:3,name:"Decisión de política",reason:record.decision+" · "+record.reason+" · "+record.policy},
+  {id:4,name:"Respuesta y evidencia",reason:blocked?"Tool no ejecutada · respuesta gobernada":record.decision==="Pendiente"?"PENDING_APPROVAL · sin ejecución":"Respuesta entregada"}
  ];
  return <SpaceBetween size="l">
+  <Container header={<Header variant="h2">Transacción {record.id} · ejemplo</Header>}>
+   <KeyValuePairs columns={3} items={[
+    {label:"Principal",value:record.who},
+    {label:"Agente",value:record.agent},
+    {label:"Canal y conexiones",value:record.channel+" · "+record.connections},
+    {label:"Decisión",value:<State value={record.decision}/>},
+    {label:"Modelo",value:record.model},
+    {label:"Correlación",value:"tool_call_id / inferida (demo)"}
+   ]}/>
+  </Container>
   <ColumnLayout columns={2}>
-   <Panel title="Historia de la transacción" help="Cada paso guarda el principal, agente, regla, resultado y tipo de correlación. También se explicitan saltos fuera de MCP.">
-    <SpaceBetween size="s">{events.map(x=><div className={"step-entry "+(step===x.id?"selected":"")} key={x.id}><Button variant="link" onClick={()=>setStep(x.id)}>{x.id}. {x.name}</Button><Box color="text-body-secondary">{x.reason}</Box></div>)}</SpaceBetween>
+   <Panel title="Historia de la transacción" help="EVD-05: cada paso conserva principal, canal, regla y correlación; las ejecuciones fuera de MCP se marcan.">
+    <SpaceBetween size="s">{events.map(x=><div className={"step-entry "+(step===x.id?"selected":"")} key={x.id}>
+     <Button variant="link" onClick={()=>setStep(x.id)}>{x.id}. {x.name}</Button><Box color="text-body-secondary">{x.reason}</Box>
+    </div>)}</SpaceBetween>
    </Panel>
    <SpaceBetween size="l">
-    <Panel title="Regla determinante" help="Se conserva la versión exacta de la regla y configuración evaluadas, aun cuando se publiquen versiones posteriores.">
+    <Panel title="Regla y configuración determinantes" help="El sistema debe conservar el texto y la versión exactos, aun si la política se cambia después.">
      <KeyValuePairs columns={1} items={[
-      {label:"Conjunto y versión",value:"descuento_máximo · v3"},
-      {label:"Texto de la condición",value:"DENY si descuento > 10"},
-      {label:"Cambio administrativo",value:"operador plataforma"},
-      {label:"Detalle elegido",value:events.find(x=>x.id===step)?.reason||""}
+      {label:"Conjunto de reglas",value:record.policy},
+      {label:"Texto evaluado (resumen demo)",value:record.reason},
+      {label:"Versión de configuración",value:record.config},
+      {label:"Autor del último cambio",value:record.author},
+      {label:"Detalle seleccionado",value:events.find(x=>x.id===step)?.reason||""}
      ]}/>
     </Panel>
-    <Panel title="Sello de evidencia"><SpaceBetween size="m">
-     <StatusIndicator type="success">Object Lock GOVERNANCE</StatusIndicator>
-     <Box color="text-body-secondary">Objeto en S3 bajo la retención configurada.</Box>
-     <Button onClick={()=>setSeal(true)}>Probar inmutabilidad (demo)</Button>
-    </SpaceBetween></Panel>
+    <Panel title="Sello de evidencia">
+     <SpaceBetween size="m">
+      <StatusIndicator type="success">Object Lock GOVERNANCE · contrato objetivo</StatusIndicator>
+      <KeyValuePairs columns={1} items={[
+       {label:"Objeto",value:"evidencia/"+record.id+".json (ejemplo)"},
+       {label:"Retención",value:"Configurada por despliegue; no medida en esta DEMO"},
+       {label:"Integridad",value:"No comprobada contra AWS"}
+      ]}/>
+      <Button onClick={()=>setSeal(true)}>Probar inmutabilidad (demo)</Button>
+     </SpaceBetween>
+    </Panel>
    </SpaceBetween>
   </ColumnLayout>
-  <Modal visible={seal} header="Prueba de inmutabilidad" onDismiss={()=>setSeal(false)} footer={<Box float="right"><Button variant="primary" onClick={()=>setSeal(false)}>Cerrar</Button></Box>}>
-   <Alert type="info">Resultado esperado del sistema final: S3 rechaza el borrado sin permiso de bypass y conserva el objeto. Este prototipo no ejecutó ninguna llamada a AWS.</Alert>
+  <Modal visible={seal} header="Prueba de inmutabilidad" onDismiss={()=>setSeal(false)}
+   footer={<Box float="right"><Button variant="primary" onClick={()=>setSeal(false)}>Cerrar</Button></Box>}>
+   <Alert type="info">Resultado esperado: S3 rechaza el borrado sin permiso de bypass y el objeto persiste. El modo GOVERNANCE permite un bypass privilegiado expresamente autorizado; este prototipo no ejecuta ninguna llamada AWS.</Alert>
   </Modal>
  </SpaceBetween>;
 }
