@@ -9,7 +9,6 @@ on:
       - feat/auditoria-integral-vistas-ux
       - fix/presentation-mode-s2-functional
       - feat/auditoria-progresion-vistas-s0-s6
-      - feat/ux-capacidades-por-resultados-pizarra
     paths:
       - package.json
       - 'scripts/stamp-console-assets.mjs'
