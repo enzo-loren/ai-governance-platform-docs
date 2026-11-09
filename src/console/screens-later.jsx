@@ -138,7 +138,7 @@ function MCP(){
       options={[{value:"autonoma",label:"Autónoma"},{value:"notificar",label:"Notificar"},{value:"requiere_aprobacion",label:"Requiere aprobación"}]}
       onChange={({detail})=>changeSupervision(row.id,detail.selectedOption.value)}/>
     </FormField>}
-    <Alert type="info">En activo, una tool pendiente o no aprobada se deniega; en descubrimiento la evaluación de esa regla puede operar en sombra. Esta acción solo modifica una muestra.</Alert>
+    <Alert type="warning">{agent.mode==="Activo"?"Sin aprobación, esta herramienta se rechaza.":"En descubrimiento, la decisión se observa sin bloquear."} Cambio de demostración.</Alert>
    </SpaceBetween>
   </Modal>
   <Modal visible={targetModal} header="Registrar target MCP · DEMO" onDismiss={()=>setTargetModal(false)}
@@ -146,7 +146,8 @@ function MCP(){
    <SpaceBetween size="m">
     <FormField label="Nombre del target"><Input value={targetName} onChange={({detail})=>setTargetName(detail.value)}/></FormField>
     <FormField label="Tipo"><Select selectedOption={targetType} options={[{value:"lambda",label:"AWS Lambda"},{value:"openapi",label:"OpenAPI HTTPS"}]} onChange={({detail})=>setTargetType(detail.selectedOption)}/></FormField>
-    <Alert type="info">La credencial real del destino se configura en AgentCore Identity o Secrets Manager y no se muestra al agente. Aquí no se solicitan ni almacenan secretos.</Alert>
+    <Alert type="warning">No ingreses secretos reales en esta demostración.</Alert>
+    <Explanation>En producción, la puerta recupera la credencial del destino desde AgentCore Identity o Secrets Manager sin mostrársela al agente.</Explanation>
    </SpaceBetween>
   </Modal>
  </SpaceBetween>;
@@ -522,9 +523,9 @@ function Forensic(){
     </Panel>
     <Panel title="Sello de evidencia">
      <SpaceBetween size="m">
-      <StatusIndicator type="warning">Object Lock GOVERNANCE · no verificado</StatusIndicator>
+      <StatusIndicator type="warning">Integridad sin verificar</StatusIndicator>
       <Button onClick={()=>setSeal(true)}>Probar inmutabilidad (demo)</Button>
-      <Explanation>Objeto ilustrativo: evidencia/{record.id}.json. La retención depende del despliegue y no se ha comprobado contra AWS.</Explanation>
+      <Explanation>Objeto ilustrativo: evidencia/{record.id}.json. La retención depende del despliegue. Se prevé S3 Object Lock GOVERNANCE, pero esta demostración no ha comprobado la inmutabilidad en AWS.</Explanation>
      </SpaceBetween>
     </Panel>
    </SpaceBetween>
