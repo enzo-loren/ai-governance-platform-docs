@@ -4,7 +4,7 @@ import {readFile,mkdir,writeFile} from "node:fs/promises";
 
 const data=JSON.parse(await readFile("assets/console-data.json","utf8"));
 const doc=await readFile("docs/slices-vistas-trazabilidad.md","utf8");
-const output="artifacts/surface-contract-qa",base="http://127.0.0.1:8896/";
+const output="artifacts/incremental-functional-qa/surface-contract",base="http://127.0.0.1:8896/";
 await mkdir(output,{recursive:true});
 const errors=[],records=[];
 const assert=(ok,reason)=>{if(!ok)errors.push(reason);};
