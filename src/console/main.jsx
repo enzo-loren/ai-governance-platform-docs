@@ -18,6 +18,7 @@ import Toggle from "@cloudscape-design/components/toggle";
 import ExpandableSection from "@cloudscape-design/components/expandable-section";
 import data from "../../assets/console-data.json";
 import editorialBoard from "./editorial-board.json";
+import {getModelCatalog,initialAllowedModelIds} from "./model-catalog.js";
 import {RenderScreen} from "./screens.jsx";
 import PresentationStage,{PRESENTATION_SCREEN_IDS} from "./presentation-stage.jsx";
 import "./presentation-stage.css";
@@ -65,7 +66,7 @@ function Application(){
  const [help,setHelp]=useState(null);
  const [presenting,setPresenting]=useState(false);
  const [message,setMessage]=useState(null);
- const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"],approvedTools:["consultar_ficha","actualizar_precio"],supervision:{consultar_ficha:"autonoma",actualizar_precio:"notificar",eliminar_registro:"requiere_aprobacion",cambiar_fondo:"requiere_aprobacion"},toolOverrides:{},toolSchemaVersions:{}, approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},selectedAgentId:"agt-demo",agentRegistry:[{id:"agt-demo",name:"agente-demo",owner:"Operador plataforma",mode:"Descubrimiento",model:"bedrock-a",tokens:[{id:"cred-demo-1",suffix:"D3MO",status:"Activa",created:"Demo inicial"}]}]});
+ const [simulation,setSimulation]=useState({agent:"agente-demo",mode:"Descubrimiento", budget:50,spent:41.2, rate:50, piiRole:"consulta", policies:[], simulatedEnabled:true, toolsMcp:["consultar_ficha","actualizar_precio","eliminar_registro"],approvedTools:["consultar_ficha","actualizar_precio"],supervision:{consultar_ficha:"autonoma",actualizar_precio:"notificar",eliminar_registro:"requiere_aprobacion",cambiar_fondo:"requiere_aprobacion"},toolOverrides:{},toolSchemaVersions:{}, approvals:{APR42:"Pendiente",APR43:"Pendiente",APR41:"Vencida"},selectedAgentId:"agt-demo",agentRegistry:[{id:"agt-demo",name:"agente-demo",owner:"Operador plataforma",mode:"Descubrimiento",modelos_permitidos:initialAllowedModelIds(getModelCatalog(true)),tokens:[{id:"cred-demo-1",suffix:"D3MO",status:"Activa",created:"Demo inicial"}]}]});
  const slice=route.slice;
  const active=findScreen(route.screen)||data.screens[0];
  const editorial=editorialBoard[active.surface];
