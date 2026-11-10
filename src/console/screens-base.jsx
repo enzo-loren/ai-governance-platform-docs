@@ -333,12 +333,19 @@ function Inventory(){
      {label:"Versión de esquema",value:selected?.schema||""},
      {label:"Esquema anterior",value:dummyTools.find(tool=>tool.id===selected?.id)?.schema||""},
      {label:"Estado",value:selected?.status==="Revisada"?"Revisada":"Sugerida · sin validar"},
-     {label:"Canal",value:"A · intención, no ejecución"}
+     {label:"Canal",value:rank>=4?"A · intención / B · ejecución centralizada":"A · intención, no ejecución"},
+     ...(rank>=4?[
+      {label:"Aprobación",value:approved.includes(selected?.id)?"Aprobada":"Pendiente"},
+      {label:"Ejecución",value:mcp.includes(selected?.id)?"Por MCP":"Fuera de MCP"},
+      {label:"Supervisión",value:supervisionFor(simulation,currentAgent.id)[selected?.id]||"Sin configurar"},
+      {label:"Último uso",value:selected?.id==="procesar_lote"?"No observado":"Hace 12 min (demo)"}
+     ]:[])
     ]}/>
     <FormField label="Clasificación revisada">
      <Select selectedOption={draftClass} options={classes} onChange={({detail})=>setDraftClass(detail.selectedOption)}/>
     </FormField>
     <Alert type="info">Clasificar una herramienta no autoriza su ejecución.</Alert>
+    {rank>=4&&<Button variant="link" onClick={()=>{setSelected(null);navigate("s4-mcp");}}>Administrar ejecución de esta herramienta</Button>}
    </SpaceBetween>
   </Modal>
  </SpaceBetween>;
