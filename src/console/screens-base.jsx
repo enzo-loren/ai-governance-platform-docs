@@ -154,7 +154,7 @@ function Live(){
        {id:"connections",header:"Conexiones",cell:x=>x.connections},
        {id:"state",header:"Decisión",cell:x=><Decision state={x.state} reason={x.reason}/>},
        {id:"cost",header:"Costo",cell:x=>x.cost},
-       {id:"actions",header:"Detalle",width:112,cell:x=><span className="gov-trace-action"><Button variant="link" ariaLabel={"Ver decisión "+x.id} onClick={()=>choose(x)}>Ver</Button></span>
+       {id:"actions",header:"Detalle",width:112,cell:x=><span className="gov-trace-action"><Button variant="link" ariaLabel={"Ver decisión "+x.id} onClick={()=>choose(x)}>Ver</Button></span>}
       ]} empty={<Box textAlign="center" padding="l">No hay eventos para estos filtros.</Box>}/>
     </div>
     <div className="mobile-cards">
