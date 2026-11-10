@@ -71,10 +71,12 @@ try{
    check(text.includes("1 · Caja Negra Segura")&&text.includes("2 · Operación Supervisada")&&text.includes("3 · Blindaje Estricto"),vp.name+" faltan descripciones de presets");
    check(text.includes("Las herramientas pendientes o sin clasificar"),vp.name+" falta advertencia de aprobación");
    const layer=await page.locator(".gov-preset-help-panel").evaluate(el=>{
-    const container=el.closest('[class*="awsui_container_"]');
-    return {z:container?Number(getComputedStyle(container).zIndex):0,bg:getComputedStyle(el).backgroundColor};
+    const container=el.closest(".gov-preset-help-popover");
+    const rect=container?.getBoundingClientRect();
+    const point=rect?document.elementFromPoint(rect.left+rect.width/2,rect.top+15):null;
+    return {z:container?Number(getComputedStyle(container).zIndex):0,bg:getComputedStyle(container).backgroundColor,visible:container?.contains(point)};
    });
-   check(layer.z>=10000&&layer.bg==="rgb(255, 255, 255)",vp.name+" el popover no es opaco o queda detrás de la navegación: "+JSON.stringify(layer));
+   check(layer.z>=10000&&layer.bg==="rgb(255, 255, 255)"&&layer.visible,vp.name+" ayuda queda detrás de la navegación o no es opaca: "+JSON.stringify(layer));
    await page.screenshot({path:output+"/"+vp.name+"-ayuda-preset-abierta.png",fullPage:true});
    await page.keyboard.press("Escape");
   }
