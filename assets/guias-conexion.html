@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#162c49">
+<meta name="description" content="Guías de conexión B y C para AI Governance Platform. Dificultad de integrar identidad del usuario en AWS, Azure y Google Cloud, con ejemplos y fuentes técnicas.">
+<title>Guías de conexión · AI Governance Platform</title>
+<style>
+:root{color-scheme:light;--bg:#f5f7fa;--surface:#fff;--ink:#172b4d;--muted:#53657c;--border:#d5dfe9;--blue:#0972d3;--navy:#192e4d;--focus:#0972d3}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.62 "Open Sans",Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}a{color:#075ca8}a:hover{text-decoration:underline}button{font:inherit;cursor:pointer}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.wrap{max-width:1250px;margin:0 auto;padding:0 30px}.skip{position:absolute;left:-9999px;z-index:10;top:0;background:#fff;padding:12px}.skip:focus{left:12px}.topbar{background:#fff;border-bottom:1px solid var(--border)}.topbar-inner{min-height:72px;display:flex;justify-content:space-between;gap:20px;align-items:center}.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink);font-weight:800;white-space:nowrap}.mark{width:38px;height:38px;display:grid;place-items:center;background:var(--navy);color:white;border-radius:9px;font-size:20px}.mark em{font-style:normal;color:#9ad4ff}.brand small{display:block;line-height:1.15;font-weight:650;letter-spacing:.04em;color:var(--muted);font-size:11px}.top-nav{display:flex;gap:19px;align-items:center;flex-wrap:wrap}.top-nav a{font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap}.top-nav a[aria-current=page]{color:#0b528d;border-bottom:2px solid #0972d3;padding-bottom:3px}
+.hero{padding-top:56px;padding-bottom:30px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.09em;color:#315c89}.hero h1{font-size:clamp(34px,4.3vw,54px);line-height:1.12;letter-spacing:-.04em;max-width:850px;margin:11px 0 16px;color:#132943}.lead{font-size:17px;color:var(--muted);max-width:810px;margin:0 0 18px}.hero-note{font-size:13px;color:var(--muted);max-width:900px}.hero-note strong{color:var(--ink)}.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.connection-card{border:1px solid var(--border);border-radius:13px;padding:21px 23px;background:#fff;display:flex;gap:16px;min-height:142px}.connection-card.current{border-color:#8bbfe9;box-shadow:0 2px 14px rgba(12,91,166,.06)}.connection-id{width:45px;height:45px;border-radius:11px;display:grid;place-items:center;font-size:24px;font-weight:800;background:#edf3fa;color:#31587f;flex:none}.current .connection-id{background:#e5f2ff;color:#095eac}.connection-card h2{font-size:20px;margin:0 0 6px;line-height:1.3}.connection-card p{margin:0;color:var(--muted);font-size:13px}.state{font-size:11px;font-weight:800;letter-spacing:.03em;display:inline-block;margin:8px 0 0;color:#52647b}.state.active{color:#126f53}.section{padding-top:46px}.section h2{font-size:30px;letter-spacing:-.03em;margin:0 0 9px;line-height:1.25}.section-intro{margin:0 0 23px;color:var(--muted);max-width:900px;font-size:15px}.decision-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.decision{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px}.decision-number{font-size:12px;font-weight:850;color:#176db6}.decision h3{font-size:17px;margin:7px 0 5px;line-height:1.3}.decision p{margin:0;color:var(--muted);font-size:13px}.notice{border-left:3px solid #2384c9;padding:12px 17px;background:#eaf3fc;border-radius:0 9px 9px 0;font-size:13px;color:#2e4f71}.notice p{margin:5px 0}.notice.warning{border-color:#b7822f;background:#fff7e7;color:#684d21}.overview{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:auto;margin-top:20px}.overview table{width:100%;border-collapse:collapse;min-width:760px}.overview th{background:#edf2f7;color:#39536e;text-align:left;padding:12px 15px;font-size:12px}.overview td{padding:11px 15px;border-top:1px solid #edf1f6;vertical-align:top;font-size:13px}.overview tr:hover td{background:#fafcfe}.overview td:first-child{font-weight:700}.difficulty{display:inline-block;font-size:11px;font-weight:800;border-radius:6px;padding:3px 7px;white-space:nowrap}.low{color:#106b52;background:#e6f5ed}.mid{color:#845600;background:#fff2cf}.high{color:#a34037;background:#ffebe8}.na{color:#536477;background:#eef1f4}.filterbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:21px 0 15px}.filterbar span{font-size:12px;font-weight:800;color:var(--muted);margin-right:4px}.filterbar button{border:1px solid #c9d6e4;border-radius:8px;color:#31506f;background:#fff;padding:8px 14px;font-weight:750;font-size:13px;min-height:40px}.filterbar button[aria-pressed=true]{background:#1a436a;border-color:#1a436a;color:#fff}.scenarios{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.scenario{border:1px solid var(--border);border-radius:13px;background:#fff;padding:21px 22px;min-width:0;display:flex;flex-direction:column;gap:11px}.scenario[hidden]{display:none}.scenario-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.scenario .cloud{font-size:12px;color:#35628c;font-weight:800;letter-spacing:.045em}.scenario h3{font-size:19px;line-height:1.3;letter-spacing:-.015em;margin:4px 0 0}.scenario p{margin:0;font-size:13px;color:var(--muted)}.scenario dl{margin:0;display:grid;gap:9px}.scenario dl div{display:grid;grid-template-columns:85px minmax(0,1fr);gap:8px;font-size:13px}.scenario dt{font-weight:800;color:#38516c}.scenario dd{margin:0;color:var(--muted)}.scenario details{margin-top:auto;border-top:1px solid #e7edf4;padding-top:10px}.scenario summary{color:#075ca8;font-weight:800;cursor:pointer;font-size:13px}.scenario ol{padding-left:19px;margin:10px 0;font-size:13px;color:#354e68}.scenario li{margin:0 0 7px}.scenario .source{font-size:12px;display:inline-block;margin-top:5px}.section-space{margin-top:18px}.contract{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}.panel{background:#fff;border:1px solid var(--border);border-radius:12px;padding:23px;min-width:0}.panel h3{font-size:18px;margin:0 0 8px}.panel p{color:var(--muted);margin:0 0 10px}.code{background:#152d49;border-radius:9px;color:#e8f4ff;padding:17px;overflow:auto;font:13px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre}.small{font-size:12px;color:var(--muted)}.panel ul{padding-left:20px;margin:10px 0}.panel li{margin-bottom:7px}.checklist{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:13px 0}.check{border:1px solid var(--border);padding:13px 15px;border-radius:9px;background:#fff;font-size:13px}.check b{display:block;color:var(--ink)}.references{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px}.references h2{font-size:20px;margin:0 0 8px}.references ul{margin:0;padding-left:21px;columns:2;column-gap:32px}.references li{margin-bottom:8px;break-inside:avoid;font-size:13px}.footer{margin-top:46px;background:#fff;border-top:1px solid var(--border);color:var(--muted)}.footer .wrap{padding-top:21px;padding-bottom:27px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12px}.footer a{text-decoration:none}
+@media(max-width:950px){.topbar-inner{align-items:flex-start;flex-direction:column;padding-top:15px;padding-bottom:13px;gap:14px}.scenarios,.contract{grid-template-columns:1fr}.decision-grid{grid-template-columns:1fr 1fr}}@media(max-width:680px){.wrap{padding-left:17px;padding-right:17px}.top-nav{gap:11px}.top-nav a{font-size:12px}.hero{padding-top:34px}.hero h1{font-size:34px}.lead{font-size:15px}.two,.decision-grid,.checklist{grid-template-columns:1fr}.section{padding-top:33px}.section h2{font-size:26px}.scenario{padding:18px}.scenario dl div{grid-template-columns:74px 1fr}.references ul{columns:1}.connection-card{min-height:0}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar a la guía</a>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="../index.html" aria-label="AI Governance, volver al inicio"><span class="mark" aria-hidden="true">G<em>·</em></span><span>AI Governance <small>PLATAFORMA · PROPUESTA</small></span></a>
+    <nav class="top-nav" aria-label="Recursos del proyecto">
+      <a href="../index.html">Inicio</a>
+      <a href="console.html?slice=S0&amp;screen=s0-connect&amp;v=56da347f0bca7145">Consola navegable ↗</a>
+      <a href="arquitectura.html">Arquitectura AWS ↗</a>
+      <a href="guias-conexion.html" aria-current="page">Guías de conexión</a>
+      <a href="https://github.com/enzo-loren/agentic-ai-governance-platform/tree/main/insumo" target="_blank" rel="noopener noreferrer">Requisitos ↗</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="eyebrow">INTEGRACIÓN · MÓDULO A · AWS / AZURE / GOOGLE CLOUD</div>
+      <h1 id="hero-title">Conectar un agente depende de cómo está construida su identidad.</h1>
+      <p class="lead">La guía distingue lo que el cliente ya tiene de lo que necesita adaptar. No clasifica la dificultad por nube: la clasifica por el token disponible y la posibilidad de propagarlo hasta el agente.</p>
+      <p class="hero-note"><strong>Alcance:</strong> arquitectura objetivo y escenarios de integración; no representa conectores desplegados ni esfuerzo medido en días. La aplicación cliente sigue autenticando a sus propios usuarios.</p>
+    </section>
+    <section class="two" aria-label="Guías disponibles por conexión">
+      <article class="connection-card" id="conexion-b">
+        <span class="connection-id" aria-hidden="true">B</span>
+        <div><h2>Tools por MCP</h2><p>Cómo centralizar la ejecución de herramientas y sus credenciales en la puerta, incluidos los casos de herramientas externas o locales.</p><span class="state">GUÍA PENDIENTE · PRÓXIMA ENTREGA</span></div>
+      </article>
+      <article class="connection-card current" id="conexion-c">
+        <span class="connection-id" aria-hidden="true">C</span>
+        <div><h2>Identidad del usuario</h2><p>Comparación de arquitecturas reales, compatibilidad de tokens, pasos de conexión y criterios de aceptación por solicitud.</p><span class="state active">GUÍA DISPONIBLE · S3 · IDN-01</span></div>
+      </article>
+    </section>
+    <section class="section" aria-labelledby="c-title">
+      <div class="eyebrow">CONEXIÓN C · IDENTIDAD DE USUARIO</div>
+      <h2 id="c-title">Primero, tres preguntas.</h2>
+      <p class="section-intro">C agrega a la conexión A el JWT de un usuario humano en <code>X-Gov-User-Token</code>. Si existe B, debe propagarse también al canal MCP. El token del usuario nunca reemplaza al <code>agent_token</code>.</p>
+      <div class="decision-grid">
+        <article class="decision"><span class="decision-number">01 · PERSONA</span><h3>¿Hay un usuario humano?</h3><p>Un proceso programado puede seguir como <code>solo_workload</code> sin inventar una identidad humana.</p></article>
+        <article class="decision"><span class="decision-number">02 · TOKEN</span><h3>¿Hay un access token JWT apropiado?</h3><p>Debe ser verificable y estar destinado al recurso autorizado. Una cookie o cualquier ID token no basta.</p></article>
+        <article class="decision"><span class="decision-number">03 · PROPAGACIÓN</span><h3>¿Llega el token hasta el agente?</h3><p>El backend debe mantener el contexto de cada sesión y enviar el JWT correcto en cada llamada a inferencia y MCP.</p></article>
+      </div>
+      <div class="notice section-space">Escenario de <strong>menor fricción</strong>: IdP OIDC existente + access token JWT correcto + backend que lo propaga. Si falta alguna condición, el trabajo se desplaza hacia la configuración OAuth, la delegación o la federación.</div>
+    </section>
+    <section class="section" aria-labelledby="map-title">
+      <h2 id="map-title">Mapa rápido por arquitectura</h2>
+      <p class="section-intro">La dificultad es relativa y condicional; no es una calificación de seguridad ni un tiempo de proyecto. Selecciona un caso más abajo para revisar los cambios concretos.</p>
+      <div class="overview" role="region" aria-label="Comparación de escenarios de conexión C" tabindex="0">
+        <table>
+          <thead><tr><th>Cloud</th><th>Arquitectura existente</th><th>Identidad que suele llegar al backend</th><th>Integración C</th></tr></thead>
+          <tbody>
+            <tr><td>AWS</td><td>Cognito User Pools + API Gateway + Lambda</td><td>Access token JWT Cognito</td><td><span class="difficulty low">Baja*</span></td></tr>
+            <tr><td>AWS</td><td>ECS/EKS + IdP OIDC externo</td><td>Token del IdP si el backend lo conserva</td><td><span class="difficulty mid">Baja–media</span></td></tr>
+            <tr><td>AWS</td><td>ALB authenticate-oidc + ECS/EC2</td><td>JWT de claims firmado por ALB</td><td><span class="difficulty mid">Media</span></td></tr>
+            <tr><td>Azure</td><td>Entra ID + App Service / Functions</td><td>Access token para la API de origen</td><td><span class="difficulty mid">Baja–media</span></td></tr>
+            <tr><td>Google Cloud</td><td>Identity Platform / Firebase + Cloud Run</td><td>ID token Firebase</td><td><span class="difficulty mid">Media</span></td></tr>
+            <tr><td>Google Cloud</td><td>IAP + Cloud Run / GKE</td><td>Assertion JWT de IAP</td><td><span class="difficulty mid">Media–alta</span></td></tr>
+            <tr><td>Híbrido</td><td>SAML, Active Directory o sesiones propias</td><td>Assertion SAML o cookie de sesión</td><td><span class="difficulty high">Alta</span></td></tr>
+            <tr><td>Multicloud</td><td>IAM Role / Managed Identity / Service Account</td><td>Identidad de workload, no del humano</td><td><span class="difficulty na">No aplica / alta</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small">* Cognito es de baja complejidad solo si el cliente puede obtener un access token adecuado para el recurso de gobernanza; los tokens de usuario no incluyen automáticamente una audiencia de recurso.</p>
+    </section>
+    <section class="section" aria-labelledby="cases-title">
+      <h2 id="cases-title">Casos concretos y trabajo del cliente</h2>
+      <p class="section-intro">Cada tarjeta separa el punto de partida, el impedimento y la ruta de integración. «Abrir pasos» contiene el alcance técnico y una fuente oficial.</p>
+      <div class="filterbar" role="group" aria-label="Filtrar escenarios por nube">
+        <span>Filtrar:</span>
+        <button type="button" data-filter="all" aria-pressed="true">Todos</button>
+        <button type="button" data-filter="aws" aria-pressed="false">AWS</button>
+        <button type="button" data-filter="azure" aria-pressed="false">Azure</button>
+        <button type="button" data-filter="gcp" aria-pressed="false">Google Cloud</button>
+        <button type="button" data-filter="hybrid" aria-pressed="false">Híbrido / general</button>
+        <span id="filter-result" role="status" aria-live="polite">8 escenarios</span>
+      </div>
+      <div class="scenarios">
+        <article class="scenario" data-cloud="aws">
+          <div class="scenario-head"><div><span class="cloud">AWS · SERVERLESS</span><h3>Cognito User Pools + API Gateway + Lambda</h3></div><span class="difficulty low">Baja*</span></div>
+          <p>Una aplicación autenticada con Cognito invoca una API que valida JWT antes de llegar a la Lambda del agente.</p>
+          <dl><div><dt>Ya existe</dt><dd>IdP OIDC, JWT firmados y JWKS públicos.</dd></div><div><dt>Brecha</dt><dd>Conservar el JWT original y comprobar su audiencia para gobernanza.</dd></div></dl>
+          <details><summary>Pasos de integración</summary><ol>
+            <li>Verificar que la ruta utiliza un <strong>access token</strong> y no un ID token. API Gateway puede entregar claims aunque no se conserve el JWT original.</li>
+            <li>Configurar un recurso/audiencia autorizado para gobernanza. Cognito permite <em>resource binding</em> desde su endpoint OAuth de managed login; no es automático en todos sus SDK.</li>
+            <li>Mapear <code>cognito:groups</code> a roles y reenviar el token original en cada solicitud del agente.</li>
+          </ol><a class="source" href="https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-define-resource-servers.html" target="_blank" rel="noopener noreferrer">AWS · Resource binding en Cognito ↗</a></details>
+        </article>
+        <article class="scenario" data-cloud="aws">
+          <div class="scenario-head"><div><span class="cloud">AWS · CONTENEDORES</span><h3>ECS / EKS con Auth0, Keycloak u otro OIDC</h3></div><span class="difficulty mid">Baja–media</span></div>
+          <p>El agente corre en contenedores, y la aplicación utiliza un IdP externo para autenticar a cada persona.</p>
+          <dl><div><dt>Ya existe</dt><dd>Autenticación OIDC independiente del runtime AWS.</dd></div><div><dt>Brecha</dt><dd>No confundir IAM del pod/task con el usuario; revisar audience y scopes.</dd></div></dl>
+          <details><summary>Pasos de integración</summary><ol>
+            <li>Confirmar que el proveedor emite un access token JWT aceptable para la API de gobernanza.</li>
+            <li>Propagar el token a lo largo del backend hasta la llamada al modelo y, si se usa B, a <code>/mcp</code>.</li>
+            <li>Configurar en la plataforma el emisor, clientes permitidos y mapeo de grupos a roles.</li>
+          </ol><a class="source" href="https://www.rfc-editor.org/rfc/rfc9068.html" target="_blank" rel="noopener noreferrer">IETF · Perfil JWT de OAuth access tokens ↗</a></details>
+        </article>
+        <article class="scenario" data-cloud="aws">
+          <div class="scenario-head"><div><span class="cloud">AWS · LOAD BALANCER</span><h3>ALB authenticate-oidc + ECS / EC2</h3></div><span class="difficulty mid">Media</span></div>
+          <p>ALB autentica al usuario antes de entregar la petición a una aplicación detrás del balanceador.</p>
+          <dl><div><dt>Ya existe</dt><dd><code>x-amzn-oidc-data</code> con claims firmados por ALB.</dd></div><div><dt>Brecha</dt><dd>Ese JWT es una assertion de ALB, no el access token OIDC esperado por C.</dd></div></dl>
+          <details><summary>Pasos de integración</summary><ol>
+            <li>Verificar la firma y el ARN del ALB si el backend confía en sus claims.</li>
+            <li>Obtener por un flujo OAuth controlado un access token JWT con destino autorizado; no reenviar ciegamente <code>x-amzn-oidc-data</code>.</li>
+            <li>Si se evalúa <code>x-amzn-oidc-accesstoken</code>, comprobar formato, audience y verificabilidad: el encabezado no está firmado por ALB y puede contener un token opaco.</li>
+          </ol><a class="source" href="https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html" target="_blank" rel="noopener noreferrer">AWS · ALB OIDC headers ↗</a></details>
+        </article>
+        <article class="scenario" data-cloud="azure">
+          <div class="scenario-head"><div><span class="cloud">AZURE · IDENTIDAD CORPORATIVA</span><h3>Microsoft Entra ID + App Service / Functions</h3></div><span class="difficulty mid">Baja–media</span></div>
+          <p>Una aplicación empresarial utiliza Entra ID y su backend llama a un agente por cuenta del usuario.</p>
+          <dl><div><dt>Ya existe</dt><dd>IdP OIDC, access tokens y permisos delegados.</dd></div><div><dt>Brecha</dt><dd>El token recibido puede estar destinado solo a la API de origen.</dd></div></dl>
+          <details><summary>Pasos de integración</summary><ol>
+            <li>Registrar la API de gobernanza como recurso de destino, con scopes delegados apropiados.</li>
+            <li>Cuando se recibe un token para la API intermedia, evaluar <strong>On-Behalf-Of (OBO)</strong> con MSAL para obtener otro token destinado a gobernanza.</li>
+            <li>Propagar el token resultante; mapear grupos/roles mediante los claims realmente emitidos y probar consentimiento, expiración y renovación.</li>
+          </ol><a class="source" href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow" target="_blank" rel="noopener noreferrer">Microsoft · OAuth On-Behalf-Of ↗</a></details>
+        </article>
+        <article class="scenario" data-cloud="gcp">
+          <div class="scenario-head"><div><span class="cloud">GOOGLE CLOUD · APP WEB/MÓVIL</span><h3>Identity Platform / Firebase + Cloud Run</h3></div><span class="difficulty mid">Media</span></div>
+          <p>El frontend autentica personas con Firebase/Identity Platform y el backend verifica su ID token.</p>
+          <dl><div><dt>Ya existe</dt><dd>Identidad humana y un ID token JWT verificable.</dd></div><div><dt>Brecha</dt><dd>El ID token tiene como audiencia el proyecto Firebase, no nuestra API.</dd></div></dl>
+          <details><summary>Pasos de integración</summary><ol>
+            <li>Continuar validando ID tokens Firebase para autenticar al usuario en su backend; no enviarlos directamente como access tokens C.</li>
+            <li>Diseñar un flujo OAuth/OIDC o intermediario confiable que emita un access token JWT apropiado para la audiencia de gobernanza.</li>
+            <li>Conservar la asociación entre <code>uid</code>, usuario, permisos y token delegado en cada llamada del agente.</li>
+          </ol><a class="source" href="https://firebase.google.com/docs/auth/admin/verify-id-tokens" target="_blank" rel="noopener noreferrer">Google · Firebase ID tokens ↗</a></details>
+        </article>
+        <article class="scenario" data-cloud="gcp">
+          <div class="scenario-head"><div><span class="cloud">GOOGLE CLOUD · ACCESO PROTEGIDO</span><h3>IAP + Cloud Run / GKE</h3></div><span class="difficulty mid">Media–alta</span></div>
+          <p>IAP valida el acceso a una aplicación y entrega una assertion JWT firmada sobre la solicitud.</p>
+          <dl><div><dt>Ya existe</dt><dd><code>x-goog-iap-jwt-assertion</code> y claves públicas propias de IAP.</dd></div><div><dt>Brecha</dt><dd>La assertion identifica el acceso a IAP y su audiencia no corresponde a gobernanza.</dd></div></dl>
+          <details><summary>Pasos de integración</summary><ol>
+            <li>Validar la assertion del lado cliente contra el JWKS específico de IAP y su audiencia real.</li>
+            <li>Intermediar hacia un token delegado compatible con C; no reutilizar la assertion de IAP como access token de la plataforma.</li>
+            <li>Probar el vínculo entre usuario autenticado, backend y petición emitida por el agente.</li>
+          </ol><a class="source" href="https://docs.cloud.google.com/iap/docs/signed-headers-howto" target="_blank" rel="noopener noreferrer">Google Cloud · IAP signed headers ↗</a></details>
+        </article>
+        <article class="scenario" data-cloud="hybrid">
+          <div class="scenario-head"><div><span class="cloud">HÍBRIDO · LEGACY</span><h3>SAML / Active Directory / cookies de sesión</h3></div><span class="difficulty high">Alta</span></div>
+          <p>La aplicación conoce al usuario en su servidor, pero no puede presentar un access token JWT admitido por C.</p>
+          <dl><div><dt>Ya existe</dt><dd>Login empresarial o sesión del servidor.</dd></div><div><dt>Brecha</dt><dd>Falta emisión OIDC/OAuth con audiencia para gobernanza.</dd></div></dl>
+          <details><summary>Pasos de integración</summary><ol>
+            <li>Evaluar federar el IdP SAML a un proveedor OIDC. Cognito User Pools puede actuar como puente SAML→OIDC.</li>
+            <li>Para sesiones por cookie, incorporar un authorization server o broker de identidad; no tratar la cookie como JWT.</li>
+            <li>Definir mapeo de usuario, grupos, expiración, revocación y trazabilidad entre aplicaciones.</li>
+          </ol><a class="source" href="https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-saml-idp.html" target="_blank" rel="noopener noreferrer">AWS · Federación SAML con Cognito ↗</a></details>
+        </article>
+        <article class="scenario" data-cloud="hybrid">
+          <div class="scenario-head"><div><span class="cloud">MULTICLOUD · WORKLOAD</span><h3>IAM Role / Managed Identity / Service Account</h3></div><span class="difficulty na">No aplica / alta</span></div>
+          <p>Un agente batch en Lambda, ECS, Azure Functions o Cloud Run se autentica como servicio, sin persona originadora.</p>
+          <dl><div><dt>Ya existe</dt><dd>Identidad de máquina para recursos cloud.</dd></div><div><dt>Brecha</dt><dd>Es diferente de una identidad humana. Si no hay usuarios, C no es necesaria.</dd></div></dl>
+          <details><summary>Pasos de integración</summary><ol>
+            <li>Para procesos autónomos, declarar <code>tiene_usuarios_humanos = false</code> y operar con A y opcionalmente B como <code>solo_workload</code>.</li>
+            <li>Si también atiende personas, llevar identidad por usuario desde un IdP de la aplicación; IAM de servicio no sustituye ese contexto.</li>
+          </ol><a class="source" href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/01-modelo-de-conexion.md" target="_blank" rel="noopener noreferrer">Contrato del proyecto · principal solo_workload ↗</a></details>
+        </article>
+      </div>
+    </section>
+    <section class="section" aria-labelledby="contract-title">
+      <h2 id="contract-title">El contrato que finalmente debe cumplir el agente</h2>
+      <p class="section-intro">Estas cabeceras son las mismas para un backend ejecutado en Lambda, ECS, Azure Functions o Cloud Run. La conexión A es obligatoria; C es opcional y puede cubrir solo parte de las solicitudes.</p>
+      <div class="contract">
+        <article class="panel"><h3>Solicitud hacia la puerta</h3>
+          <pre class="code">POST {gateway}/inference/v1/chat/completions
+Authorization: Bearer gov_AGENT_TOKEN
+X-Gov-User-Token: ACCESS_TOKEN_JWT_USUARIO
+X-Gov-Trace-Id: UUID_OPCIONAL</pre>
+          <p class="small">Con B activa, incluir también <code>X-Gov-User-Token</code> en <code>POST {gateway}/mcp</code>. Cada usuario y cada solicitud requieren su propio contexto; no almacenar un token global compartido en el agente.</p>
+          <a href="console.html?slice=S4&amp;screen=s4-guide&amp;v=56da347f0bca7145">Abrir guía dentro de la consola ↗</a>
+        </article>
+        <article class="panel"><h3>Validación y resultados esperados</h3>
+          <ul>
+            <li><strong>Con JWT válido:</strong> verificar firma/JWKS, emisor, expiración, tipo de token y cliente/audiencia configurada; mapear usuario y grupos a roles.</li>
+            <li><strong>Sin cabecera:</strong> continuar como <code>solo_workload</code>, sin simular una persona.</li>
+            <li><strong>JWT inválido:</strong> responder <code>401 gov_user_unauthorized</code> o degradar con alerta según configuración.</li>
+            <li><strong>C parcial:</strong> medir solicitudes con JWT válido respecto del tráfico total del agente.</li>
+          </ul>
+          <a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/02-contrato.md" target="_blank" rel="noopener noreferrer">Ver contrato canónico ↗</a>
+        </article>
+      </div>
+      <div class="notice warning section-space">
+        <strong>Decisión de diseño pendiente:</strong> el contrato actual acepta <code>client_id</code> o <code>aud</code> configurados. Para tokens destinados a recursos downstream conviene exigir audience/resource binding explícito; validar solo un cliente conocido no prueba que el token se emitió para esta API. Esta página propone ese criterio de seguridad, pero <strong>no afirma que ya esté implementado</strong>. Véase RFC 9068.
+      </div>
+    </section>
+    <section class="section" aria-labelledby="accept-title">
+      <h2 id="accept-title">Checklist para una reunión de discovery técnico</h2>
+      <p class="section-intro">Antes de estimar esfuerzos o prometer una integración directa, verificar estas dependencias con el equipo de identidad y con el dueño del agente.</p>
+      <div class="checklist">
+        <div class="check"><b>1. Proveedor y flujo</b>¿Qué IdP y qué grant OAuth usa la aplicación?</div>
+        <div class="check"><b>2. Tipo de token</b>¿Es un access token JWT verificable, no un ID token, assertion o cookie?</div>
+        <div class="check"><b>3. Destinatario</b>¿Se puede emitir con audience/recurso y scopes adecuados?</div>
+        <div class="check"><b>4. Claims de identidad</b>¿Qué claim identifica al usuario y cómo se obtienen roles/grupos?</div>
+        <div class="check"><b>5. Propagación segura</b>¿El backend conserva el vínculo usuario–solicitud hasta la llamada al agente?</div>
+        <div class="check"><b>6. Pruebas de rechazo</b>¿Qué pasa con firma alterada, expiración, emisor o audiencia distintos?</div>
+      </div>
+    </section>
+    <section class="section" aria-labelledby="sources-title">
+      <div class="references">
+        <h2 id="sources-title">Fuentes y límites de interpretación</h2>
+        <p class="small">Fuentes primarias de arquitectura y proveedores. Las dificultades son juicios orientativos de integración, no datos de una medición ni estado de despliegue.</p>
+        <ul>
+          <li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/requisitos.yaml" target="_blank" rel="noopener noreferrer">Requisitos · IDN-01, GRD-03, FIN-03</a></li>
+          <li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/01-modelo-de-conexion.md" target="_blank" rel="noopener noreferrer">Modelo de conexión · A/B/C</a></li>
+          <li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/02-contrato.md" target="_blank" rel="noopener noreferrer">Contrato de Puerta Única · cabeceras</a></li>
+          <li><a href="https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-define-resource-servers.html" target="_blank" rel="noopener noreferrer">AWS · Cognito resource binding</a></li>
+          <li><a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html" target="_blank" rel="noopener noreferrer">AWS · ALB authenticate-oidc</a></li>
+          <li><a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow" target="_blank" rel="noopener noreferrer">Microsoft · OAuth OBO</a></li>
+          <li><a href="https://firebase.google.com/docs/auth/admin/verify-id-tokens" target="_blank" rel="noopener noreferrer">Google · Firebase ID tokens</a></li>
+          <li><a href="https://docs.cloud.google.com/iap/docs/signed-headers-howto" target="_blank" rel="noopener noreferrer">Google Cloud · IAP assertions</a></li>
+          <li><a href="https://www.rfc-editor.org/rfc/rfc9068.html" target="_blank" rel="noopener noreferrer">IETF · RFC 9068, JWT access tokens</a></li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="footer"><div class="wrap"><span>AI Governance Platform · Guías de conexión · Diseño objetivo, no despliegue verificado</span><span><a href="../index.html">Volver al inicio ↗</a></span></div></footer>
+<script>
+(function(){
+  const buttons=[...document.querySelectorAll("[data-filter]")];
+  const cards=[...document.querySelectorAll(".scenario[data-cloud]")];
+  const out=document.getElementById("filter-result");
+  for(const button of buttons){
+    button.addEventListener("click",function(){
+      const key=button.dataset.filter;
+      for(const b of buttons)b.setAttribute("aria-pressed",String(b===button));
+      let visible=0;
+      for(const card of cards){const show=key==="all"||card.dataset.cloud===key;card.hidden=!show;if(show)visible++;}
+      out.textContent=visible+(visible===1?" escenario":" escenarios");
+    });
+  }
+})();
+</script>
+</body>
+</html>

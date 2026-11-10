@@ -1,0 +1,28 @@
+name: Connection guide QA
+on:
+  pull_request:
+    paths:
+      - index.html
+      - assets/guias-conexion.html
+      - docs/guia-conexiones-identidad.md
+      - tests/connection-guide-qa.mjs
+      - .github/workflows/connection-guide-qa.yml
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - assets/guias-conexion.html
+      - docs/guia-conexiones-identidad.md
+      - tests/connection-guide-qa.mjs
+      - .github/workflows/connection-guide-qa.yml
+permissions:
+  contents: read
+jobs:
+  static-guide-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/connection-guide-qa.mjs
