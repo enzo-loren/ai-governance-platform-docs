@@ -112,8 +112,15 @@ try{
   assert((await heading())==="Ejecución por MCP",prefix+"catálogo no abrió ejecución");
   assert((await content()).includes("3 de 4"),prefix+"MCP inicial de muestra incorrecto");
   await capture("ejecucion-mcp");
+  await page.getByRole("button",{name:"Registrar target (demo)"}).click();
+  await page.getByRole("textbox",{name:"Nombre del target"}).fill("destino-"+viewport.name);
+  await page.getByRole("button",{name:"Registrar (demo)"}).click();
+  assert((await content()).includes("destino-"+viewport.name),prefix+"registro de target no se refleja en MCP");
   await page.getByRole("button",{name:"Volver al catálogo"}).click();
   assert((await heading())==="Tools detectadas"&&(await content()).includes("v2"),prefix+"retorno del MCP perdió catálogo o esquema");
+  await page.getByRole("button",{name:"Administrar ejecución MCP"}).click();
+  assert((await content()).includes("destino-"+viewport.name),prefix+"target no persiste al volver a su vista");
+  await page.getByRole("button",{name:"Volver al catálogo"}).click();
 
   await open("S4","s0-connect");
   await page.getByRole("textbox",{name:"Nombre del agente"}).fill("aislado-"+viewport.name);
