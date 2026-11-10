@@ -14,7 +14,8 @@ export const CONNECTION_SCENARIOS=[
 export const PRINCIPALS=[
  {value:"solo_workload",label:"Sin usuario · solo_workload"},
  {value:"consulta",label:"Usuario verificado · consulta"},
- {value:"operador",label:"Usuario verificado · operador"}
+ {value:"operador",label:"Usuario verificado · operador"},
+ {value:"aprobador",label:"Usuario verificado · aprobador"}
 ];
 export const TOOL_EXAMPLES=[
  {id:"lectura",label:"Consultar ficha",kind:"lectura",approved:true},
