@@ -136,3 +136,6 @@ finally{
 // Segunda verificación independiente: contrato de superficies, aislamiento MCP,
 // FIN-02/FIN-03 (agente, persona y solo_workload) y conservación de capacidades.
 await import("./surface-contract-qa.mjs");
+
+// Validar modelo de autorización por lista y columna de detalle en desktop/tablet/móvil.
+await import("./model-selection-flow-qa.mjs");
