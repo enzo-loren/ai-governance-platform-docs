@@ -133,5 +133,6 @@ finally{
  if(failures.length)process.exitCode=1;
 }
 
-// Segunda verificación independiente: contrato de superficies y conservación de capacidades.
+// Segunda verificación independiente: contrato de superficies, aislamiento MCP,
+// FIN-02/FIN-03 (agente, persona y solo_workload) y conservación de capacidades.
 await import("./surface-contract-qa.mjs");
