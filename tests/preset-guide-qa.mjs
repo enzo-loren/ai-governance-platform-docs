@@ -47,7 +47,7 @@ try{
    await page.goto(url+"assets/console.html?slice="+slice+"&screen="+screen,{waitUntil:"domcontentloaded"});
    await page.locator("#governance-root h1").first().waitFor({timeout:15000});
   }
-  const content=()=>page.locator("#console-content").innerText();
+
   async function chooseOption(visible,optionName){
    const trigger=page.getByText(visible,{exact:true}).first();
    await trigger.click();
