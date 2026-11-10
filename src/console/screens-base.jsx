@@ -25,7 +25,7 @@ import {usePrototype,Explanation} from "./main.jsx";
 import {AgentEnrollment,AgentSelector,AgentCredentialControls,selectedFrom} from "./agent-credentials.jsx";
 import {getModelCatalog,allowedModelOptions,initialAllowedModelIds} from "./model-catalog.js";
 import {mcpFor,approvalsFor,supervisionFor} from "./agent-tool-state.js";
-import PresetExplainer from "./preset-explainer.jsx";
+import PresetHelp from "./preset-explainer.jsx";
 
 const SIM="Simulación local: ningún dato fue guardado ni se invocó AWS.";
 const STATUS={
@@ -447,13 +447,18 @@ function ActiveAgent(){
       <Multiselect ariaLabel="Modelos autorizados" selectedOptions={options} options={models}
        onChange={({detail})=>setModelEdit(detail.selectedOptions)} placeholder="Seleccionar modelos"/>
      </FormField>
-     <FormField label="Preset de políticas">
+     <FormField label="Preset de políticas" info={<PresetHelp/>}>
       <Select selectedOption={policyOption} options={presets} onChange={({detail})=>setPresetEdit(detail.selectedOption)}/>
      </FormField>
     </ColumnLayout>}
     {mode!=="Retirado"&&<SpaceBetween size="s">
-     <PresetExplainer currentPreset={preset} candidatePreset={policyOption.value} mode={mode} showExplanations={showExplanations}/>
-     <Button disabled={(!modelEdit&&!presetEdit)||options.length===0} onClick={saveSettings}>Guardar configuración (demo)</Button>
+     {presetEdit&&presetEdit.value!==preset&&<Box fontSize="body-s" color="text-body-secondary">
+      {policyOption.value==="1"?"Se permitirán lecturas y escrituras aprobadas; las críticas quedarán bloqueadas.":
+       policyOption.value==="2"?"Para escribir se necesita un usuario autorizado (C); las operaciones críticas requieren aprobación por MCP (B).":
+       "Las herramientas quedarán bloqueadas hasta definir permisos específicos."}
+      {" "}No hay datos suficientes para estimar cuántas solicitudes cambiarían de decisión.
+     </Box>}
+     <Button disabled={(!modelEdit&&(!presetEdit||presetEdit.value===preset))||options.length===0} onClick={saveSettings}>Guardar configuración (demo)</Button>
     </SpaceBetween>}
    </SpaceBetween>
   </Container>
