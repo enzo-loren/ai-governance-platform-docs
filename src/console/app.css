@@ -106,7 +106,18 @@ body{background:#f8f9fc;scroll-behavior:smooth}
  vertical-align:middle;
 }
 .gov-preset-help:hover{background:#f2f5f8;color:#0972d3}
-.gov-preset-help-panel{background:#fff;isolation:isolate}
-/* Elevar solo este popover: la cabecera fija y ciertos KPI no deben cubrir su texto. */
-[class*="awsui_container_"]:has(.gov-preset-help-panel){z-index:10000!important}
+/* Portal independiente de las capas del layout (nav fija, KPI y formularios). */
+.gov-preset-help-popover{
+ position:fixed;z-index:2147483000;box-sizing:border-box;
+ background:#fff;color:#0f141a;border:1px solid #b4b4bb;border-radius:8px;
+ box-shadow:0 4px 20px 1px rgba(0,7,22,.15);
+ padding:12px 14px;max-height:calc(100vh - 32px);overflow-y:auto;
+ font:normal 14px/1.45 "Open Sans",Arial,sans-serif;
+}
+.gov-preset-help-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.gov-preset-help-panel{background:#fff}
+.gov-preset-help-close{border:0;background:transparent;font-size:24px;line-height:1;
+ cursor:pointer;color:#526576;min-width:28px;min-height:28px}
+.gov-preset-help-close:hover{color:#0972d3}
+.gov-preset-help-close:focus-visible{outline:2px solid #0972d3;outline-offset:2px}
 .gov-preset-help:focus-visible{outline:2px solid #0972d3;outline-offset:2px}
