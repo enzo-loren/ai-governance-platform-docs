@@ -103,6 +103,8 @@ try{
   assert((await heading())==="Tools detectadas",prefix+"S4 convirtió catálogo en ejecución");
   assert(await page.getByRole("button",{name:"Administrar ejecución MCP"}).count()===1,prefix+"catálogo no enlaza ejecución");
   await (viewport.name==="desktop"?page.getByRole("button",{name:"consultar_ficha"}).first():page.getByRole("button",{name:"Revisar"}).first()).click();
+  const detail=await page.getByRole("dialog").innerText();
+  assert(["Aprobación","Supervisión","Último uso","Ejecución"].every(x=>detail.includes(x)),prefix+"CON-07 perdió estado y uso de la tool en el detalle");
   await page.getByRole("button",{name:"Simular cambio de esquema"}).click();
   assert((await content()).includes("v2"),prefix+"S4 perdió la versión de esquema del catálogo");
   await capture("catalogo-s4");
