@@ -33,7 +33,7 @@ export default function PresetExplainer({currentPreset,candidatePreset,mode,show
    <Box><strong>{selected} · {summary.name}.</strong> {summary.summary} {summary.detail}</Box>
    {previewing&&<Alert type="info">Estás comparando el Preset {currentPreset} con el Preset {candidatePreset}. Todavía no se ha guardado el cambio.</Alert>}
    {mode==="Descubrimiento"&&<Alert type="info">Este agente está en descubrimiento: las decisiones de sus reglas se evalúan en sombra. La tabla muestra qué ocurriría <strong>en modo activo</strong>.</Alert>}
-   <Box color="text-body-secondary">Explora qué ocurriría en distintos contextos. Estos selectores <strong>no conectan B ni C</strong> y no cambian la configuración del agente.</Box>
+   <Box color="text-body-secondary">Explora qué ocurriría en distintos contextos. Estos selectores <strong>no conectan B ni C</strong> y no cambian la configuración del agente. En los ejemplos, los roles proceden de la semilla inicial: consulta, operador y aprobador; el rol de escritura es operador y puede variar según el despliegue.</Box>
    <ColumnLayout columns={2}>
     <FormField label="Conexiones del ejemplo">
      <Select ariaLabel="Conexiones del ejemplo" selectedOption={scenario} options={CONNECTION_SCENARIOS} onChange={({detail})=>changeScenario(detail.selectedOption)}/>
