@@ -142,7 +142,27 @@ try{
     viewport.name+" S6: faltan fuentes tras activar el interruptor");
   await page.screenshot({path:output+"/"+viewport.name+"-s6-forense-explicaciones.png",fullPage:true});
 
-  results.push({viewport:viewport.name,roadmapToggle:true,consoleToggle:true,deepLinks:true,cleanDefault:true,forensicS6:true,protectedConfirmations:true});
+  // La distinción inferencia A / ejecución B solo aparece bajo explicaciones.
+  await page.goto(base+"assets/console.html?slice=S4&screen=s4-mcp",{waitUntil:"domcontentloaded"});
+  await page.locator("#governance-root h1").first().waitFor();
+  const mcpContent=page.locator("#console-content");
+  check(await mcpContent.getByText("Sin B:",{exact:true}).count()===0,
+    viewport.name+" S4: explicación B visible sin activar el interruptor");
+  await page.getByText("Mostrar explicaciones",{exact:true}).click();
+  check(await mcpContent.getByText("Sin B:",{exact:true}).count()===1,
+    viewport.name+" S4: falta comparación sin B");
+  check(await mcpContent.getByText("Con B:",{exact:true}).count()===1,
+    viewport.name+" S4: falta comparación con B");
+  check((await mcpContent.innerText()).includes("herramientas fuera de MCP siguen sin este control"),
+    viewport.name+" S4: falta advertencia de herramientas no centralizadas");
+  check((await mcpContent.innerText()).includes("actualizar_precio"),
+    viewport.name+" S4: falta ejemplo de intención frente a ejecución");
+  await page.screenshot({path:output+"/"+viewport.name+"-s4-explicacion-B.png",fullPage:true});
+  await page.getByText("Mostrar explicaciones",{exact:true}).click();
+  check(await mcpContent.getByText("Sin B:",{exact:true}).count()===0,
+    viewport.name+" S4: la explicación no desaparece al apagar el interruptor");
+
+  results.push({viewport:viewport.name,roadmapToggle:true,consoleToggle:true,deepLinks:true,cleanDefault:true,forensicS6:true,protectedConfirmations:true,s4ConnectionB:true});
   verifyErrors();
   await page.close();
  }

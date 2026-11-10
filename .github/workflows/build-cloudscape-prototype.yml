@@ -9,6 +9,7 @@ on:
       - feat/auditoria-integral-vistas-ux
       - fix/presentation-mode-s2-functional
       - feat/auditoria-progresion-vistas-s0-s6
+      - docs/s4-explicacion-conexion-b-operativa
       - fix/presets-ayuda-contextual-compacta
       - fix/presets-ayuda-contextual-compacta
     paths:
