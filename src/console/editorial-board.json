@@ -72,10 +72,10 @@
     "decision": "Mostrar secuencia y conclusión primero. Colocar el texto completo de la regla tras una apertura voluntaria."
   },
   "control-agente": {
-    "visible": "Estado del agente y selección de preset, con efectos previstos por clase de tool y por escenario A/B/C, sin presentar cantidades ficticias como tráfico medido.",
-    "required": "Separar modo descubrimiento/activo, preset aplicado/candidato y escenario hipotético/conexiones reales; advertir si Preset 2 carece de C o B.",
-    "optional": "Matriz POL-01, roles de presets.roles, reglas Cedar determinantes, comparación de decisiones de POL-05 basada en evidencia.",
-    "decision": "Se añadió una guía visible con ejemplos de lectura, escritura, crítica aprobada y no aprobada; se sustituyeron los conteos fijos por «Sin datos medidos»."
+    "visible": "Selección de preset junto a modelos autorizados. La explicación está en el signo «?» y no ocupa espacio mientras se opera.",
+    "required": "Cuando el operador cambia el preset, advertir brevemente las restricciones relevantes y no inventar un conteo de solicitudes afectadas.",
+    "optional": "Explicación de los tres presets por clase de tool, identidad y aprobación humana; detalles Cedar y matrices quedan fuera del formulario.",
+    "decision": "Sustituir guía interactiva de laboratorio por ayuda contextual junto al selector. Conservar un aviso corto solo ante cambios no guardados."
   },
   "mcp": {
     "visible": "Administrar destinos de ejecución y revisar qué herramientas pasan por MCP.",

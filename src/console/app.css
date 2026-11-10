@@ -96,8 +96,28 @@ body{background:#f8f9fc;scroll-behavior:smooth}
 .gov-trace-action{display:inline-flex;min-width:46px;align-items:center;white-space:nowrap;word-break:keep-all}
 .gov-trace-action [class*="awsui_button"]{white-space:nowrap;word-break:keep-all;flex-shrink:0}
 
-/* Vista previa de presets: tabla legible en tablet, tarjetas en móvil. */
-.gov-preset-table{max-width:100%;min-width:0}
-.gov-preset-table [class*="awsui_table-container"]{max-width:100%;overflow-x:auto}
-.gov-preset-table table{min-width:740px;table-layout:auto}
-.gov-preset-table th,.gov-preset-table td{vertical-align:top;overflow-wrap:normal;word-break:normal}
+/* Ayuda contextual de presets: pequeña, accesible y fuera del flujo normal. */
+.gov-preset-help{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:18px;height:18px;min-width:18px;
+ border:1px solid currentColor;border-radius:50%;
+ background:transparent;color:#526576;
+ font:600 12px/1 Arial,sans-serif;cursor:pointer;
+ vertical-align:middle;
+}
+.gov-preset-help:hover{background:#f2f5f8;color:#0972d3}
+/* Portal independiente de las capas del layout (nav fija, KPI y formularios). */
+.gov-preset-help-popover{
+ position:fixed;z-index:2147483000;box-sizing:border-box;
+ background:#fff;color:#0f141a;border:1px solid #b4b4bb;border-radius:8px;
+ box-shadow:0 4px 20px 1px rgba(0,7,22,.15);
+ padding:12px 14px;max-height:calc(100vh - 32px);overflow-y:auto;
+ font:normal 14px/1.45 "Open Sans",Arial,sans-serif;
+}
+.gov-preset-help-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.gov-preset-help-panel{background:#fff}
+.gov-preset-help-close{border:0;background:transparent;font-size:24px;line-height:1;
+ cursor:pointer;color:#526576;min-width:28px;min-height:28px}
+.gov-preset-help-close:hover{color:#0972d3}
+.gov-preset-help-close:focus-visible{outline:2px solid #0972d3;outline-offset:2px}
+.gov-preset-help:focus-visible{outline:2px solid #0972d3;outline-offset:2px}

@@ -225,7 +225,7 @@ function Policy(){
   <Explanation>La plataforma final debe validar sintaxis y tipos con Cedar y el esquema de la tool, guardar autor y texto, versionar y aplicar la regla en 10 segundos o menos. La validación de este prototipo es ilustrativa, no equivalente a Cedar.</Explanation>
  </SpaceBetween>;
  return <SpaceBetween size="l">
-  <Container header={<Header variant="h2" actions={<Button onClick={()=>navigate("s2-activate")}>Ver y comparar presets</Button>}>Preset del agente</Header>}>
+  <Container header={<Header variant="h2" actions={<Button onClick={()=>navigate("s2-activate")}>Configurar preset</Button>}>Preset del agente</Header>}>
    <Box>{agent.name}: <strong>{agent.preset||"1"} · {PRESET_DESCRIPTIONS.find(x=>x.value===(agent.preset||"1"))?.name||"Caja Negra Segura"}</strong>. Las reglas propias se suman al preset; elegir uno no reemplaza al editor Cedar.</Box>
   </Container>
   <Panel title="Políticas del agente" help="La regla opera sobre la intención observada en A y, cuando la tool pasa por MCP B, sobre sus argumentos en la ejecución.">
