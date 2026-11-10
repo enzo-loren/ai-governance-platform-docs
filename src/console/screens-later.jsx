@@ -87,6 +87,13 @@ function MCP(){
    <Panel title="Tools por MCP"><div className="kpi-value">{mcp.length} de 4</div><Box color="text-body-secondary">Cobertura B parcial</Box></Panel>
    <Panel title="Fuera de la puerta"><div className="kpi-value">{4-mcp.length}</div><Box color="text-body-secondary">Ejecución no gobernada</Box></Panel>
   </ColumnLayout>
+  <Explanation>
+   <SpaceBetween size="xs">
+    <div data-testid="s4-b-difference"><strong>Sin B:</strong> Cedar puede bloquear el tool_call que propone el modelo por A, pero no una ejecución directa posterior del agente hacia una API.</div>
+    <div><strong>Con B:</strong> cuando la tool pasa por MCP, Cedar vuelve a evaluar la llamada y sus argumentos antes de ejecutarla. Puede denegarla y registrar la solicitud y la respuesta del destino.</div>
+    <div><strong>Límite:</strong> solo cubre las tools que pasan por MCP. En descubrimiento las políticas quedan en sombra; la aprobación humana completa se incorpora desde S5.</div>
+   </SpaceBetween>
+  </Explanation>
   <Container header={<Header variant="h2" actions={<Button onClick={()=>setTargetModal(true)}>Registrar target (demo)</Button>}>Destinos conectados</Header>}>
    <SpaceBetween size="m">
     <div className="desktop-table"><Table variant="embedded" items={targets} trackBy="id" columnDefinitions={[
