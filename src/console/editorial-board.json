@@ -42,7 +42,7 @@
     "decision": "Mostrar usuario efectivo y resultado de acceso. Ocultar el contrato del encabezado HTTP salvo en guía."
   },
   "reglas": {
-    "visible": "Crear una condición, observar su efecto y conservar versiones.",
+    "visible": "Editar reglas y acceder al preset del agente con la comparación desde Control del agente.",
     "required": "Una regla no validada no puede presentarse como aplicada ni probada contra Cedar real.",
     "optional": "Esquema tipado, parser Cedar, propagación en segundos y matriz de pruebas.",
     "decision": "Priorizar formulario, resultado y guardar; conservar el editor técnico como pestaña elegible."
@@ -72,10 +72,10 @@
     "decision": "Mostrar secuencia y conclusión primero. Colocar el texto completo de la regla tras una apertura voluntaria."
   },
   "control-agente": {
-    "visible": "Operar el agente seleccionado: activar, suspender, reactivar, retirar y revisar impacto previo.",
-    "required": "Un cambio de modo afecta solo al agente seleccionado; las credenciales y la evidencia de los demás permanecen intactas.",
-    "optional": "Plazos del cambio, códigos de respuesta, reglas y registros de la confirmación.",
-    "decision": "Separar la ficha del agente del listado, conservando la navegación desde cada fila y la selección."
+    "visible": "Estado del agente y selección de preset, con efectos previstos por clase de tool y por escenario A/B/C, sin presentar cantidades ficticias como tráfico medido.",
+    "required": "Separar modo descubrimiento/activo, preset aplicado/candidato y escenario hipotético/conexiones reales; advertir si Preset 2 carece de C o B.",
+    "optional": "Matriz POL-01, roles de presets.roles, reglas Cedar determinantes, comparación de decisiones de POL-05 basada en evidencia.",
+    "decision": "Se añadió una guía visible con ejemplos de lectura, escritura, crítica aprobada y no aprobada; se sustituyeron los conteos fijos por «Sin datos medidos»."
   },
   "mcp": {
     "visible": "Administrar destinos de ejecución y revisar qué herramientas pasan por MCP.",
