@@ -7,7 +7,7 @@ assert.match(index,/<nav class="header-nav"[^>]*>[\s\S]*?href="assets\/guias-con
 assert.match(index,/assets\/console\.html\?slice=S0/);
 assert.match(index,/href="assets\/arquitectura\.html"/);
 assert.match(index,/agentic-ai-governance-platform\/tree\/main\/insumo/);
-for(const text of ["Guías de conexión","Tools por MCP","GUÍA PENDIENTE","Identidad del usuario","CONEXIÓN C","X-Gov-User-Token","agent_token","solo_workload","aud","client_id","RFC 9068","On-Behalf-Of","resource binding"]){
+for(const text of ["Guías de conexión","Tools por MCP","GUÍA DISPONIBLE · ABRIR","Identidad del usuario","CONEXIÓN C","X-Gov-User-Token","agent_token","solo_workload","aud","client_id","RFC 9068","On-Behalf-Of","resource binding"]){
   assert.ok(html.includes(text),"Missing content: "+text);
 }
 for(const source of ["docs.aws.amazon.com","learn.microsoft.com","firebase.google.com","docs.cloud.google.com","rfc-editor.org"]){
@@ -24,6 +24,8 @@ assert.match(html,/b\.setAttribute\("aria-pressed",String\(b===button\)\)/);
 assert.match(html,/aria-live="polite"/);
 assert.match(html,/prefers-reduced-motion/);
 assert.match(html,/screen=s4-guide/);
+assert.match(html,/href="guia-conexion-b.html"/);
+assert.match(html,/href="#c-title"/);
 assert.doesNotMatch(html,/screen=s4-connect/);
 assert.match(doc,/decisión de arquitectura pendiente/i);
 assert.ok(existsSync(new URL("../assets/arquitectura.html",import.meta.url)));
