@@ -25,6 +25,7 @@ import {usePrototype,Explanation} from "./main.jsx";
 import {AgentEnrollment,AgentSelector,AgentCredentialControls,selectedFrom} from "./agent-credentials.jsx";
 import {getModelCatalog,allowedModelOptions,initialAllowedModelIds} from "./model-catalog.js";
 import {mcpFor,approvalsFor,supervisionFor} from "./agent-tool-state.js";
+import PresetExplainer from "./preset-explainer.jsx";
 
 const SIM="Simulación local: ningún dato fue guardado ni se invocó AWS.";
 const STATUS={
@@ -451,18 +452,7 @@ function ActiveAgent(){
      </FormField>
     </ColumnLayout>}
     {mode!=="Retirado"&&<SpaceBetween size="s">
-     {policyOption.value==="2"&&<Alert type="warning">Las escrituras requieren usuario identificado. Las herramientas críticas necesitan conexión MCP para su aprobación.</Alert>}
-     {policyOption.value==="3"&&<Alert type="warning">Sin reglas específicas de acceso, las solicitudes se deniegan.</Alert>}
-     {presetEdit&&presetEdit.value!==preset&&<Container header={<Header variant="h3">Vista previa del cambio · datos sintéticos</Header>}>
-      <SpaceBetween size="s">
-       <KeyValuePairs columns={3} items={[
-        {label:"Preset actual",value:presets.find(x=>x.value===preset)?.label||preset},
-        {label:"Candidato",value:presetEdit.label},
-        {label:"Solicitudes cuya decisión cambiaría",value:presetEdit.value==="3"?"3 de 12":presetEdit.value==="2"?"2 de 12":"1 de 12"}
-       ]}/>
-
-      </SpaceBetween>
-     </Container>}
+     <PresetExplainer currentPreset={preset} candidatePreset={policyOption.value} mode={mode} showExplanations={showExplanations}/>
      <Button disabled={(!modelEdit&&!presetEdit)||options.length===0} onClick={saveSettings}>Guardar configuración (demo)</Button>
     </SpaceBetween>}
    </SpaceBetween>
