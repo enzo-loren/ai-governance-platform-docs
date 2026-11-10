@@ -90,10 +90,10 @@ try{
   await budget().fill("15");
   await page.getByRole("button",{name:"Guardar límites (simulación)"}).click();
   await page.getByRole("button",{name:"Límites del agente"}).click();
-  await page.waitForFunction(()=>document.querySelector('input[type="number"]')?.value==="80",{timeout:5000}).catch(()=>{});
+  await page.waitForFunction(()=>document.querySelector('input[type="number"]')?.value==="80",null,{timeout:5000}).catch(()=>{});
   assert((await budget().inputValue())==="80",prefix+"cuota personal sobrescribió al agente");
   await page.getByRole("button",{name:"Límites por persona"}).click();
-  await page.waitForFunction(()=>document.querySelector('input[type="number"]')?.value==="15",{timeout:5000}).catch(()=>{});
+  await page.waitForFunction(()=>document.querySelector('input[type="number"]')?.value==="15",null,{timeout:5000}).catch(()=>{});
   assert((await budget().inputValue())==="15",prefix+"cuota del agente sobrescribió al usuario");
   await capture("consumo-dos-alcances");
 
