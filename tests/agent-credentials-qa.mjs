@@ -28,6 +28,8 @@ try{
   const js=[];
   page.on("pageerror",e=>js.push(e.message));
   await goto(page,"S0","s0-connect");await page.getByRole("button",{name:"Registrar y emitir API key"}).waitFor();
+  check(await page.getByRole("button",{name:"Administrar"}).count()===0,vp.name+" S0 anticipa operación de S2");
+  await goto(page,"S2","s0-connect");
   check(await page.getByText("Agentes registrados").count()===1,vp.name+" no muestra registro");
   check(await page.locator('input[value^="gov_demo_"]').count()===0,vp.name+" expone key antes del alta");
   check(await page.getByRole("button",{name:"Registrar y emitir API key"}).isDisabled(),vp.name+" acepta agente sin nombre/responsable");
@@ -45,12 +47,11 @@ try{
         vp.name+" registro no enumera ambos agentes");
   await page.screenshot({path:output+"/"+vp.name+"-registro-aislado.png",fullPage:true});
 
-  // El selector de versiones de la MISMA superficie debe conservar el registro y la selección.
-  const versionSelect=page.getByTestId("screen-version-selector").locator("button,[role=combobox]").first();
-  await versionSelect.click();
-  await page.getByRole("option",{name:/S2 · Control activo/}).click();
+  // La ficha es una pantalla distinta del listado; seleccionar conserva el registro.
+  check(await page.getByTestId("screen-version-selector").count()===0,vp.name+" la ficha no es versión del listado");
+  await page.getByRole("button",{name:"Administrar"}).last().click();
   await page.locator("#governance-root h1").first().waitFor();
-  check(await page.locator("#governance-root h1").first().textContent()==="Modo activo y suspensión",vp.name+" no navega al control de credenciales S2");
+  check(await page.locator("#governance-root h1").first().textContent()==="Control del agente",vp.name+" no abre la ficha individual");
   check((await page.locator("#console-content").innerText()).includes("agente-soporte"),vp.name+" perdió agente seleccionado");
   check((await page.locator("#console-content").innerText()).includes("1 de 2 durante rotación"),vp.name+" no muestra el total de claves actuales");
   await page.screenshot({path:output+"/"+vp.name+"-credenciales-S2.png",fullPage:true});

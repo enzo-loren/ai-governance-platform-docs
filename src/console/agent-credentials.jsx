@@ -65,7 +65,7 @@ export function OneTimeCredential({reveal,onClose}){
  </Modal>;
 }
 export function AgentEnrollment(){
- const {simulation,setSimulation,notify,showExplanations}=usePrototype();
+ const {simulation,setSimulation,notify,showExplanations,slice,navigate}=usePrototype();
  const [agentName,setAgentName]=useState("");
  const [owner,setOwner]=useState("");
  const [model,setModel]=useState(models[0]);
@@ -85,6 +85,9 @@ export function AgentEnrollment(){
   setAgentName("");setOwner("");setModel(models[0]);
  };
  const filtered=simulation.agentRegistry.filter(x=>x.name.toLowerCase().includes(lookup.toLowerCase()));
+ const controlAvailable=Number(slice.slice(1))>=2;
+ const selectAgent=x=>setSimulation(prev=>({...prev,selectedAgentId:x.id,agent:x.name,mode:x.mode}));
+ const manage=x=>{selectAgent(x);navigate("s2-activate");};
  return <SpaceBetween size="l">
   <Container header={<Header variant="h2" description={showExplanations?"REG-02 · alta, identidad del workload y token individual":undefined}>Registrar agente</Header>}>
    <SpaceBetween size="m">
@@ -110,14 +113,15 @@ export function AgentEnrollment(){
    <SpaceBetween size="m">
     <FormField label="Filtrar agentes"><Input ariaLabel="Filtrar agentes" value={lookup} onChange={({detail})=>setLookup(detail.value)} placeholder="Buscar por nombre"/></FormField>
     <div className="desktop-table"><Table items={filtered} trackBy="id" variant="embedded" empty={<Box color="text-body-secondary">No hay agentes con ese nombre.</Box>} columnDefinitions={[
-     {id:"name",header:"Agente",cell:x=><Button variant="link" onClick={()=>setSimulation(prev=>({...prev,selectedAgentId:x.id,agent:x.name,mode:x.mode}))}>{x.name}</Button>},
+     {id:"name",header:"Agente",cell:x=><Button variant="link" onClick={()=>selectAgent(x)}>{x.name}</Button>},
      {id:"owner",header:"Responsable",cell:x=>x.owner},
      {id:"mode",header:"Modo",cell:x=>x.mode},
      {id:"credentials",header:"API keys activas",cell:x=>activeCount(x)},
-     {id:"id",header:"Identidad",cell:x=><Box fontFamily="monospace" fontSize="body-s">{x.id}</Box>}
+     {id:"id",header:"Identidad",cell:x=><Box fontFamily="monospace" fontSize="body-s">{x.id}</Box>},
+      ...(controlAvailable?[{id:"manage",header:"Acción",cell:x=><Button onClick={()=>manage(x)}>Administrar</Button>}]:[])
     ]}/></div>
     <div className="mobile-cards"><SpaceBetween size="s">
-     {filtered.map(x=><Container key={x.id} header={<Header variant="h3" actions={<Button onClick={()=>setSimulation(prev=>({...prev,selectedAgentId:x.id,agent:x.name,mode:x.mode}))}>Seleccionar</Button>}>{x.name}</Header>}>
+     {filtered.map(x=><Container key={x.id} header={<Header variant="h3" actions={<SpaceBetween direction="horizontal" size="xs"><Button onClick={()=>selectAgent(x)}>Seleccionar</Button>{controlAvailable&&<Button onClick={()=>manage(x)}>Administrar</Button>}</SpaceBetween>}>{x.name}</Header>}>
       <KeyValuePairs columns={2} items={[{label:"Responsable",value:x.owner},{label:"Modo",value:x.mode},{label:"Claves vigentes",value:String(activeCount(x))},{label:"Identidad",value:x.id}]}/>
      </Container>)}
      {!filtered.length&&<Box color="text-body-secondary">No hay agentes con ese nombre.</Box>}

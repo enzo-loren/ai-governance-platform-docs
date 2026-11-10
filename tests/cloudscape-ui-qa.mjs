@@ -92,7 +92,7 @@ try{
  await page.locator("[data-stage='S4']").click();
  check(await page.locator(".screen-card").count()===3,"Roadmap S4: se esperan 3 cambios");
  await page.locator("#mode-all").click();
- check(await page.locator(".screen-card").count()===9,"Roadmap S4: 9 superficies acumuladas");
+ check(await page.locator(".screen-card").count()===11,"Roadmap S4: 11 superficies acumuladas");
  await page.locator("#mode-delta").click();
  await page.screenshot({path:out+"/roadmap-s4.png",fullPage:true});
  await page.locator(".open-screen").first().click();

@@ -38,7 +38,7 @@ Aplicación concreta: componentes Cloudscape reales en vez de figuras estáticas
 
 ## Trazabilidad por slice
 
-Las 15 versiones siguen el mapeo detallado de [slices-vistas-trazabilidad.md](slices-vistas-trazabilidad.md): en la portada solo se muestran las novedades, y «Producto acumulado» deja únicamente la versión más reciente de cada superficie. S0–S6 son pantallas del Módulo A; B0–B3 son un banco de pruebas externo. A es obligatoria; B y C son independientes. Los controles técnicos que no requieren una pantalla propia no se convierten artificialmente en menú.
+Las 15 versiones siguen el mapeo detallado de [slices-vistas-trazabilidad.md](slices-vistas-trazabilidad.md): en la portada solo se muestran las novedades, y «Producto acumulado» deja únicamente la versión más reciente de cada superficie (14 superficies al cerrar S6; 15 entregas y una sola actualización de Consumo S2→S3). El catálogo y MCP, y el listado y ficha individual, coexisten. S0–S6 son pantallas del Módulo A; B0–B3 son un banco de pruebas externo. A es obligatoria; B y C son independientes. Los controles técnicos que no requieren una pantalla propia no se convierten artificialmente en menú.
 
 ## Comportamiento verificable en prototipo
 

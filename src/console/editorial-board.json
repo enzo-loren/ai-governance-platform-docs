@@ -30,10 +30,10 @@
     "decision": "Representar antes/después mediante estados claros y una explicación técnica opcional."
   },
   "consumo": {
-    "visible": "Ver gasto, límites y quién consume el presupuesto.",
-    "required": "Una alerta no equivale a bloqueo; las cuotas personales requieren identidad verificada.",
+    "visible": "Ver gasto y límites del agente, y desde S3 el desglose y límites de cada persona.",
+    "required": "Cambiar el alcance a una persona no debe borrar ni sustituir la edición de límites del agente. solo_workload hereda el límite del agente.",
     "optional": "Códigos HTTP, periodicidad, ventana de contadores y propagación de ajustes.",
-    "decision": "Mantener valores, efectos y acciones. Trasladar la mecánica de implementación a ayuda."
+    "decision": "Mantener S3 como actualización acumulativa: panel agregado por agente y desglose por usuario con un selector de alcance."
   },
   "identidad": {
     "visible": "Comprobar si una persona puede acceder a un dato sensible.",
@@ -70,5 +70,17 @@
     "required": "Una política histórica no puede sustituirse por su versión actual; un sello no verificado no es evidencia íntegra.",
     "optional": "Texto Cedar histórico, identidad de la correlación, Object Lock y referencias normativas.",
     "decision": "Mostrar secuencia y conclusión primero. Colocar el texto completo de la regla tras una apertura voluntaria."
+  },
+  "control-agente": {
+    "visible": "Operar el agente seleccionado: activar, suspender, reactivar, retirar y revisar impacto previo.",
+    "required": "Un cambio de modo afecta solo al agente seleccionado; las credenciales y la evidencia de los demás permanecen intactas.",
+    "optional": "Plazos del cambio, códigos de respuesta, reglas y registros de la confirmación.",
+    "decision": "Separar la ficha del agente del listado, conservando la navegación desde cada fila y la selección."
+  },
+  "mcp": {
+    "visible": "Administrar destinos de ejecución y revisar qué herramientas pasan por MCP.",
+    "required": "Una herramienta declarada en inferencia no está protegida al ejecutarse fuera de la puerta; no debe confundirse con su aprobación.",
+    "optional": "Esquemas de targets, autenticación de destinos, mensajes MCP tools/call y las reglas de correlación.",
+    "decision": "Crear una pantalla de ejecución distinta del catálogo, y conservar la clasificación de tools en la vista de catálogo."
   }
 }

@@ -22,6 +22,7 @@ import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
 import ExpandableSection from "@cloudscape-design/components/expandable-section";
 import {usePrototype,Explanation} from "./main.jsx";
 import {AgentEnrollment,AgentSelector,AgentCredentialControls,selectedFrom} from "./agent-credentials.jsx";
+import {mcpFor,approvalsFor,supervisionFor} from "./agent-tool-state.js";
 
 const SIM="Simulación local: ningún dato fue guardado ni se invocó AWS.";
 const STATUS={
@@ -186,7 +187,7 @@ function Coverage(){
  const agent=selectedFrom(simulation);
  const rank=Number(slice.slice(1));
  const hasB=rank>=4,hasC=rank>=3;
- const bCount=hasB?simulation.toolsMcp.length:0;
+ const bCount=hasB?mcpFor(simulation,agent.id).length:0;
  const max=hasB?(hasC?89:67):(hasC?56:41);
  const noData=evidence.value!=="observado";
  const outcomes=[
@@ -250,8 +251,12 @@ function Coverage(){
 }
 
 function Inventory(){
- const {notify,simulation,setSimulation}=usePrototype();
+ const {notify,simulation,setSimulation,slice,navigate}=usePrototype();
  const currentAgent=selectedFrom(simulation);
+ const rank=Number(slice.slice(1));
+ const mcp=rank>=4?mcpFor(simulation,currentAgent.id):[];
+ const approved=rank>=4?approvalsFor(simulation,currentAgent.id):[];
+ const supervision=rank>=5?supervisionFor(simulation,currentAgent.id):{};
  const [filter,setFilter]=useState("");
  const [selected,setSelected]=useState(null);
  const toolKey=id=>currentAgent.id+":"+id;
@@ -281,7 +286,7 @@ function Inventory(){
  };
  return <SpaceBetween size="l">
   <AgentSelector/>
-  <Panel title="Descubrimiento de herramientas" info="INF-02: cada declaración de tools se cataloga por agente y versión de esquema; la clase automática es sugerida, no una aprobación.">
+  <Panel title="Descubrimiento de herramientas" info="INF-02: cada declaración de tools se cataloga por agente y versión de esquema; la clase automática es sugerida, no una aprobación." actions={rank>=4?<Button onClick={()=>navigate("s4-mcp")}>Administrar ejecución MCP</Button>:undefined}>
    <ColumnLayout columns={3}>
     <SmallKpi title="Detectadas" value="4" context="Inferencias simuladas"/>
     <SmallKpi title="Sin clasificar" value={String(unclassified)} context="Requieren revisión"/>
@@ -296,7 +301,8 @@ function Inventory(){
     {id:"kind",header:"Clase",cell:tool=>tool.kind},
     {id:"schema",header:"Esquema",cell:tool=>tool.schema},
     {id:"state",header:"Clasificación",cell:tool=><StatusIndicator type={tool.status==="Revisada"?"success":"warning"}>{tool.status==="Revisada"?"Revisada":"Sugerida · revisar"}</StatusIndicator>},
-    {id:"coverage",header:"Ejecución",cell:()=><StatusIndicator type="stopped">Fuera de MCP</StatusIndicator>}
+    {id:"coverage",header:"Ejecución",cell:tool=><StatusIndicator type={mcp.includes(tool.id)?"success":"stopped"}>{mcp.includes(tool.id)?"Por MCP":"Fuera de MCP"}</StatusIndicator>},
+    ...(rank>=4?[{id:"approval",header:"Aprobación",cell:tool=><StatusIndicator type={approved.includes(tool.id)?"success":"warning"}>{approved.includes(tool.id)?"Aprobada":"Pendiente"}</StatusIndicator>}]:[])
    ]}/>
   </div>
   <div className="mobile-cards">
@@ -306,12 +312,15 @@ function Inventory(){
      <SpaceBetween size="s">
       <KeyValuePairs columns={2} items={[{label:"Clase",value:tool.kind},{label:"Esquema",value:tool.schema}]}/>
       <StatusIndicator type={tool.status==="Revisada"?"success":"warning"}>{tool.status==="Revisada"?"Clasificación revisada":"Clase sugerida"}</StatusIndicator>
-      <Box color="text-body-secondary" fontSize="body-s">Ejecución fuera de MCP</Box>
+      <StatusIndicator type={mcp.includes(tool.id)?"success":"stopped"}>{mcp.includes(tool.id)?"Ejecución por MCP":"Ejecución fuera de MCP"}</StatusIndicator>
+      {rank>=4&&<StatusIndicator type={approved.includes(tool.id)?"success":"warning"}>{approved.includes(tool.id)?"Aprobada":"Pendiente de aprobación"}</StatusIndicator>}
+      {rank>=5&&<Box fontSize="body-s">Supervisión: {supervision[tool.id]||"Autónoma"}</Box>}
      </SpaceBetween>
     </Container>)}
    </SpaceBetween>
   </div>
-  <Explanation>En S1 se observa la intención del modelo, no la ejecución local. En S4 las tools que pasan por MCP pueden gobernarse también al ejecutarse. La aprobación de una tool es independiente de revisar su clase.</Explanation>
+  {rank>=4&&<Button variant="link" onClick={()=>navigate("s4-mcp")}>Ver destinos y ejecución por MCP</Button>}
+  <Explanation>El catálogo sigue disponible al conectar B. A descubre la intención del modelo; B gobierna la ejecución únicamente de las tools centralizadas. Clasificar una herramienta no la aprueba.</Explanation>
   <Modal visible={!!selected} header={selected?.id||"Revisar clasificación"} onDismiss={()=>setSelected(null)}
    footer={<Box float="right"><SpaceBetween direction="horizontal" size="s">
     <Button onClick={()=>setSelected(null)}>Cancelar</Button>
@@ -324,12 +333,19 @@ function Inventory(){
      {label:"Versión de esquema",value:selected?.schema||""},
      {label:"Esquema anterior",value:dummyTools.find(tool=>tool.id===selected?.id)?.schema||""},
      {label:"Estado",value:selected?.status==="Revisada"?"Revisada":"Sugerida · sin validar"},
-     {label:"Canal",value:"A · intención, no ejecución"}
+     {label:"Canal",value:rank>=4?"A · intención / B · ejecución centralizada":"A · intención, no ejecución"},
+     ...(rank>=4?[
+      {label:"Aprobación",value:approved.includes(selected?.id)?"Aprobada":"Pendiente"},
+      {label:"Ejecución",value:mcp.includes(selected?.id)?"Por MCP":"Fuera de MCP"},
+      {label:"Supervisión",value:supervisionFor(simulation,currentAgent.id)[selected?.id]||"Sin configurar"},
+      {label:"Último uso",value:selected?.id==="procesar_lote"?"No observado":"Hace 12 min (demo)"}
+     ]:[])
     ]}/>
     <FormField label="Clasificación revisada">
      <Select selectedOption={draftClass} options={classes} onChange={({detail})=>setDraftClass(detail.selectedOption)}/>
     </FormField>
     <Alert type="info">Clasificar una herramienta no autoriza su ejecución.</Alert>
+    {rank>=4&&<Button variant="link" onClick={()=>{setSelected(null);navigate("s4-mcp");}}>Administrar ejecución de esta herramienta</Button>}
    </SpaceBetween>
   </Modal>
  </SpaceBetween>;
@@ -355,7 +371,7 @@ function Shadow(){
  </SpaceBetween>;
 }
 function ActiveAgent(){
- const {simulation,setSimulation,notify,showExplanations}=usePrototype();
+ const {simulation,setSimulation,notify,showExplanations,navigate,slice}=usePrototype();
  const [dialog,setDialog]=useState(null);
  const selected=selectedFrom(simulation);
  const mode=selected.mode;
@@ -400,6 +416,11 @@ function ActiveAgent(){
   <Container header={<Header variant="h2">Agente y operación</Header>}>
    <SpaceBetween size="m">
     <div className="gov-agent-picker"><AgentSelector/></div>
+    <Button variant="link" onClick={()=>navigate("s0-connect")}>Volver al listado de agentes</Button>
+    {Number(slice.slice(1))>=4&&<SpaceBetween direction="horizontal" size="s">
+     <Button onClick={()=>navigate("s1-inventory")}>Ver catálogo de herramientas</Button>
+     <Button onClick={()=>navigate("s4-mcp")}>Administrar ejecución MCP</Button>
+    </SpaceBetween>}
     <ColumnLayout columns={4}>
      <SmallKpi title="Estado" value={mode} context="Solo este agente"/>
      <SmallKpi title="API keys vigentes" value={selected.tokens.filter(x=>x.status==="Activa").length.toString()} context="Solo este agente"/>
@@ -467,8 +488,10 @@ function Limits({byUser=false}){
  const {simulation,setSimulation,notify,showExplanations}=usePrototype();
  const selected=selectedFrom(simulation);
  const [user,setUser]=useState(users[0]);
- const workload=byUser&&user.value==="workload";
- const config=byUser&&!workload?(selected.userLimits?.[user.value]||{}):(selected.limits||{});
+ const [scope,setScope]=useState("agent");
+ const personView=byUser&&scope==="person";
+ const workload=personView&&user.value==="workload";
+ const config=personView&&!workload?(selected.userLimits?.[user.value]||{}):(selected.limits||{});
  const [budget,setBudget]=useState(String(config.budget??50));
  const [rate,setRate]=useState(String(config.rate??50));
  const [tokens,setTokens]=useState(String(config.tokens??100000));
@@ -476,20 +499,20 @@ function Limits({byUser=false}){
  const actions=selectOptions([["alert","Solo alerta"],["throttle","Reducir frecuencia"],["block","Bloquear"]]);
  const [policy,setPolicy]=useState(actions.find(x=>x.value===(config.action||"block"))||actions[2]);
  useEffect(()=>{
-  const c=byUser&&!workload?(selected.userLimits?.[user.value]||{}):(selected.limits||{});
+  const c=personView&&!workload?(selected.userLimits?.[user.value]||{}):(selected.limits||{});
   setBudget(String(c.budget??50));setRate(String(c.rate??50));setTokens(String(c.tokens??100000));
   setPeriod({value:c.period||"day",label:c.period==="month"?"Mensual":"Diario"});
   setPolicy(actions.find(x=>x.value===(c.action||"block"))||actions[2]);
- },[selected.id,user.value,byUser,workload]);
+ },[selected.id,user.value,personView,workload]);
  const parsed=x=>Number(String(x).replace(",","."));
  const valid=[budget,rate,tokens].every(x=>Number.isFinite(parsed(x))&&parsed(x)>0);
  const save=()=>{
-  if(!valid)return;
+  if(!valid||(personView&&workload))return;
   const saved={budget:parsed(budget),rate:parsed(rate),tokens:parsed(tokens),period:period.value,action:policy.value};
   setSimulation(prev=>({...prev,agentRegistry:prev.agentRegistry.map(x=>x.id===selected.id?
-    byUser&&!workload?{...x,userLimits:{...x.userLimits,[user.value]:saved}}:{...x,limits:saved}
+    personView&&!workload?{...x,userLimits:{...x.userLimits,[user.value]:saved}}:{...x,limits:saved}
     :x)}));
-  notify("Límites de "+(byUser&&!workload?user.name+" en ":"")+selected.name+" modificados únicamente en la DEMO.");
+  notify("Límites de "+(personView&&!workload?user.name+" en ":"")+selected.name+" modificados únicamente en la DEMO.");
  };
  return <SpaceBetween size="l">
   <Container header={<Header variant="h2">Consumo del agente · {selected.name}</Header>}>
@@ -502,14 +525,34 @@ function Limits({byUser=false}){
     </ColumnLayout>
    </SpaceBetween>
   </Container>
-  {byUser&&<FormField label="Principal para analizar">
-    <Select options={users.map(x=>({label:x.label,value:x.value}))} selectedOption={{label:user.label,value:user.value}} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
-   </FormField>}
-  <Panel title={byUser?"Límites de "+(workload?"solo_workload (hereda agente)":user.name):"Límites por agente"} info="FIN-03: límites por usuario verificado configurables dentro de cada agente, sin consumir la cuota de otro usuario.">
+  {byUser&&<Container header={<Header variant="h2">Consumo por persona</Header>}>
+    <SpaceBetween size="m">
+     <div className="desktop-table">
+     <Table variant="embedded" items={users} trackBy="value" header={<Header variant="h3">Personas y consumo</Header>}
+      columnDefinitions={[
+       {id:"who",header:"Usuario",cell:x=>x.label},
+       {id:"requests",header:"Solicitudes",cell:x=>x.requests},
+       {id:"spent",header:"Gasto de muestra",cell:x=>"US$ "+x.spent.toFixed(2)},
+       {id:"action",header:"Límites",cell:x=><Button onClick={()=>{setUser(x);setScope(x.value==="workload"?"agent":"person");}}>{x.value==="workload"?"Ver límite heredado":"Configurar persona"}</Button>}
+      ]}/>
+     </div>
+     <div className="mobile-cards"><SpaceBetween size="s">{users.map(x=><Container key={x.value} header={<Header variant="h3">{x.label}</Header>}>
+      <SpaceBetween size="xs"><KeyValuePairs columns={2} items={[{label:"Solicitudes",value:String(x.requests)},{label:"Gasto de muestra",value:"US$ "+x.spent.toFixed(2)}]}/><Button onClick={()=>{setUser(x);setScope(x.value==="workload"?"agent":"person");}}>{x.value==="workload"?"Ver límite heredado":"Configurar persona"}</Button></SpaceBetween>
+     </Container>)}</SpaceBetween></div>
+     <SpaceBetween direction="horizontal" size="xs">
+      <Button variant={scope==="agent"?"primary":"normal"} onClick={()=>setScope("agent")}>Límites del agente</Button>
+      <Button variant={scope==="person"?"primary":"normal"} onClick={()=>setScope("person")}>Límites por persona</Button>
+     </SpaceBetween>
+     {personView&&<FormField label="Usuario para configurar">
+      <Select options={users.map(x=>({label:x.label,value:x.value}))} selectedOption={{label:user.label,value:user.value}} onChange={({detail})=>setUser(users.find(x=>x.value===detail.selectedOption.value))}/>
+     </FormField>}
+    </SpaceBetween>
+   </Container>}
+  <Panel title={personView?"Límites de "+(workload?"solo_workload (hereda agente)":user.name):"Límites por agente"} info="FIN-03: los límites por persona verificada se configuran dentro de cada agente. Sin identidad, solo_workload utiliza los límites del agente.">
    <SpaceBetween size="m">
-    {byUser&&<SmallKpi title={"Principal: "+user.name} value={"US$ "+user.spent.toFixed(2)} context={user.requests+" solicitudes sintéticas · "+user.role}/>}
-    {byUser&&<Alert type={workload?"info":"success"}>{workload?"Sin JWT válido: solo_workload consume los límites del agente.":"Los límites de "+user.name+" son independientes de los de las demás personas en "+selected.name+"."}</Alert>}
-    <ProgressBar value={Math.min(100,Math.round((byUser&&!workload?user.spent:simulation.spent)/parsed(budget)*100)||0)} description={"Presupuesto de "+(byUser&&!workload?user.name:selected.name)}/>
+    {personView&&<SmallKpi title={"Principal: "+user.name} value={"US$ "+user.spent.toFixed(2)} context={user.requests+" solicitudes sintéticas · "+user.role}/>}
+    {personView&&<Alert type={workload?"info":"success"}>{workload?"Sin JWT válido: solo_workload consume los límites del agente.":"Los límites de "+user.name+" son independientes de los de las demás personas en "+selected.name+"."}</Alert>}
+    <ProgressBar value={Math.min(100,Math.round((personView&&!workload?user.spent:simulation.spent)/parsed(budget)*100)||0)} description={"Presupuesto de "+(personView&&!workload?user.name:selected.name)}/>
     <ColumnLayout columns={3}>
      <FormField label="Presupuesto (USD)" errorText={!Number.isFinite(parsed(budget))||parsed(budget)<=0?"Introduce un monto mayor que cero.":undefined}>
       <Input value={budget} onChange={({detail})=>setBudget(detail.value)} type="number"/>
@@ -527,7 +570,8 @@ function Limits({byUser=false}){
       <Select selectedOption={policy} options={actions} onChange={({detail})=>setPolicy(detail.selectedOption)}/>
      </FormField>
     </ColumnLayout>
-    <Button variant="primary" disabled={!valid} onClick={save}>Guardar límites (simulación)</Button>
+    {personView&&workload&&<Alert type="info">Sin usuario identificado, se aplica el límite del agente. Para cambiarlo, selecciona «Límites del agente».</Alert>}
+    <Button variant="primary" disabled={!valid||(personView&&workload)} onClick={save}>Guardar límites (simulación)</Button>
     {showExplanations&&<Alert type="info">Los umbrales de alerta son 50, 80 y 100 % del presupuesto. En el producto, los cambios se aplican sin redesplegar: limitar responde 429 con Retry-After; bloquear responde 403; una alerta no detiene solicitudes. Los contadores se separan por agente y, con C, por usuario.</Alert>}
    </SpaceBetween>
   </Panel>
