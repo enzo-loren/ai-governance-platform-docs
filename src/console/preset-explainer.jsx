@@ -26,16 +26,15 @@ export default function PresetHelp(){
   closeButton.current?.focus();
   const key=e=>{if(e.key==="Escape"){e.preventDefault();close()}};
   const outside=e=>{if(!trigger.current?.contains(e.target)&&!panel.current?.contains(e.target))setOpen(false)};
-  const moved=()=>setOpen(false);
   document.addEventListener("keydown",key);
   document.addEventListener("mousedown",outside);
-  window.addEventListener("scroll",moved,true);
-  window.addEventListener("resize",moved);
+  const resized=()=>setOpen(false);
+  window.addEventListener("resize",resized);
   return()=>{
    document.removeEventListener("keydown",key);
    document.removeEventListener("mousedown",outside);
-   window.removeEventListener("scroll",moved,true);
-   window.removeEventListener("resize",moved);
+   window.removeEventListener("resize",resized);
+
   };
  },[open]);
  return <>
