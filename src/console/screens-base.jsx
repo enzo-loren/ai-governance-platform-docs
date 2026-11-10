@@ -12,6 +12,7 @@ import TextFilter from "@cloudscape-design/components/text-filter";
 import FormField from "@cloudscape-design/components/form-field";
 import Input from "@cloudscape-design/components/input";
 import Select from "@cloudscape-design/components/select";
+import Multiselect from "@cloudscape-design/components/multiselect";
 import StatusIndicator from "@cloudscape-design/components/status-indicator";
 import ProgressBar from "@cloudscape-design/components/progress-bar";
 import Modal from "@cloudscape-design/components/modal";
@@ -22,6 +23,7 @@ import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
 import ExpandableSection from "@cloudscape-design/components/expandable-section";
 import {usePrototype,Explanation} from "./main.jsx";
 import {AgentEnrollment,AgentSelector,AgentCredentialControls,selectedFrom} from "./agent-credentials.jsx";
+import {getModelCatalog,allowedModelOptions,initialAllowedModelIds} from "./model-catalog.js";
 import {mcpFor,approvalsFor,supervisionFor} from "./agent-tool-state.js";
 
 const SIM="Simulación local: ningún dato fue guardado ni se invocó AWS.";
@@ -58,7 +60,7 @@ const dummyTools=[
  {id:"procesar_lote",kind:"Sin clasificar",status:"Pendiente de revisión",target:"Local",schema:"v2"}
 ];
 const demoCalls=[
- {id:"TRC-0101",time:"10:43:08",agent:"agente-demo",model:"Bedrock modelo A",state:"Permitido",reason:"Inferencia aceptada",cost:"US$ 0,003",channel:"A",tokens:"1.300",latency:"128 ms"},
+ {id:"TRC-0101",time:"10:43:08",agent:"agente-demo",model:"GPT-6 Luna (DEMO)",state:"Permitido",reason:"Inferencia aceptada",cost:"US$ 0,003",channel:"A",tokens:"1.300",latency:"128 ms"},
  {id:"TRC-0102",time:"10:42:57",agent:"agente-demo",model:"Simulado",state:"Permitido",reason:"Modelo de prueba respondió",cost:"US$ 0,000",channel:"A",tokens:"840",latency:"94 ms"},
  {id:"TRC-0103",time:"10:42:11",agent:"agente-demo",model:"—",state:"Denegado",reason:"Credencial inválida",cost:"—",channel:"A",tokens:"0",latency:"12 ms"}
 ];
@@ -92,8 +94,8 @@ function Live(){
  const [selection,setSelection]=useState(null);
  const base=demoCalls.map((call,i)=>({...call,principal:"solo_workload",connections:"A",medium:"Inferencia",target:call.model,policy:i===2?"auth-agent-v1":"inference-preset-1",context:i===2?"agent_token inválido":"model permitido · presupuesto disponible"}));
  const incremental=[
-  {since:2,id:"TRC-0201",time:"10:44:15",agent:"agente-demo",principal:"solo_workload",medium:"Inferencia",target:"Bedrock modelo A",model:"Bedrock modelo A",state:"Denegado",reason:"Intención de eliminar_registro bloqueada",cost:"US$ 0,002",tokens:"920",latency:"112 ms",connections:"A",policy:"cedar-tool-deny-v2",context:"tool=eliminar_registro · modo activo"},
-  {since:3,id:"TRC-0301",time:"10:45:23",agent:"agente-demo",principal:"ana.consulta",medium:"Inferencia",target:"Bedrock modelo A",model:"Bedrock modelo A",state:"Permitido",reason:"Rol consulta: RUT enmascarado",cost:"US$ 0,003",tokens:"1100",latency:"121 ms",connections:"A+C",policy:"pii-role-v1",context:"JWT válido · role=consulta"},
+  {since:2,id:"TRC-0201",time:"10:44:15",agent:"agente-demo",principal:"solo_workload",medium:"Inferencia",target:"GPT-6 Luna (DEMO)",model:"GPT-6 Luna (DEMO)",state:"Denegado",reason:"Intención de eliminar_registro bloqueada",cost:"US$ 0,002",tokens:"920",latency:"112 ms",connections:"A",policy:"cedar-tool-deny-v2",context:"tool=eliminar_registro · modo activo"},
+  {since:3,id:"TRC-0301",time:"10:45:23",agent:"agente-demo",principal:"ana.consulta",medium:"Inferencia",target:"GPT-6 Luna (DEMO)",model:"GPT-6 Luna (DEMO)",state:"Permitido",reason:"Rol consulta: RUT enmascarado",cost:"US$ 0,003",tokens:"1100",latency:"121 ms",connections:"A+C",policy:"pii-role-v1",context:"JWT válido · role=consulta"},
   {since:4,id:"TRC-0401",time:"10:46:32",agent:"agente-demo",principal:"ana.consulta",medium:"MCP",target:"actualizar_precio",model:"—",state:"Denegado",reason:"descuento 25 supera el máximo 10",cost:"—",tokens:"0",latency:"35 ms",connections:"A+B+C",policy:"cedar-mcp-v3",context:"tool=actualizar_precio · descuento=25"},
   {since:5,id:"TRC-0501",time:"10:47:40",agent:"agente-demo",principal:"elena.aprobadora",medium:"MCP",target:"cambiar_fondo",model:"—",state:"Pendiente",reason:"Operación retenida hasta aprobación",cost:"—",tokens:"0",latency:"29 ms",connections:"A+B+C",policy:"hitl-v1",context:"requiere_aprobacion · APR42 · plazo 15 min"},
   {since:6,id:"TRC-0601",time:"10:48:17",agent:"agente-demo",principal:"elena.aprobadora",medium:"MCP",target:"consultar_ficha",model:"—",state:"Permitido",reason:"Ejecución y evidencia correlacionadas",cost:"—",tokens:"0",latency:"47 ms",connections:"A+B+C",policy:"cedar-mcp-v3",context:"trace explícito · tool_call_id asociado"}
@@ -143,7 +145,7 @@ function Live(){
      </FormField>
     </ColumnLayout>
     {paused&&<Alert type="warning">Vista pausada; el agente sigue operando. {queued.length} eventos de ejemplo esperan reanudación.</Alert>}
-    <div className="desktop-table">
+    <div className="desktop-table gov-flow-table">
      <Table items={filtered} trackBy="id" header={<Header variant="h3" counter={"("+filtered.length+")"}>Solicitudes</Header>}
       columnDefinitions={[
        {id:"id",header:"Trace ID",width:104,cell:x=><Button variant="link" onClick={()=>choose(x)}>{x.id}</Button>},
@@ -152,7 +154,7 @@ function Live(){
        {id:"connections",header:"Conexiones",cell:x=>x.connections},
        {id:"state",header:"Decisión",cell:x=><Decision state={x.state} reason={x.reason}/>},
        {id:"cost",header:"Costo",cell:x=>x.cost},
-       {id:"actions",header:"Detalle",width:70,cell:x=><Button variant="link" ariaLabel={"Ver decisión "+x.id} onClick={()=>choose(x)}>Ver</Button>}
+       {id:"actions",header:"Detalle",width:112,cell:x=><span className="gov-trace-action"><Button variant="link" ariaLabel={"Ver decisión "+x.id} onClick={()=>choose(x)}>Ver</Button></span>
       ]} empty={<Box textAlign="center" padding="l">No hay eventos para estos filtros.</Box>}/>
     </div>
     <div className="mobile-cards">
@@ -377,10 +379,12 @@ function ActiveAgent(){
  const mode=selected.mode;
  const [modelEdit,setModelEdit]=useState(null);
  const [presetEdit,setPresetEdit]=useState(null);
- const models=selectOptions([["bedrock-a","Modelo del catálogo A"],["bedrock-b","Modelo del catálogo B"],["simulado","Simulado, si está disponible"]]);
+ const models=getModelCatalog(simulation.simulatedEnabled===true);
  const presets=selectOptions([["1","1 · Caja Negra Segura"],["2","2 · Operación Supervisada"],["3","3 · Blindaje Estricto"]]);
- const model=selected.model||"bedrock-a";
+ const permittedIds=(selected.modelos_permitidos??(selected.model?[selected.model]:initialAllowedModelIds(models)))
+  .filter(id=>models.some(option=>option.value===id));
  const preset=selected.preset||"1";
+ useEffect(()=>{setModelEdit(null);setPresetEdit(null);},[selected.id]);
  const updateSelected=change=>{
   setSimulation(prev=>{
    const updated=prev.agentRegistry.map(x=>x.id===selected.id?{...x,...change}:x);
@@ -406,11 +410,12 @@ function ActiveAgent(){
   setDialog(null);
  };
  const saveSettings=()=>{
-  updateSelected({model:modelEdit?.value||model,preset:presetEdit?.value||preset});
+  if(modelEdit?.length===0)return;
+  updateSelected({modelos_permitidos:modelEdit?modelEdit.map(x=>x.value):permittedIds,preset:presetEdit?.value||preset});
   setModelEdit(null);setPresetEdit(null);
   notify("Modelos y Preset del agente "+selected.name+" cambiados en DEMO. No se aplicaron a AWS.");
  };
- const options=modelEdit||models.find(x=>x.value===model)||models[0];
+ const options=modelEdit||allowedModelOptions(models,permittedIds);
  const policyOption=presetEdit||presets.find(x=>x.value===preset)||presets[0];
  return <SpaceBetween size="l">
   <Container header={<Header variant="h2">Agente y operación</Header>}>
@@ -436,8 +441,10 @@ function ActiveAgent(){
     {mode==="Suspendido"&&<Alert type="warning">Agente suspendido: sus solicitudes A y MCP se rechazarían; los demás agentes siguen operando.</Alert>}
     {mode==="Retirado"&&<Alert type="error">Agente retirado: sus credenciales dejan de dar acceso; su evidencia se conserva.</Alert>}
     {mode!=="Retirado"&&<ColumnLayout columns={2}>
-     <FormField label="Modelo permitido" description={showExplanations?"Cambio individual de catálogo; se aplica en ≤10 s en el producto real.":undefined}>
-      <Select selectedOption={options} options={models} onChange={({detail})=>setModelEdit(detail.selectedOption)}/>
+     <FormField label="Modelos autorizados" errorText={options.length===0?"Selecciona al menos un modelo.":undefined}
+      description={showExplanations?"Lista modelos_permitidos (INF-03); el producto debe aplicar cambios en ≤10 s. Nombres ilustrativos sin servicios AWS conectados.":undefined}>
+      <Multiselect ariaLabel="Modelos autorizados" selectedOptions={options} options={models}
+       onChange={({detail})=>setModelEdit(detail.selectedOptions)} placeholder="Seleccionar modelos"/>
      </FormField>
      <FormField label="Preset de políticas">
       <Select selectedOption={policyOption} options={presets} onChange={({detail})=>setPresetEdit(detail.selectedOption)}/>
@@ -456,7 +463,7 @@ function ActiveAgent(){
 
       </SpaceBetween>
      </Container>}
-     <Button disabled={!modelEdit&&!presetEdit} onClick={saveSettings}>Guardar configuración (demo)</Button>
+     <Button disabled={(!modelEdit&&!presetEdit)||options.length===0} onClick={saveSettings}>Guardar configuración (demo)</Button>
     </SpaceBetween>}
    </SpaceBetween>
   </Container>
