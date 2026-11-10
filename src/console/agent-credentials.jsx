@@ -6,6 +6,7 @@ import ColumnLayout from "@cloudscape-design/components/column-layout";
 import FormField from "@cloudscape-design/components/form-field";
 import Input from "@cloudscape-design/components/input";
 import Select from "@cloudscape-design/components/select";
+import Multiselect from "@cloudscape-design/components/multiselect";
 import Button from "@cloudscape-design/components/button";
 import Alert from "@cloudscape-design/components/alert";
 import Modal from "@cloudscape-design/components/modal";
@@ -16,16 +17,12 @@ import StatusIndicator from "@cloudscape-design/components/status-indicator";
 import Badge from "@cloudscape-design/components/badge";
 import KeyValuePairs from "@cloudscape-design/components/key-value-pairs";
 import {usePrototype,Explanation} from "./main.jsx";
+import {getModelCatalog} from "./model-catalog.js";
 
 // DEMO: valores sin validez criptográfica ni conexión AWS. No usan credenciales reales.
 // La cadena ficticia SOLO se mantiene en el estado local del modal de revelación.
 // El registro compartido guarda únicamente referencia, sufijo y estado.
 const demoEndpoint="https://gateway.example.invalid/inference/v1";
-const models=[
- {label:"Modelo del catálogo A",value:"bedrock-a"},
- {label:"Modelo del catálogo B",value:"bedrock-b"},
- {label:"Proveedor simulado (si se habilita)",value:"simulado"}
-];
 const createDemoKey=()=>({id:"cred-"+crypto.randomUUID().slice(0,12),secret:"gov_demo_"+crypto.randomUUID().replaceAll("-","")});
 const descriptor=key=>({id:key.id,suffix:key.secret.slice(-4),status:"Activa",created:"En esta sesión (demo)"});
 const selectedFrom=simulation=>simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)||simulation.agentRegistry[0];
@@ -68,21 +65,22 @@ export function AgentEnrollment(){
  const {simulation,setSimulation,notify,showExplanations,slice,navigate}=usePrototype();
  const [agentName,setAgentName]=useState("");
  const [owner,setOwner]=useState("");
- const [model,setModel]=useState(models[0]);
+ const models=getModelCatalog(simulation.simulatedEnabled===true);
+ const [allowedModels,setAllowedModels]=useState(()=>getModelCatalog(simulation.simulatedEnabled===true));
  const [reveal,setReveal]=useState(null);
  const [lookup,setLookup]=useState("");
  const agent=selectedFrom(simulation);
  const duplicate=simulation.agentRegistry.some(x=>x.name.toLowerCase()===agentName.trim().toLowerCase());
- const valid=!!agentName.trim()&&!!owner.trim()&&!duplicate;
+ const valid=!!agentName.trim()&&!!owner.trim()&&!duplicate&&allowedModels.length>0;
  const register=()=>{
   if(!valid)return;
   const key=createDemoKey();
   const id="agt-"+crypto.randomUUID().slice(0,8);
-  const registered={id,name:agentName.trim(),owner:owner.trim(),mode:"Descubrimiento",model:model.value,tokens:[descriptor(key)]};
+  const registered={id,name:agentName.trim(),owner:owner.trim(),mode:"Descubrimiento",modelos_permitidos:allowedModels.map(x=>x.value),tokens:[descriptor(key)]};
   setSimulation(prev=>({...prev,agent:registered.name,mode:registered.mode,selectedAgentId:id,agentRegistry:[...prev.agentRegistry,registered]}));
   setReveal({agentName:registered.name,secret:key.secret});
   notify("Agente "+registered.name+" registrado en la DEMO, aislado de los demás. No se creó una identidad AWS.");
-  setAgentName("");setOwner("");setModel(models[0]);
+  setAgentName("");setOwner("");setAllowedModels(models);
  };
  const filtered=simulation.agentRegistry.filter(x=>x.name.toLowerCase().includes(lookup.toLowerCase()));
  const controlAvailable=Number(slice.slice(1))>=2;
@@ -98,8 +96,10 @@ export function AgentEnrollment(){
      <FormField label="Responsable">
       <Input ariaLabel="Responsable" value={owner} placeholder="Persona o equipo responsable" onChange={({detail})=>setOwner(detail.value)}/>
      </FormField>
-     <FormField label="Modelo permitido inicial">
-      <Select ariaLabel="Modelo permitido inicial" selectedOption={model} options={models} onChange={({detail})=>setModel(detail.selectedOption)}/>
+     <FormField label="Modelos autorizados" errorText={allowedModels.length===0?"Selecciona al menos un modelo.":undefined}
+      description={showExplanations?"Se guardan como modelos_permitidos. Por defecto, todos los modelos habilitados del catálogo; nombres de esta DEMO no corresponden a destinos AWS reales.":undefined}>
+      <Multiselect ariaLabel="Modelos autorizados" selectedOptions={allowedModels} options={models}
+       onChange={({detail})=>setAllowedModels(detail.selectedOptions)} placeholder="Seleccionar modelos"/>
      </FormField>
     </ColumnLayout>
     <SpaceBetween direction="horizontal" size="s">
