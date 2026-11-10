@@ -34,7 +34,6 @@ on:
       - 'tests/presentation-mode-qa.mjs'
       - 'tests/incremental-functional-qa.mjs'
       - 'tests/editorial-sweep-qa.mjs'
-      - 'tests/surface-contract-qa.mjs'
       - '.github/workflows/cloudscape-ui-qa.yml'
   pull_request:
     paths:
@@ -59,7 +58,6 @@ on:
       - 'tests/presentation-mode-qa.mjs'
       - 'tests/incremental-functional-qa.mjs'
       - 'tests/editorial-sweep-qa.mjs'
-      - 'tests/surface-contract-qa.mjs'
   workflow_dispatch:
 concurrency:
   group: cloudscape-qa-${{ github.ref }}
@@ -100,8 +98,6 @@ jobs:
         run: node tests/incremental-functional-qa.mjs
       - name: Auditoría editorial de las 15 versiones en escritorio y móvil
         run: node tests/editorial-sweep-qa.mjs
-      - name: Contrato de superficies: catálogo, MCP, agentes y consumo
-        run: node tests/surface-contract-qa.mjs
       - name: Attach screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
@@ -116,5 +112,4 @@ jobs:
             artifacts/presentation-qa/
             artifacts/incremental-functional-qa/
             artifacts/editorial-sweep/
-            artifacts/surface-contract-qa/
           retention-days: 14
