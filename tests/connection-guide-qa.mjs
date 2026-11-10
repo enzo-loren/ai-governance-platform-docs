@@ -23,6 +23,8 @@ assert.match(html,/card\.hidden=!show/);
 assert.match(html,/b\.setAttribute\("aria-pressed",String\(b===button\)\)/);
 assert.match(html,/aria-live="polite"/);
 assert.match(html,/prefers-reduced-motion/);
+assert.match(html,/screen=s4-guide/);
+assert.doesNotMatch(html,/screen=s4-connect/);
 assert.match(doc,/decisión de arquitectura pendiente/i);
 assert.ok(existsSync(new URL("../assets/arquitectura.html",import.meta.url)));
 console.log("connection-guide-qa: OK (8 casos, navegación, accesibilidad, fuentes y contrato)");
