@@ -142,6 +142,19 @@ try{
     viewport.name+" S6: faltan fuentes tras activar el interruptor");
   await page.screenshot({path:output+"/"+viewport.name+"-s6-forense-explicaciones.png",fullPage:true});
 
+  // S4: explicar diferencia funcional A / A+B solamente bajo demanda.
+  await page.goto(base+"assets/console.html?slice=S4&screen=s4-mcp",{waitUntil:"domcontentloaded"});
+  await page.locator("#governance-root h1").first().waitFor();
+  check(await page.getByTestId("s4-b-difference").count()===0,viewport.name+" S4 expone explicación B en modo limpio");
+  await page.getByText("Mostrar explicaciones",{exact:true}).click();
+  check(await page.getByTestId("s4-b-difference").count()===1,viewport.name+" S4 no explica diferencia operativa sin/con B");
+  const s4Text=await page.locator("#console-content").innerText();
+  check(s4Text.includes("ejecución directa posterior")&&s4Text.includes("vuelve a evaluar la llamada")&&s4Text.includes("solo cubre las tools que pasan por MCP"),viewport.name+" S4 no distingue intención, ejecución y cobertura parcial");
+  check(s4Text.includes("En descubrimiento las políticas quedan en sombra")&&s4Text.includes("desde S5"),viewport.name+" S4 sugiere enforcement o aprobación humana prematuros");
+  await page.screenshot({path:output+"/"+viewport.name+"-s4-explicacion-b.png",fullPage:true});
+  await page.getByText("Mostrar explicaciones",{exact:true}).click();
+  check(await page.getByTestId("s4-b-difference").count()===0,viewport.name+" S4 no oculta explicación B al desactivar modo");
+
   results.push({viewport:viewport.name,roadmapToggle:true,consoleToggle:true,deepLinks:true,cleanDefault:true,forensicS6:true,protectedConfirmations:true});
   verifyErrors();
   await page.close();
