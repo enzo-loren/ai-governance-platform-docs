@@ -132,3 +132,6 @@ finally{
  console.log(JSON.stringify({passed:failures.length===0,failures,results}));
  if(failures.length)process.exitCode=1;
 }
+
+// Segunda verificación independiente: contrato de superficies y conservación de capacidades.
+await import("./surface-contract-qa.mjs");
