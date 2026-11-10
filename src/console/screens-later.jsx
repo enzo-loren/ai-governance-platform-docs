@@ -87,6 +87,11 @@ function MCP(){
    <Panel title="Tools por MCP"><div className="kpi-value">{mcp.length} de 4</div><Box color="text-body-secondary">Cobertura B parcial</Box></Panel>
    <Panel title="Fuera de la puerta"><div className="kpi-value">{4-mcp.length}</div><Box color="text-body-secondary">Ejecución no gobernada</Box></Panel>
   </ColumnLayout>
+  <Explanation>
+   <strong>Sin B:</strong> por A se pueden bloquear los tool_calls denegados antes de entregarlos al agente, pero no una ejecución posterior que el agente haga directamente.
+   {" "}<strong>Con B:</strong> si la herramienta pasa por MCP, se revisan la llamada y sus argumentos reales, y se puede rechazar antes de contactar al destino.
+   {" "}<strong>Ejemplo:</strong> A observó actualizar_precio con descuento 8; si se intenta ejecutar con descuento 25, B puede bloquearlo. Las herramientas fuera de MCP siguen sin este control de ejecución.
+  </Explanation>
   <Container header={<Header variant="h2" actions={<Button onClick={()=>setTargetModal(true)}>Registrar target (demo)</Button>}>Destinos conectados</Header>}>
    <SpaceBetween size="m">
     <div className="desktop-table"><Table variant="embedded" items={targets} trackBy="id" columnDefinitions={[
