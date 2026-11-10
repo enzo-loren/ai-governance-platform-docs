@@ -61,6 +61,10 @@ try{
    await page.getByRole("option",{name}).click();
   };
 
+  await open("S0","s2-activate");
+  assert((await heading())==="Alta del agente",prefix+"un enlace S0 adelanta la ficha S2");
+  await open("S1","s4-mcp");
+  assert((await heading())==="Tarjeta de gobernanza",prefix+"un enlace S1 adelanta MCP S4");
   await open("S0","s0-connect");
   assert(await page.getByRole("button",{name:"Administrar"}).count()===0,prefix+"S0 anticipa S2");
   assert(await page.getByTestId("screen-version-selector").count()===0,prefix+"S0 ofrece versiones falsas");
