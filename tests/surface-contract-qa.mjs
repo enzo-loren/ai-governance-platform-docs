@@ -95,6 +95,12 @@ try{
   await page.getByRole("button",{name:"Límites por persona"}).click();
   await page.waitForFunction(()=>document.querySelector('input[type="number"]')?.value==="15",null,{timeout:5000}).catch(()=>{});
   assert((await budget().inputValue())==="15",prefix+"cuota del agente sobrescribió al usuario");
+  await page.getByRole("button",{name:"Ver límite heredado"}).click();
+  await page.waitForFunction(()=>document.querySelector('input[type="number"]')?.value==="80",null,{timeout:5000});
+  assert((await content()).includes("Límites por agente"),prefix+"solo_workload no hereda el límite del agente");
+  await page.getByRole("button",{name:"Límites por persona"}).click();
+  assert((await content()).includes("Sin usuario identificado, se aplica el límite del agente"),prefix+"solo_workload permite un límite propio sin usuario");
+  assert(await page.getByRole("button",{name:"Guardar límites (simulación)"}).isDisabled(),prefix+"solo_workload permite editar cuota personal");
   await capture("consumo-dos-alcances");
 
   await open("S1","s1-inventory");
