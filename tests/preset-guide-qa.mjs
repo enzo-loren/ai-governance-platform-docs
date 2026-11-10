@@ -78,6 +78,7 @@ try{
    });
    check(layer.z>=10000&&layer.bg==="rgb(255, 255, 255)"&&layer.visible,vp.name+" ayuda queda detrás de la navegación o no es opaca: "+JSON.stringify(layer));
    await page.screenshot({path:output+"/"+vp.name+"-ayuda-preset-abierta.png",fullPage:true});
+   check(await page.getByRole("dialog",{name:"¿Qué controla este preset?"}).isVisible(),vp.name+" la ayuda se cierra involuntariamente al desplazarse o capturar");
    await page.keyboard.press("Escape");
   }
   await page.screenshot({path:output+"/"+vp.name+"-selector-limpio.png",fullPage:true});
