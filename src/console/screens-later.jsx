@@ -59,10 +59,11 @@ function MCP(){
  const [targetName,setTargetName]=useState("");
  const [targetType,setTargetType]=useState({value:"lambda",label:"AWS Lambda"});
  const [targetModal,setTargetModal]=useState(false);
- const [targets,setTargets]=useState([
+ const initialTargets=[
   {id:"lambda-demo",type:"AWS Lambda",secret:"IAM / AgentCore Identity",status:"Registrado (demo)"},
   {id:"openapi-demo",type:"OpenAPI HTTPS",secret:"API key / Secrets Manager",status:"Registrado (demo)"}
- ]);
+ ];
+ const targets=simulation.mcpTargets||initialTargets;
  const mcp=mcpFor(simulation,agent.id);
  const filtered=tools.map(x=>({...x,...(simulation.toolOverrides?.[agent.id+":"+x.id]||{}),schema:simulation.toolSchemaVersions?.[agent.id+":"+x.id]||"v1"})).filter(x=>x.id.toLowerCase().includes(filter.toLowerCase()));
  const toggle=(id,checked)=>{
@@ -74,7 +75,7 @@ function MCP(){
  const register=()=>{
   if(!targetName.trim())return;
   if(targets.some(x=>x.id.toLowerCase()===targetName.trim().toLowerCase())){notify("Ya existe un target con ese nombre.","error");return}
-  setTargets(old=>[...old,{id:targetName.trim(),type:targetType.label,secret:targetType.value==="lambda"?"IAM / AgentCore Identity":"Secrets Manager",status:"Registrado (demo)"}]);
+  setSimulation(prev=>({...prev,mcpTargets:[...(prev.mcpTargets||initialTargets),{id:targetName.trim(),type:targetType.label,secret:targetType.value==="lambda"?"IAM / AgentCore Identity":"Secrets Manager",status:"Registrado (demo)"}]}));
   setTargetName("");setTargetModal(false);
   notify("Target registrado en la demostración. No se creó ningún recurso AWS.");
  };
