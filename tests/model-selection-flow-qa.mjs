@@ -37,8 +37,9 @@ try{
   check(initial.includes("Modelos autorizados"),vp.name+" mantiene el campo singular anterior");
   check(initial.includes("GPT-6 Luna (DEMO)")&&initial.includes("Claude 5.5 Haiku (DEMO)"),vp.name+" no muestra modelos con nombres específicos");
   check(!initial.includes("Modelo del catálogo A")&&!initial.includes("Modelo del catálogo B"),vp.name+" aún muestra catálogo genérico");
-  const select=page.locator('[aria-label="Modelos autorizados"]').first();
-  check(await select.count()===1,vp.name+" falta control multiselección accesible");
+  let select=page.getByRole("button",{name:/Modelos autorizados|Seleccionar modelos/}).first();
+  if(!(await select.count()))select=page.getByText("Seleccionar modelos",{exact:true}).first();
+  check(await select.count()===1,vp.name+" falta disparador de la multiselección");
   await page.screenshot({path:output+"/"+vp.name+"-alta-multimodelo.png",fullPage:true});
 
   if(await select.count()){
@@ -46,6 +47,7 @@ try{
    const option=page.getByRole("option",{name:/Claude 5\.5 Haiku/}).first();
    if(await option.count()){
     await option.click();
+    await page.keyboard.press("Escape");
     // La otra opción continua autorizada: una selección individual no debe reemplazar toda la lista.
     check((await content()).includes("GPT-6 Luna (DEMO)"),vp.name+" selección múltiple borró GPT-6 Luna");
    }else{
