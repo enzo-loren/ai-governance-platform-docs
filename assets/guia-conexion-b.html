@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Guía de conexión B: dificultad y pasos de integración de herramientas por MCP en AWS, Azure, Google Cloud y sistemas híbridos.">
+<meta name="theme-color" content="#162c49">
+<title>Conexión B · Guías de conexión · AI Governance Platform</title>
+<style>
+:root{color-scheme:light;--ink:#172b4d;--muted:#53657c;--border:#d5dfe9;--blue:#0972d3;--navy:#192e4d;--bg:#f5f7fa}*{box-sizing:border-box}
+html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--bg);font:14px/1.6 "Open Sans",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#075ca8}a:hover{text-decoration:underline}button{font:inherit;cursor:pointer}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.wrap{max-width:1220px;margin:0 auto;padding:0 30px}.skip{position:absolute;left:-9999px;top:0;padding:12px;background:white;z-index:100}.skip:focus{left:15px}
+.topbar{background:#fff;border-bottom:1px solid var(--border)}.topbar-inner{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;gap:11px;align-items:center;font-weight:800;text-decoration:none;color:var(--ink);white-space:nowrap}.mark{width:38px;height:38px;border-radius:9px;background:#192e4d;color:#fff;font-weight:900;font-size:20px;display:grid;place-items:center}
+.mark span{color:#9ad4ff}.brand small{display:block;color:var(--muted);font-size:11px;letter-spacing:.045em;line-height:1.2}.nav{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.nav a{font-weight:700;font-size:13px;text-decoration:none}.nav a[aria-current=page]{color:#0b528d;border-bottom:2px solid var(--blue)}
+.hero{padding-top:53px;padding-bottom:29px}.eyebrow{font-size:12px;letter-spacing:.08em;color:#315c89;font-weight:850}.hero h1{font-size:clamp(34px,4vw,52px);line-height:1.15;letter-spacing:-.04em;max-width:950px;margin:11px 0 15px}
+.hero p{max-width:890px;margin:0 0 12px;color:var(--muted);font-size:16px}.hero .context{font-size:13px}
+.overview,.card,.panel,.callout{background:#fff;border:1px solid var(--border);border-radius:12px}
+.section{padding-top:39px}.section h2{font-size:30px;letter-spacing:-.03em;margin:0 0 9px;line-height:1.25}.section>p{font-size:14px;color:var(--muted);max-width:920px;margin:0 0 19px}
+.section h3{font-size:20px;line-height:1.3;margin:24px 0 12px}.columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.card{padding:20px}
+.card .n{font-size:12px;color:#176db6;font-weight:850}.card h3{margin:7px 0;font-size:17px}.card p{color:var(--muted);font-size:13px;margin:0}
+.flow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:15px 0}.flow>div{text-align:center;border:1px solid var(--border);background:white;border-radius:10px;padding:17px}
+.flow strong{display:block}.flow small{display:block;font-size:12px;color:var(--muted);margin-top:5px}.flow .center{background:#edf6ff;border-color:#81b4df}
+.callout{padding:15px 19px;font-size:13px;color:#33526f;background:#eaf3fc;border-left:3px solid #2384c9;border-radius:0 10px 10px 0;margin:17px 0}.callout.warning{background:#fff7e7;border-left-color:#b7822f;color:#684d21}
+.callout p{margin:4px 0}.tablewrap{overflow:auto;border:1px solid var(--border);background:#fff;border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:750px}th{text-align:left;background:#edf2f7;font-size:12px;color:#39536e;padding:13px 14px}
+td{font-size:13px;padding:12px 14px;border-top:1px solid #edf1f6;vertical-align:top}td:first-child{font-weight:750}
+.level{font-size:11px;font-weight:850;border-radius:6px;padding:4px 7px;white-space:nowrap;display:inline-block}
+.low{background:#e6f5ed;color:#106b52}.mid{background:#fff2cf;color:#845600}.high{background:#ffebe8;color:#a34037}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:21px 0 15px}.filters>span{font-size:12px;color:var(--muted);font-weight:800;margin-right:5px}
+.filters button{min-height:40px;background:white;border:1px solid #c9d6e4;border-radius:8px;font-size:13px;font-weight:750;color:#31506f;padding:8px 14px}
+.filters button[aria-pressed=true]{background:#1a436a;color:#fff;border-color:#1a436a}
+.cases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.case{border:1px solid var(--border);border-radius:13px;background:#fff;padding:21px 22px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.case[hidden]{display:none}.casehead{display:flex;align-items:flex-start;justify-content:space-between;gap:11px}
+.cloud{font-size:12px;letter-spacing:.045em;color:#35628c;font-weight:850}.case h3{font-size:19px;line-height:1.32;letter-spacing:-.01em;margin:4px 0 0}
+.case p{font-size:13px;color:var(--muted);margin:0}.case dl{margin:0;display:grid;gap:9px}
+.case dl div{display:grid;grid-template-columns:80px minmax(0,1fr);gap:9px;font-size:13px}
+.case dt{font-weight:800;color:#38516c}.case dd{margin:0;color:var(--muted)}
+.case details{border-top:1px solid #e7edf4;padding-top:10px;margin-top:auto}
+.case summary{color:#075ca8;font-weight:800;font-size:13px;cursor:pointer}.case ol{padding-left:19px;margin:10px 0}.case li{margin-bottom:7px;font-size:13px}
+.case .source{font-size:12px;margin-top:5px;display:inline-block}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:17px 0}
+.compare>div{border-radius:11px;background:white;border:1px solid var(--border);padding:18px;min-width:0}
+.compare .after{background:#f1f8ff;border-color:#81b4df}.compare strong{display:block;margin:0 0 11px}
+.node{padding:10px 14px;background:white;border:1px solid #d5dfe9;border-radius:7px;text-align:center;font-size:13px;font-weight:700;margin:9px 0}
+.arrow{text-align:center;color:#607790;font-size:19px}.compare p{font-size:12px;color:var(--muted);margin:12px 0 0}
+.panel{padding:22px}.panel ul{padding-left:19px}.panel li{margin-bottom:8px;font-size:13px}
+.code{background:#152d49;color:#edf6ff;border-radius:9px;overflow:auto;padding:17px;font:13px/1.9 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre}
+.checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.check{background:white;border:1px solid var(--border);border-radius:11px;padding:16px;color:var(--muted);font-size:13px}
+.check b{display:block;color:var(--ink);font-size:14px;margin-bottom:5px}
+.sources{background:#fff;border:1px solid var(--border);border-radius:12px;padding:22px}.sources ul{padding-left:21px;columns:2;column-gap:29px}
+.sources li{margin-bottom:8px;break-inside:avoid;font-size:13px}.small{font-size:12px;color:var(--muted)}.foot{background:#fff;border-top:1px solid var(--border);margin-top:45px;color:var(--muted);font-size:12px}
+.foot .wrap{padding-top:21px;padding-bottom:27px;display:flex;gap:15px;justify-content:space-between;flex-wrap:wrap}
+@media(max-width:950px){.topbar-inner{flex-direction:column;align-items:flex-start;padding-top:15px;padding-bottom:15px;gap:13px}.cases,.compare{grid-template-columns:1fr}.columns,.checks{grid-template-columns:1fr 1fr}}
+@media(max-width:680px){.wrap{padding:0 17px}.hero{padding-top:33px}.hero h1{font-size:34px}.hero p{font-size:15px}.nav{gap:10px}.nav a{font-size:12px}.section{padding-top:31px}.section h2{font-size:25px}.flow,.columns,.checks{grid-template-columns:1fr}.case{padding:18px}.case dl div{grid-template-columns:70px 1fr}.sources ul{columns:1}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar a contenido</a>
+<header class="topbar"><div class="wrap topbar-inner">
+<a class="brand" href="../index.html" aria-label="AI Governance · Inicio"><span class="mark">G<span>·</span></span><span>AI Governance<small>PLATAFORMA · PROPUESTA</small></span></a>
+<nav class="nav" aria-label="Otros recursos"><a href="../index.html">Inicio</a><a href="guias-conexion.html">Guías de conexión</a><a href="guia-conexion-b.html" aria-current="page">Conexión B</a><a href="guias-conexion.html#c-title">Conexión C</a><a href="arquitectura.html">Arquitectura AWS ↗</a><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/tree/main/insumo" target="_blank" rel="noopener noreferrer">Requisitos ↗</a></nav>
+</div></header>
+<main id="main"><div class="wrap">
+<section class="hero" aria-labelledby="title">
+<div class="eyebrow">GUÍAS DE CONEXIÓN · B · TOOLS POR MCP · S4</div>
+<h1 id="title">Qué tan difícil es poner las tools del cliente detrás de nuestra puerta.</h1>
+<p>La integración B es más sencilla cuando las herramientas ya se exponen como servicios con contratos estables. Es más compleja si están dentro del proceso del agente, usan credenciales propias o pueden ejecutarse fuera del Gateway.</p>
+<p class="context">Esta página documenta escenarios de integración y arquitectura objetivo, no una certificación de compatibilidad ni esfuerzo medido en jornadas. <a href="guias-conexion.html#c-title">Ver en paralelo la guía C de identidad ↗</a></p>
+</section>
+
+<section class="section" aria-labelledby="b-basics">
+<h2 id="b-basics">B añade control sobre la ejecución, no solo sobre la intención.</h2>
+<p>Con A, la plataforma inspecciona los tool_calls vistos en inferencia. Con B, el agente invoca las tools desde <code>{gateway}/mcp</code>, usando su <code>agent_token</code>, y la puerta evalúa la ejecución real antes de llamar al target.</p>
+<div class="flow" aria-label="Flujo lógico de conexión B"><div><strong>1 · Agente</strong><small>Declara tools y ejecuta MCP</small></div><div class="center"><strong>2 · Puerta</strong><small>Autorización, reglas, aprobación y evidencia</small></div><div><strong>3 · Target</strong><small>Lambda u OpenAPI en el MVP</small></div></div>
+<div class="columns">
+<article class="card"><span class="n">01 · EXPOSICIÓN</span><h3>¿Dónde vive la tool?</h3><p>Una Lambda o API OpenAPI es más fácil de registrar que una función local de Python.</p></article>
+<article class="card"><span class="n">02 · INVOCACIÓN</span><h3>¿El agente usa MCP?</h3><p>Debe consultar tools/list e invocar tools/call contra el Gateway, no usar una ejecución directa alternativa.</p></article>
+<article class="card"><span class="n">03 · CONTROL</span><h3>¿Quién tiene los permisos?</h3><p>IAM, API keys, OAuth, conectividad y bypass determinan cuánto hay que rediseñar.</p></article>
+</div>
+<div class="callout"><strong>Ruta de menor fricción:</strong> API OpenAPI o Lambda bien delimitada, autenticación soportada, endpoint accesible y agente que puede utilizar MCP. La ruta difícil suele exigir extraer lógica, delegar credenciales y restringir acceso directo a recursos.</div>
+<div class="callout warning"><strong>Alcance real de nuestro MVP:</strong> la decisión D-03 contempla targets <strong>Lambda y OpenAPI</strong>. Amazon Bedrock AgentCore Gateway admite otros tipos —MCP remoto, API Gateway nativo, entre otros—, pero no debemos presentarlos como ya soportados por nuestro producto. Las capacidades de interceptación y aprobación se validan mediante SP-01, SP-04 y SP-05. <a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/05-decisiones-tecnicas.md" target="_blank" rel="noopener noreferrer">Decisión D-03 ↗</a></div>
+</section>
+
+<section class="section" aria-labelledby="matrix-title">
+<h2 id="matrix-title">Matriz de dificultad por arquitectura</h2>
+<p>Las etiquetas expresan complejidad técnica relativa, no plazos, costos ni seguridad garantizada. El soporte del servicio AWS y el alcance actual del MVP se evalúan por separado.</p>
+<div class="tablewrap" role="region" aria-label="Matriz de escenarios B" tabindex="0"><table><thead><tr><th>Nube</th><th>Arquitectura existente</th><th>Trabajo principal</th><th>Dificultad</th></tr></thead><tbody>
+<tr><td>AWS</td><td>Servidor MCP remoto</td><td>Integrar o ampliar tipo de target; ruta y permisos</td><td><span class="level mid">Baja técnicamente / MVP pendiente</span></td></tr>
+<tr><td>AWS</td><td>API Gateway REST / ECS con OpenAPI</td><td>Publicar operaciones, autenticación y cliente MCP</td><td><span class="level mid">Baja–media</span></td></tr>
+<tr><td>AWS</td><td>Lambda que implementa una tool</td><td>Tool schema, adaptación del handler, IAM</td><td><span class="level mid">Baja–media</span></td></tr>
+<tr><td>Azure</td><td>API Management + Azure Functions</td><td>OpenAPI o MCP remoto, seguridad y acceso desde AWS</td><td><span class="level mid">Media</span></td></tr>
+<tr><td>Google Cloud</td><td>Apigee + Cloud Run</td><td>OpenAPI, permisos y conectividad</td><td><span class="level mid">Media</span></td></tr>
+<tr><td>Multicloud</td><td>Tools locales LangChain / Python</td><td>Extraer funciones y adaptar el agente</td><td><span class="level high">Media–alta</span></td></tr>
+<tr><td>AWS</td><td>boto3 directo a DynamoDB/S3/RDS</td><td>Servicio de tools, IAM restringido y cierre de bypass</td><td><span class="level high">Alta</span></td></tr>
+<tr><td>Híbrido</td><td>APIs privadas, OAuth delegado, operaciones críticas</td><td>Red, credenciales, idempotencia y aprobación</td><td><span class="level high">Alta</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="section" aria-labelledby="cases-title">
+<h2 id="cases-title">Ocho escenarios concretos de integración</h2>
+<p>Filtra por nube y abre cada caso para ver exactamente qué debe adaptar el cliente y en qué documentación se apoya la recomendación.</p>
+<div class="filters" role="group" aria-label="Filtrar escenarios B">
+<span>Filtrar:</span><button type="button" data-filter="all" aria-pressed="true">Todos</button><button type="button" data-filter="aws" aria-pressed="false">AWS</button><button type="button" data-filter="azure" aria-pressed="false">Azure</button><button type="button" data-filter="gcp" aria-pressed="false">Google Cloud</button><button type="button" data-filter="hybrid" aria-pressed="false">Híbrido / general</button><span id="filter-result" role="status" aria-live="polite">8 escenarios</span>
+</div>
+<div class="cases">
+<article class="case" data-cloud="aws"><div class="casehead"><div><span class="cloud">AWS · SERVIDOR MCP</span><h3>AgentCore Runtime o ECS con MCP remoto</h3></div><span class="level mid">MVP pendiente</span></div>
+<p>El agente ya utiliza un cliente MCP y el servidor de tools funciona por HTTPS.</p>
+<dl><div><dt>Facilita</dt><dd>Protocolo y herramientas remotas disponibles.</dd></div><div><dt>Brecha</dt><dd>El tipo MCP remoto está disponible en AgentCore, pero excede D-03 del MVP.</dd></div></dl>
+<details><summary>Pasos concretos</summary><ol><li>Inventariar tools, esquemas, versión MCP y credenciales del servidor remoto.</li><li>Para el MVP actual, adaptar a Lambda/OpenAPI o formalizar ampliación para MCP remote target.</li><li>Redirigir el cliente MCP a la puerta; comprobar nombres, herramientas visibles y errores.</li></ol><a class="source" target="_blank" rel="noopener noreferrer" href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-target-MCPservers.html">AWS · MCP server targets ↗</a></details></article>
+<article class="case" data-cloud="aws"><div class="casehead"><div><span class="cloud">AWS · REST Y OPENAPI</span><h3>API Gateway REST + Lambda / ECS</h3></div><span class="level mid">Baja–media</span></div>
+<p>El backend expone GET /inventario y POST /reservas como operaciones REST ya documentadas.</p>
+<dl><div><dt>Facilita</dt><dd>OpenAPI permite generar tools sin reescribir lógica empresarial.</dd></div><div><dt>Brecha</dt><dd>Seleccionar endpoints, configurar autorización de salida y adaptar el agente.</dd></div></dl>
+<details><summary>Pasos concretos</summary><ol><li>Publicar OpenAPI con operationId y esquemas estables; usar el target OpenAPI previsto en D-03.</li><li>Probar la credencial downstream y la ruta a la API.</li><li>Si se considera el target API Gateway nativo, validar restricciones de misma cuenta/región e IAM/API key; ese target no está en D-03.</li></ol><a class="source" target="_blank" rel="noopener noreferrer" href="https://docs.aws.amazon.com/apigateway/latest/developerguide/mcp-server.html">AWS · API Gateway target ↗</a></details></article>
+<article class="case" data-cloud="aws"><div class="casehead"><div><span class="cloud">AWS · LAMBDA</span><h3>Lambda utilizada como tool</h3></div><span class="level mid">Baja–media</span></div>
+<p>Una Lambda existente consulta precios o actualiza un pedido; el agente hoy la invoca por SDK.</p>
+<dl><div><dt>Facilita</dt><dd>La función ya es un servicio aislado y D-03 admite targets Lambda.</dd></div><div><dt>Brecha</dt><dd>Esquema JSON, formato de evento y permisos de invocación pueden cambiar.</dd></div></dl>
+<details><summary>Pasos concretos</summary><ol><li>Definir schema de tools con parámetros y respuestas JSON.</li><li>Adaptar el handler al evento AgentCore y al prefijo de nombre de tool.</li><li>Autorizar invocación desde Gateway y reducir acceso directo si se requiere control obligatorio.</li></ol><a class="source" target="_blank" rel="noopener noreferrer" href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-add-target-lambda.html">AWS · Lambda targets ↗</a></details></article>
+<article class="case" data-cloud="azure"><div class="casehead"><div><span class="cloud">AZURE · API MANAGEMENT</span><h3>APIM + Azure Functions</h3></div><span class="level mid">Media</span></div>
+<p>El agente utiliza una API empresarial administrada en Azure API Management.</p>
+<dl><div><dt>Facilita</dt><dd>APIM permite exponer operaciones REST como tools MCP.</dd></div><div><dt>Brecha</dt><dd>Resolver acceso desde AWS y decidir si se integra por OpenAPI o MCP remoto.</dd></div></dl>
+<details><summary>Pasos concretos</summary><ol><li>Seleccionar operaciones REST que deben exponerse como tools y revisar sus contratos.</li><li>Preferir target OpenAPI accesible en el MVP; un endpoint MCP de APIM requeriría validar/ampliar D-03.</li><li>Configurar credenciales, red y pruebas de invocación antes de migrar todas las tools.</li></ol><a class="source" target="_blank" rel="noopener noreferrer" href="https://learn.microsoft.com/en-us/azure/api-management/export-rest-mcp-server">Microsoft · REST API como servidor MCP ↗</a></details></article>
+<article class="case" data-cloud="gcp"><div class="casehead"><div><span class="cloud">GOOGLE CLOUD · API MANAGEMENT</span><h3>Apigee + Cloud Run</h3></div><span class="level mid">Media</span></div>
+<p>El cliente publica servicios empresariales de pedidos en Apigee, con backend Cloud Run.</p>
+<dl><div><dt>Facilita</dt><dd>Apigee puede exponer APIs como tools MCP a partir de OpenAPI.</dd></div><div><dt>Brecha</dt><dd>Seguridad, alcance de target y conectividad entre GCP y AWS.</dd></div></dl>
+<details><summary>Pasos concretos</summary><ol><li>Confirmar OpenAPI 3.0.x, permisos y operaciones disponibles.</li><li>Integrar la API como target OpenAPI para D-03, o evaluar ampliación para MCP remoto de Apigee.</li><li>Validar autenticación downstream, latencia, errores y versiones de MCP.</li></ol><a class="source" target="_blank" rel="noopener noreferrer" href="https://docs.cloud.google.com/apigee/docs/api-platform/apigee-mcp/apigee-mcp-overview">Google Cloud · MCP in Apigee ↗</a></details></article>
+<article class="case" data-cloud="hybrid"><div class="casehead"><div><span class="cloud">MULTICLOUD · CÓDIGO LOCAL</span><h3>LangChain / CrewAI / Python con tools in-process</h3></div><span class="level high">Media–alta</span></div>
+<p>El agente ejecuta funciones Python como consultar_cliente() o actualizar_precio() dentro de su proceso.</p>
+<dl><div><dt>Facilita</dt><dd>La lógica existe y se puede reutilizar.</dd></div><div><dt>Brecha</dt><dd>Debe crearse un endpoint remoto y cambiarse el patrón de invocación del agente.</dd></div></dl>
+<details><summary>Pasos concretos</summary><ol><li>Extraer la funcionalidad a Lambda o servicio con OpenAPI.</li><li>Registrar el target en la puerta y actualizar la definición y llamada del agente.</li><li>Probar equivalencia de argumentos, errores, concurrencia y eliminación de ruta original.</li></ol><a class="source" target="_blank" rel="noopener noreferrer" href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-building.html">AWS · Flujo de Gateway ↗</a></details></article>
+<article class="case" data-cloud="aws"><div class="casehead"><div><span class="cloud">AWS · ACCESO DIRECTO</span><h3>Agente ECS con boto3 a DynamoDB / S3 / RDS</h3></div><span class="level high">Alta</span></div>
+<p>El Task Role del agente permite actualizar recursos directamente sin un servicio de herramientas.</p>
+<dl><div><dt>Facilita</dt><dd>Se conoce la operación que debe encapsularse.</dd></div><div><dt>Brecha</dt><dd>El permiso IAM directo permite eludir B aunque exista un Gateway.</dd></div></dl>
+<details><summary>Pasos concretos</summary><ol><li>Exponer cancelar_pedido como target Lambda, con rol IAM limitado al recurso necesario.</li><li>Quitar al agente privilegios directos de escritura y revisar otras credenciales/rutas (responsabilidad del cliente: CTRL-25).</li><li>Verificar que una denegación MCP no cambia DynamoDB y que una ejecución permitida deja evidencia.</li></ol><a class="source" target="_blank" rel="noopener noreferrer" href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-add-target-lambda.html">AWS · Lambda como tool ↗</a></details></article>
+<article class="case" data-cloud="hybrid"><div class="casehead"><div><span class="cloud">HÍBRIDO · SISTEMA CRÍTICO</span><h3>ERP privado, OAuth delegado y operaciones irreversibles</h3></div><span class="level high">Alta</span></div>
+<p>Las herramientas ejecutan pagos, transferencias o modificaciones sensibles mediante APIs privadas.</p>
+<dl><div><dt>Facilita</dt><dd>Puede existir una API corporativa con contrato estable.</dd></div><div><dt>Brecha</dt><dd>Red privada, credenciales por usuario, reintentos e idempotencia.</dd></div></dl>
+<details><summary>Pasos concretos</summary><ol><li>Diseñar conectividad privada o front-end autenticado para que la puerta alcance el target.</li><li>Configurar IAM/API key/OAuth downstream según el target; C no delega automáticamente la credencial del usuario al ERP.</li><li>Prevenir operaciones duplicadas y validar SP-04/SP-05 antes de prometer HITL real extremo a extremo.</li></ol><a class="source" target="_blank" rel="noopener noreferrer" href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-vpc-egress.html">AWS · Conectividad VPC egress ↗</a></details></article>
+</div></section>
+
+<section class="section" aria-labelledby="bypass-title">
+<h2 id="bypass-title">Escenario de mayor esfuerzo: el agente conserva acceso directo.</h2>
+<p>Ejemplo AWS: un agente en ECS ejecuta una actualización con boto3 contra DynamoDB. Publicar la misma acción como tool MCP no elimina los permisos de escritura que ya posee su Task Role.</p>
+<div class="compare" aria-label="Comparación de ejecución directa frente a ejecución gobernada">
+<div><strong>Antes · acceso directo</strong><div class="node">ECS · agente con Task Role de escritura</div><div class="arrow" aria-hidden="true">↓</div><div class="node">DynamoDB · UpdateItem</div><p>La plataforma no controla la ejecución; el agente puede modificar el recurso sin pasar por MCP.</p></div>
+<div class="after"><strong>Después · ejecución gobernada</strong><div class="node">ECS · agente cliente MCP</div><div class="arrow" aria-hidden="true">↓</div><div class="node">Puerta · Cedar, registro y aprobación</div><div class="arrow" aria-hidden="true">↓</div><div class="node">Lambda tool · IAM restringido → DynamoDB</div><p>Es necesario retirar al agente los privilegios de bypass si se necesita control obligatorio.</p></div>
+</div>
+<div class="callout warning"><strong>Límite del producto:</strong> el cierre del bypass de red e IAM es responsabilidad del cliente (CTRL-25). Solo gobernamos las tools cuya ejecución pasa realmente por la puerta. La disponibilidad de una tool MCP no demuestra que sus rutas alternativas hayan desaparecido.</div>
+</section>
+
+<section class="section" aria-labelledby="contract-title">
+<h2 id="contract-title">Contrato y pruebas de aceptación</h2>
+<p>La conexión B usa el mismo token del agente en ambos canales; si existe C, la identidad del usuario se reenvía también en MCP. El cliente debe usar exactamente los nombres que expone la puerta: <code>&lt;target&gt;___&lt;tool&gt;</code>.</p>
+<div class="panel">
+<pre class="code">POST {gateway}/mcp
+Authorization: Bearer gov_AGENT_TOKEN
+X-Gov-User-Token: JWT_USUARIO_OPCIONAL
+Content-Type: application/json
+
+{"jsonrpc":"2.0","id":1,"method":"tools/list"}
+{"jsonrpc":"2.0","id":2,"method":"tools/call",
+ "params":{"name":"pedidos___cancelar_pedido",
+           "arguments":{"pedido_id":"123"}}}</pre>
+<p class="small">Solicitudes JSON-RPC ilustrativas para versiones MCP anteriores a 2026-07-28; los métodos son llamadas distintas, no dos objetos enviados juntos. La revisión 2026-07-28 tiene metadatos y descubrimiento diferentes. Véase <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-using.html" target="_blank" rel="noopener noreferrer">versiones MCP soportadas por AWS ↗</a>. La operación y sus argumentos son ficticios.</p>
+<ul>
+<li><strong>Tool aprobada:</strong> la llamada llega al target, la respuesta se registra y los datos personales se filtran según política.</li>
+<li><strong>Tool denegada:</strong> en modo activo la respuesta MCP usa <code>isError: true</code> y el target no se ejecuta.</li>
+<li><strong>Tool requiere aprobación:</strong> devuelve <code>PENDING_APPROVAL</code> y el resultado depende de la implementación y validación de SP-04/SP-05.</li>
+<li><strong>B parcial:</strong> la cobertura registra cuántas tools declaradas por el agente pasan por MCP; las demás quedan fuera del perímetro.</li>
+</ul>
+<a href="console.html?slice=S4&amp;screen=s4-mcp&amp;v=56da347f0bca7145">Abrir S4 · Ejecución por MCP en la consola ↗</a>
+</div>
+<div class="callout"><strong>B y C son independientes.</strong> Con A+B sin C, la plataforma puede gobernar ejecución por agente (<code>solo_workload</code>), pero no atribuirla a un usuario verificado. En Preset 2, ciertas operaciones de escritura necesitan C; una operación crítica con aprobación humana personalizada necesita además la identificación del usuario. <a href="guias-conexion.html#c-title">Ver guía C ↗</a></div>
+<div class="checks"><div class="check"><b>1 · Enrutamiento</b>El agente invoca la tool del Gateway por MCP y su nombre coincide con el declarado al modelo.</div><div class="check"><b>2 · Bloqueo efectivo</b>Denegar tools/call impide que el target ejecute; no se limita a ocultar la respuesta.</div><div class="check"><b>3 · Perímetro verificable</b>Se identifican tools fuera de la puerta y se restringen rutas alternativas cuando se exige exclusividad.</div></div>
+</section>
+
+<section class="section" aria-labelledby="sources-title"><div class="sources">
+<h2 id="sources-title">Fuentes y decisiones pendientes</h2>
+<p class="small">Arquitectura objetivo del proyecto y documentación oficial de proveedores. La dificultad es una evaluación cualitativa, no una medición ni una garantía de soporte productivo.</p>
+<ul>
+<li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/requisitos.yaml" target="_blank" rel="noopener noreferrer">Requisitos S4 · MCP-01 · CTRL-25</a></li>
+<li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/01-modelo-de-conexion.md" target="_blank" rel="noopener noreferrer">Modelo de conexiones · B</a></li>
+<li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/02-contrato.md" target="_blank" rel="noopener noreferrer">Contrato MCP · tools/list / tools/call</a></li>
+<li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/05-decisiones-tecnicas.md" target="_blank" rel="noopener noreferrer">Decisiones · D-03 y D-04</a></li>
+<li><a href="https://github.com/enzo-loren/agentic-ai-governance-platform/blob/main/insumo/contexto/06-spikes.md" target="_blank" rel="noopener noreferrer">Spikes · SP-01, SP-04, SP-05</a></li>
+<li><a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-supported-targets.html" target="_blank" rel="noopener noreferrer">AWS · Target types de AgentCore</a></li>
+<li><a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-add-target-lambda.html" target="_blank" rel="noopener noreferrer">AWS · Lambda tool targets</a></li>
+<li><a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-vpc-egress.html" target="_blank" rel="noopener noreferrer">AWS · Conectividad a targets privados</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/api-management/export-rest-mcp-server" target="_blank" rel="noopener noreferrer">Azure · API Management MCP</a></li>
+<li><a href="https://docs.cloud.google.com/apigee/docs/api-platform/apigee-mcp/apigee-mcp-overview" target="_blank" rel="noopener noreferrer">GCP · MCP en Apigee</a></li>
+</ul>
+</div></section>
+</div></main>
+<footer class="foot"><div class="wrap"><span>AI Governance Platform · Integración B · Diseño objetivo, no despliegue verificado</span><a href="guias-conexion.html">Volver a Guías de conexión ↗</a></div></footer>
+<script>
+(function(){
+ const buttons=[...document.querySelectorAll("[data-filter]")];
+ const cards=[...document.querySelectorAll(".case[data-cloud]")];
+ const out=document.getElementById("filter-result");
+ for(const b of buttons)b.addEventListener("click",function(){
+  const key=b.dataset.filter;
+  for(const button of buttons)button.setAttribute("aria-pressed",String(button===b));
+  let count=0;
+  for(const card of cards){const show=key==="all"||card.dataset.cloud===key;card.hidden=!show;if(show)count++;}
+  out.textContent=count+(count===1?" escenario":" escenarios");
+ });
+})();
+</script>
+</body>
+</html>
