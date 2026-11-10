@@ -49,7 +49,9 @@ try{
     await option.click();
     await page.keyboard.press("Escape");
     // La otra opción continua autorizada: una selección individual no debe reemplazar toda la lista.
-    check((await content()).includes("GPT-6 Luna (DEMO)"),vp.name+" selección múltiple borró GPT-6 Luna");
+    const afterSelection=await content();
+    check(afterSelection.includes("GPT-6 Luna (DEMO)"),vp.name+" selección múltiple borró GPT-6 Luna");
+    check(!afterSelection.includes("Claude 5.5 Haiku (DEMO)"),vp.name+" deseleccionar Claude no retiró su token");
    }else{
     check(false,vp.name+" no se puede deseleccionar un modelo en multiselect");
    }
@@ -64,6 +66,7 @@ try{
   const active=await content();
   check(active.includes("Modelos autorizados"),vp.name+" ficha sigue siendo selección singular");
   check(active.includes("GPT-6 Luna (DEMO)"),vp.name+" ficha perdió modelos elegidos en alta");
+  check(!active.includes("Claude 5.5 Haiku (DEMO)"),vp.name+" la ficha no conservó el modelo desautorizado en el alta");
   await page.screenshot({path:output+"/"+vp.name+"-ficha-multimodelo.png",fullPage:true});
 
   await open("S0","s0-live");
