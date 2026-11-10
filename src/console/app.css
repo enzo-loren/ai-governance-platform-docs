@@ -86,3 +86,12 @@ body{background:#f8f9fc;scroll-behavior:smooth}
 
 /* La opción de presentación se encuentra junto al slice, nunca dentro del formulario S2. */
 .prototype-actions [id="presentation-launch"]{white-space:nowrap}
+
+/* El ancho de la acción del flujo no puede colapsar en letras verticales.
+ * Las tablas densas desplazan horizontalmente dentro de su contenedor. */
+.gov-flow-table{max-width:100%;min-width:0}
+.gov-flow-table [class*="awsui_table-container"]{max-width:100%;overflow-x:auto}
+.gov-flow-table table{min-width:1120px;table-layout:auto}
+.gov-flow-table th:last-child,.gov-flow-table td:last-child{min-width:112px;white-space:nowrap}
+.gov-trace-action{display:inline-flex;min-width:46px;align-items:center;white-space:nowrap;word-break:keep-all}
+.gov-trace-action [class*="awsui_button"]{white-space:nowrap;word-break:keep-all;flex-shrink:0}
