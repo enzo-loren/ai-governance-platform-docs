@@ -6,6 +6,9 @@ on:
       - assets/guias-conexion.html
       - docs/guia-conexiones-identidad.md
       - tests/connection-guide-qa.mjs
+      - tests/connection-b-guide-qa.mjs
+      - docs/guia-conexion-b-tools.md
+      - assets/guia-conexion-b.html
       - .github/workflows/connection-guide-qa.yml
   push:
     branches: [main]
@@ -14,6 +17,9 @@ on:
       - assets/guias-conexion.html
       - docs/guia-conexiones-identidad.md
       - tests/connection-guide-qa.mjs
+      - tests/connection-b-guide-qa.mjs
+      - docs/guia-conexion-b-tools.md
+      - assets/guia-conexion-b.html
       - .github/workflows/connection-guide-qa.yml
 permissions:
   contents: read
@@ -26,3 +32,4 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/connection-guide-qa.mjs
+      - run: node tests/connection-b-guide-qa.mjs
