@@ -139,3 +139,6 @@ await import("./surface-contract-qa.mjs");
 
 // Validar modelo de autorización por lista y columna de detalle en desktop/tablet/móvil.
 await import("./model-selection-flow-qa.mjs");
+
+// Contrato de presets y escenarios A/B/C: guía educativa sin métricas inventadas.
+await import("./preset-guide-qa.mjs");

@@ -23,6 +23,7 @@ import ExpandableSection from "@cloudscape-design/components/expandable-section"
 import {usePrototype,Explanation} from "./main.jsx";
 import {AgentSelector,selectedFrom} from "./agent-credentials.jsx";
 import {mcpFor,approvalsFor,supervisionFor,setMcpFor,setApprovalsFor,setSupervisionFor} from "./agent-tool-state.js";
+import {PRESET_DESCRIPTIONS} from "./preset-guide.js";
 
 const tools=[
  {id:"consultar_ficha",kind:"Lectura",target:"Lambda MCP",approved:true,when:"Permitido"},
@@ -158,7 +159,7 @@ function MCP(){
 }
 
 function Policy(){
- const {notify,simulation}=usePrototype();
+ const {notify,simulation,navigate}=usePrototype();
  const agent=simulation.agentRegistry.find(x=>x.id===simulation.selectedAgentId)||simulation.agentRegistry[0];
  const [threshold,setThreshold]=useState("10");
  const [effect,setEffect]=useState({label:"Denegar",value:"DENY"});
@@ -224,6 +225,9 @@ function Policy(){
   <Explanation>La plataforma final debe validar sintaxis y tipos con Cedar y el esquema de la tool, guardar autor y texto, versionar y aplicar la regla en 10 segundos o menos. La validación de este prototipo es ilustrativa, no equivalente a Cedar.</Explanation>
  </SpaceBetween>;
  return <SpaceBetween size="l">
+  <Container header={<Header variant="h2" actions={<Button onClick={()=>navigate("s2-activate")}>Ver y comparar presets</Button>}>Preset del agente</Header>}>
+   <Box>{agent.name}: <strong>{agent.preset||"1"} · {PRESET_DESCRIPTIONS.find(x=>x.value===(agent.preset||"1"))?.name||"Caja Negra Segura"}</strong>. Las reglas propias se suman al preset; elegir uno no reemplaza al editor Cedar.</Box>
+  </Container>
   <Panel title="Políticas del agente" help="La regla opera sobre la intención observada en A y, cuando la tool pasa por MCP B, sobre sus argumentos en la ejecución.">
    <Tabs tabs={[{id:"builder",label:"Constructor visual",content:build},{id:"cedar",label:"Editor Cedar",content:editor}]} activeTabId={tab} onChange={({detail})=>setTab(detail.activeTabId)}/>
   </Panel>
