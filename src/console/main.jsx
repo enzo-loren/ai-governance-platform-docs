@@ -39,9 +39,12 @@ const fromLocation=()=>{
  const valid=data.stages.some(stage=>stage.id===query.get("slice"))?query.get("slice"):null;
  const requested=findScreen(query.get("screen"));
  if(requested){
-  const target=versionAt(requested.surface,valid||requested.slice)||requested;
-  // Retener el corte desde el que se abrió la pantalla acumulada.
-  return {slice:valid||target.slice,screen:target.id};
+  const stage=valid||requested.slice;
+  const target=versionAt(requested.surface,stage);
+  if(target)return {slice:stage,screen:target.id};
+  // Un enlace construido hacia una capacidad futura nunca debe adelantarla.
+  const fallback=data.screens.find(screen=>screen.slice===stage)||data.screens[0];
+  return {slice:stage,screen:fallback.id};
  }
  const stage=valid||"S0";
  const fallback=data.screens.find(screen=>screen.slice===stage)||data.screens[0];
