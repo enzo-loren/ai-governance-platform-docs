@@ -106,4 +106,7 @@ body{background:#f8f9fc;scroll-behavior:smooth}
  vertical-align:middle;
 }
 .gov-preset-help:hover{background:#f2f5f8;color:#0972d3}
+.gov-preset-help-panel{background:#fff;isolation:isolate}
+/* Elevar solo este popover: la cabecera fija y ciertos KPI no deben cubrir su texto. */
+[class*="awsui_container_"]:has(.gov-preset-help-panel){z-index:10000!important}
 .gov-preset-help:focus-visible{outline:2px solid #0972d3;outline-offset:2px}
