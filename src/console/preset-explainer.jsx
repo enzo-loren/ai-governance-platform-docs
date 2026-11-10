@@ -11,12 +11,12 @@ export default function PresetHelp(){
   position="right"
   size="medium"
   header="¿Qué controla este preset?"
-  content={<SpaceBetween size="s">
+  content={<div className="gov-preset-help-panel"><SpaceBetween size="s">
    <div><strong>1 · Caja Negra Segura</strong><Box>Permite consultar y modificar mediante herramientas aprobadas. Avisa de las modificaciones y bloquea operaciones críticas.</Box></div>
    <div><strong>2 · Operación Supervisada</strong><Box>Para modificar, exige un usuario identificado con permiso. Las operaciones críticas requieren además aprobación humana y ejecución por MCP.</Box></div>
    <div><strong>3 · Blindaje Estricto</strong><Box>Bloquea las herramientas hasta que autorices expresamente cada operación. Las críticas también requieren aprobación.</Box></div>
    <Box color="text-body-secondary" fontSize="body-s">Las herramientas pendientes o sin clasificar no se permiten en modo activo. En descubrimiento, las reglas se evalúan sin detener al agente.</Box>
-  </SpaceBetween>}
+  </SpaceBetween></div>}
  >
   <button className="gov-preset-help" type="button" aria-label="¿Qué significa el preset de políticas?" title="¿Qué significa el preset de políticas?">?</button>
  </Popover>;
