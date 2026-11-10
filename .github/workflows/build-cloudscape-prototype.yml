@@ -10,6 +10,7 @@ on:
       - fix/presentation-mode-s2-functional
       - feat/auditoria-progresion-vistas-s0-s6
       - fix/presets-ayuda-contextual-compacta
+      - fix/presets-ayuda-contextual-compacta
     paths:
       - package.json
       - 'scripts/stamp-console-assets.mjs'
