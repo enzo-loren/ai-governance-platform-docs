@@ -28,12 +28,9 @@ export default function PresetHelp(){
   const outside=e=>{if(!trigger.current?.contains(e.target)&&!panel.current?.contains(e.target))setOpen(false)};
   document.addEventListener("keydown",key);
   document.addEventListener("mousedown",outside);
-  const resized=()=>setOpen(false);
-  window.addEventListener("resize",resized);
   return()=>{
    document.removeEventListener("keydown",key);
    document.removeEventListener("mousedown",outside);
-   window.removeEventListener("resize",resized);
 
   };
  },[open]);
