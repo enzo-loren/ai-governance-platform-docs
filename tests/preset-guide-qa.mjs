@@ -20,6 +20,7 @@ eq({...base,preset:"2",kind:"escritura"},"Denegado","P2 A sin identidad");
 eq({...base,preset:"2",kind:"destructiva_o_critica"},"Denegado","P2 A sin MCP");
 eq({...base,preset:"2",kind:"escritura",scenario:"A+B",principal:"operador"},"Denegado","P2 B sin C no inventa un usuario");
 eq({...base,preset:"2",kind:"escritura",scenario:"A+C",principal:"consulta"},"Denegado","P2 rol consulta no escribe");
+eq({...base,preset:"2",kind:"escritura",scenario:"A+C",principal:"aprobador"},"Denegado","P2 rol aprobador no puede escribir con semilla inicial");
 eq({...base,preset:"2",kind:"escritura",scenario:"A+C",principal:"operador"},"Permitido","P2 rol operador puede escribir");
 eq({...base,preset:"2",kind:"destructiva_o_critica",scenario:"A+C",principal:"operador"},"Denegado","P2 C sin B no puede aprobar");
 eq({...base,preset:"2",kind:"destructiva_o_critica",scenario:"A+B+C",principal:"consulta"},"Denegado","P2 rol lectura no puede destruir");
