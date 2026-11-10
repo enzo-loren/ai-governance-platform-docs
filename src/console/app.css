@@ -96,8 +96,14 @@ body{background:#f8f9fc;scroll-behavior:smooth}
 .gov-trace-action{display:inline-flex;min-width:46px;align-items:center;white-space:nowrap;word-break:keep-all}
 .gov-trace-action [class*="awsui_button"]{white-space:nowrap;word-break:keep-all;flex-shrink:0}
 
-/* Vista previa de presets: tabla legible en tablet, tarjetas en móvil. */
-.gov-preset-table{max-width:100%;min-width:0}
-.gov-preset-table [class*="awsui_table-container"]{max-width:100%;overflow-x:auto}
-.gov-preset-table table{min-width:740px;table-layout:auto}
-.gov-preset-table th,.gov-preset-table td{vertical-align:top;overflow-wrap:normal;word-break:normal}
+/* Ayuda contextual de presets: pequeña, accesible y fuera del flujo normal. */
+.gov-preset-help{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:18px;height:18px;min-width:18px;
+ border:1px solid currentColor;border-radius:50%;
+ background:transparent;color:#526576;
+ font:600 12px/1 Arial,sans-serif;cursor:pointer;
+ vertical-align:middle;
+}
+.gov-preset-help:hover{background:#f2f5f8;color:#0972d3}
+.gov-preset-help:focus-visible{outline:2px solid #0972d3;outline-offset:2px}
